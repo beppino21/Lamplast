@@ -21,8 +21,8 @@ import java.util.List;
 /**
  * Client OData v4 per S/4HANA Cloud - Piano dei Conti.
  *
- * Servizio: ZPDC_SBV4
- * Entity set: ZPDC_C
+ * Servizio: ZC_PDCTEXT_SRV
+ * Entity set: ZC_PDCTEXT
  * La CDS view espone già i testi nella lingua richiesta tramite filtro
  * server-side su Language — nessun $expand necessario.
  *
@@ -47,8 +47,8 @@ public class S4HanaClient {
     private static final Logger log = LoggerFactory.getLogger(S4HanaClient.class);
 
     // Path del servizio OData v4 custom
-    private static final String SERVICE_PATH = "/sap/opu/odata4/sap/zpdc_sbv4/srvd_a2x/sap/zpdc_srv4/0001";
-    private static final String ENTITY_SET   = "ZPDC_C";
+    private static final String SERVICE_PATH = "/sap/opu/odata4/sap/zc_pdctext_sb/srvd_a2x/sap/zc_pdctext_srv/0001/";
+    private static final String ENTITY_SET   = "ZC_PDCTEXT";
 
     private static final int MAX_RETRIES     = 3;
     private static final long RETRY_DELAY_MS = 2000;
@@ -166,7 +166,7 @@ public class S4HanaClient {
                 } else if (status == 403) {
                     throw new S4HanaClientException(
                             "Accesso negato (HTTP 403). Verificare che l'utente sia associato al " +
-                            "Communication Arrangement con scenario ZPDC_COA_SCENARIO.");
+                            "Communication Arrangement con scenario ZC_PDCTEXT_COM.");
                 } else if (status == 404) {
                     throw new S4HanaClientException(
                             "Servizio non trovato (HTTP 404). Verificare s4.base.url e il path del servizio ZPDC_SBV4.");
