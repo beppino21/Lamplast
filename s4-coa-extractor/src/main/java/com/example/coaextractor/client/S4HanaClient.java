@@ -21,8 +21,8 @@ import java.util.List;
 /**
  * Client OData v4 per S/4HANA Cloud - Piano dei Conti.
  *
- * Servizio: ZPDC_SBV4
- * Entity set: ZPDC_C
+ * Servizio: ZC_PDCTEXT_SRV
+ * Entity set: ZC_PDCTEXT
  * La CDS view espone già i testi nella lingua richiesta tramite filtro
  * server-side su Language — nessun $expand necessario.
  *
