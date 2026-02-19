@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<t:layoutdefinition xmlns:t="http://www.captaincasa.com/controllibrary/t" >
+
+<t:beanprocessing id="g_1" beanbinding="#{d.Xlsx2schedlinesUI}" />
+<t:rowtitlebar id="g_2" />
+<t:rowheader id="g_3" />
+<t:rowbodypane id="g_4" />
+
+</t:layoutdefinition>

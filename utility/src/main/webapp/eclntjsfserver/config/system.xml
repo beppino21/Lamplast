@@ -1,0 +1,10 @@
+<system>
+    <filterconfiguration active="false"
+                         classname="org.eclnt.jsfserver.util.ErrorAnonymizerFilter"/>
+    <filterconfiguration active="false"
+                         classname="org.eclnt.jsfserver.util.HttpHeaderAttributesForPagesFilter"/>
+    <filterconfiguration active="false"
+                         classname="org.eclnt.jsfserver.util.SecurityFilterRemoteAddress"/>
+    <httpheaderattributesforpages/>
+    <sessionmanagement type="COOKIE"/>
+</system>
