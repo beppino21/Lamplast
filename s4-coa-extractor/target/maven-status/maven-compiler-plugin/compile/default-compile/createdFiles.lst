@@ -1,8 +1,0 @@
-com\example\coaextractor\client\S4HanaClient.class
-com\example\coaextractor\config\ConfigException.class
-com\example\coaextractor\model\GlAccount.class
-com\example\coaextractor\client\S4HanaClientException.class
-com\example\coaextractor\writer\CsvWriter.class
-com\example\coaextractor\client\S4HanaClient$PageResult.class
-com\example\coaextractor\Main.class
-com\example\coaextractor\config\AppConfig.class
