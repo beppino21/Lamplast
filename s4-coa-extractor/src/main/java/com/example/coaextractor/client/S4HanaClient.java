@@ -47,8 +47,8 @@ public class S4HanaClient {
     private static final Logger log = LoggerFactory.getLogger(S4HanaClient.class);
 
     // Path del servizio OData v4 custom
-    private static final String SERVICE_PATH = "/sap/opu/odata4/sap/zpdc_sbv4/srvd_a2x/sap/zpdc_srv4/0001";
-    private static final String ENTITY_SET   = "ZPDC_C";
+    private static final String SERVICE_PATH = "/sap/opu/odata4/sap/zc_pdctext_sb/srvd_a2x/sap/zc_pdctext_srv/0001/";
+    private static final String ENTITY_SET   = "ZC_PDCTEXT";
 
     private static final int MAX_RETRIES     = 3;
     private static final long RETRY_DELAY_MS = 2000;
