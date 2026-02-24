@@ -5,7 +5,7 @@
          http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>com.example</groupId>
+    <groupId>com.eone</groupId>
     <artifactId>s4-coa-extractor</artifactId>
     <version>1.0.0</version>
     <packaging>jar</packaging>
@@ -48,7 +48,7 @@
                             <createDependencyReducedPom>false</createDependencyReducedPom>
                             <transformers>
                                 <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
-                                    <mainClass>com.example.coaextractor.Main</mainClass>
+                                    <mainClass>com.eone.coaextractor.Main</mainClass>
                                 </transformer>
                             </transformers>
                             <filters>

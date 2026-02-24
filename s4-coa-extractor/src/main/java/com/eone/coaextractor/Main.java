@@ -1,11 +1,12 @@
-package com.example.coaextractor;
+package com.eone.coaextractor;
 
-import com.example.coaextractor.client.S4HanaClient;
-import com.example.coaextractor.client.S4HanaClientException;
-import com.example.coaextractor.config.AppConfig;
-import com.example.coaextractor.config.ConfigException;
-import com.example.coaextractor.model.GlAccount;
-import com.example.coaextractor.writer.CsvWriter;
+import com.eone.coaextractor.client.S4HanaClient;
+import com.eone.coaextractor.client.S4HanaClientException;
+import com.eone.coaextractor.config.AppConfig;
+import com.eone.coaextractor.config.ConfigException;
+import com.eone.coaextractor.model.GlAccount;
+import com.eone.coaextractor.writer.CsvWriter;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

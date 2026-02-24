@@ -1,7 +1,8 @@
-package com.example.coaextractor.writer;
+package com.eone.coaextractor.writer;
 
-import com.example.coaextractor.config.AppConfig;
-import com.example.coaextractor.model.GlAccount;
+import com.eone.coaextractor.config.AppConfig;
+import com.eone.coaextractor.model.GlAccount;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

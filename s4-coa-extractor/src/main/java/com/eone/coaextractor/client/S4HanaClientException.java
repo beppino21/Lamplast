@@ -1,4 +1,4 @@
-package com.example.coaextractor.client;
+package com.eone.coaextractor.client;
 
 public class S4HanaClientException extends RuntimeException {
 

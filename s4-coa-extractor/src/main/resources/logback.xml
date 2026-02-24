@@ -33,7 +33,7 @@
     </appender>
 
     <!-- Logger principale dell'applicazione: livello INFO in produzione -->
-    <logger name="com.example.coaextractor" level="INFO" additivity="false">
+    <logger name="com.eone.coaextractor" level="INFO" additivity="false">
         <appender-ref ref="CONSOLE"/>
         <appender-ref ref="FILE"/>
     </logger>

@@ -1,4 +1,4 @@
-package com.example.coaextractor.config;
+package com.eone.coaextractor.config;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

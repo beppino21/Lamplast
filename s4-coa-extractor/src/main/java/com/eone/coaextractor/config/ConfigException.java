@@ -1,4 +1,4 @@
-package com.example.coaextractor.config;
+package com.eone.coaextractor.config;
 
 public class ConfigException extends RuntimeException {
 

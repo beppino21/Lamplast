@@ -1,4 +1,4 @@
-package com.example.coaextractor.model;
+package com.eone.coaextractor.model;
 
 /**
  * Rappresenta un conto del piano dei conti con le sue descrizioni.
