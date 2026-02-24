@@ -237,8 +237,16 @@ public class S4HanaClient {
 			// OData v4 server-driven paging
 			JsonNode nextLinkNode = root.path("@odata.nextLink");
 			if (!nextLinkNode.isMissingNode() && !nextLinkNode.asText().isBlank()) {
-				nextLink = nextLinkNode.asText();
-				log.debug("Trovato @odata.nextLink, ci sono altre pagine");
+			    String rawNextLink = nextLinkNode.asText();
+			    
+			    // Se è un URL relativo, lo rendiamo assoluto
+			    if (rawNextLink.startsWith("http://") || rawNextLink.startsWith("https://")) {
+			        nextLink = rawNextLink;
+			    } else {
+			        nextLink = config.s4BaseUrl + SERVICE_PATH + rawNextLink;
+			    }
+			    
+			    log.debug("Trovato @odata.nextLink: {}", nextLink);
 			}
 
 		} catch (S4HanaClientException e) {
