@@ -160,7 +160,7 @@ public class S4HanaClient {
                 } else if (status == 403) {
                     throw new S4HanaClientException(
                             "Accesso negato (HTTP 403). Verificare che l'utente sia associato al " +
-                            "Communication Arrangement con scenario ZPDC_COA_SCENARIO.");
+                            "Communication Arrangement con scenario ZC_PDCTEXT_COM.");
                 } else if (status == 404) {
                     throw new S4HanaClientException(
                             "Servizio non trovato (HTTP 404). Verificare s4.base.url e il path del servizio.");
