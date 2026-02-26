@@ -1,12 +1,5 @@
 package com.eone.coaextractor.client;
 
-import com.eone.coaextractor.config.AppConfig;
-import com.eone.coaextractor.model.GlAccount;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import java.net.URI;
 import java.net.URLEncoder;
 import java.net.http.HttpClient;
@@ -18,14 +11,36 @@ import java.util.ArrayList;
 import java.util.Base64;
 import java.util.List;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.eone.coaextractor.config.AppConfig;
+import com.eone.coaextractor.model.GlAccount;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
 /**
  * Client OData v4 per S/4HANA Cloud - Piano dei Conti.
  *
  * Servizio: ZPDC_SBV4
  * Entity set: ZPDC_C
- * Filtro: CompanyCode + Language
+ * La CDS view espone già i testi nella lingua richiesta tramite filtro
+ * server-side su Language — nessun $expand necessario.
  *
- * Paging: gestisce sia $top/$skip che @odata.nextLink (server-driven paging).
+ * Struttura risposta OData v4:
+ * {
+ *   "@odata.context": "...",
+ *   "value": [
+ *     { "ChartOfAccounts": "YCOA", "GLAccount": "10010000",
+ *       "Language": "IT", "GLAccountName": "Fondo cassa",
+ *       "GLAccountLongName": "Fondo cassa" },
+ *     ...
+ *   ]
+ * }
+ *
+ * Paging: OData v4 usa $top/$skip oppure server-driven paging tramite
+ * @odata.nextLink — il client gestisce entrambi.
+ *
  * Retry automatico (max 3 tentativi) su errori temporanei (5xx, timeout).
  */
 public class S4HanaClient {
@@ -62,11 +77,16 @@ public class S4HanaClient {
     // Public API
     // -------------------------------------------------------------------------
 
+    /**
+     * Estrae tutti i conti del piano dei conti configurato nella lingua scelta.
+     * Gestisce il paging automaticamente (sia $skip che @odata.nextLink).
+     */
     public List<GlAccount> fetchAllAccounts() {
         log.info("Avvio estrazione piano dei conti per società '{}' in lingua '{}'",
                 config.companyCode, config.language);
 
         List<GlAccount> allAccounts = new ArrayList<>();
+        // Prima pagina: URL costruito con i parametri di configurazione
         String nextUrl = buildFirstUrl();
         int page = 1;
 
@@ -79,16 +99,8 @@ public class S4HanaClient {
             log.info("Pagina {}: ricevuti {} conti", page, result.accounts().size());
             allAccounts.addAll(result.accounts());
 
-            if (result.nextLink() != null) {
-                // Server-driven paging: usa il nextLink fornito dal server
-                nextUrl = result.nextLink();
-            } else if (result.accounts().size() == config.pageSize) {
-                // Client-driven paging: ci potrebbero essere altre pagine
-                nextUrl = buildSkipUrl(allAccounts.size());
-            } else {
-                // Ultima pagina
-                nextUrl = null;
-            }
+            // OData v4: server-driven paging tramite @odata.nextLink
+            nextUrl = result.nextLink();
             page++;
         }
 
@@ -100,29 +112,24 @@ public class S4HanaClient {
     // URL Building
     // -------------------------------------------------------------------------
 
+    /**
+     * Costruisce l'URL della prima pagina con:
+     * - $filter: ChartOfAccounts e Language
+     * - $select: solo i campi necessari
+     * - $top: dimensione pagina
+     */
     private String buildFirstUrl() {
         String filter = "CompanyCode eq '" + config.companyCode + "'"
                       + " and Language eq '" + config.language + "'";
 
-        String select = "CompanyCode,ChartOfAccounts,GLAccount,Language,GLAccountName,GLAccountLongName";
+        String select = "ChartOfAccounts,GLAccount,Language,GLAccountName,GLAccountLongName";
 
-        return config.s4BaseUrl + SERVICE_PATH + "/" + ENTITY_SET
+        String url = config.s4BaseUrl + SERVICE_PATH + "/" + ENTITY_SET
                 + "?$filter=" + encodeParam(filter)
                 + "&$select=" + encodeParam(select)
                 + "&$top=" + config.pageSize;
-    }
 
-    private String buildSkipUrl(int skip) {
-        String filter = "CompanyCode eq '" + config.companyCode + "'"
-                      + " and Language eq '" + config.language + "'";
-
-        String select = "CompanyCode,ChartOfAccounts,GLAccount,Language,GLAccountName,GLAccountLongName";
-
-        return config.s4BaseUrl + SERVICE_PATH + "/" + ENTITY_SET
-                + "?$filter=" + encodeParam(filter)
-                + "&$select=" + encodeParam(select)
-                + "&$top=" + config.pageSize
-                + "&$skip=" + skip;
+        return url;
     }
 
     private String encodeParam(String value) {
@@ -163,7 +170,7 @@ public class S4HanaClient {
                             "Communication Arrangement con scenario ZPDC_COA_SCENARIO.");
                 } else if (status == 404) {
                     throw new S4HanaClientException(
-                            "Servizio non trovato (HTTP 404). Verificare s4.base.url e il path del servizio.");
+                            "Servizio non trovato (HTTP 404). Verificare s4.base.url e il path del servizio ZPDC_SBV4.");
                 } else if (status >= 500 && attempt < MAX_RETRIES) {
                     log.warn("Errore server HTTP {} (tentativo {}/{}). Retry tra {}ms...",
                             status, attempt, MAX_RETRIES, RETRY_DELAY_MS);
@@ -201,6 +208,20 @@ public class S4HanaClient {
     // JSON Parsing
     // -------------------------------------------------------------------------
 
+    /**
+     * Parsa la risposta JSON OData v4:
+     *
+     * {
+     *   "@odata.context": "...",
+     *   "@odata.nextLink": "...url pagina successiva...",  // opzionale
+     *   "value": [
+     *     { "ChartOfAccounts": "YCOA", "GLAccount": "10010000",
+     *       "Language": "IT", "GLAccountName": "Fondo cassa",
+     *       "GLAccountLongName": "Fondo cassa" },
+     *     ...
+     *   ]
+     * }
+     */
     private PageResult parseResponse(String json) {
         List<GlAccount> accounts = new ArrayList<>();
         String nextLink = null;
@@ -208,27 +229,31 @@ public class S4HanaClient {
         try {
             JsonNode root = objectMapper.readTree(json);
 
+            // Controlla errori OData v4
             JsonNode error = root.path("error");
             if (!error.isMissingNode()) {
                 String message = error.path("message").asText(error.toString());
                 throw new S4HanaClientException("Errore OData dal server: " + message);
             }
 
+            // OData v4: i dati sono nell'array "value"
             JsonNode valueArray = root.path("value");
             if (!valueArray.isArray()) {
                 throw new S4HanaClientException("Struttura JSON inattesa (manca array 'value'): " + json);
             }
 
             for (JsonNode node : valueArray) {
+            	String companyCode     = node.path("CompanyCode").asText("");
                 String chartOfAccounts = node.path("ChartOfAccounts").asText("");
                 String glAccount       = node.path("GLAccount").asText("").trim();
                 String shortText       = node.path("GLAccountName").asText(null);
                 String longText        = node.path("GLAccountLongName").asText(null);
 
+                // Normalizza stringhe vuote a null
                 if (shortText != null && shortText.isBlank()) shortText = null;
                 if (longText  != null && longText.isBlank())  longText  = null;
 
-                accounts.add(new GlAccount(chartOfAccounts, glAccount, shortText, longText));
+                accounts.add(new GlAccount(companyCode, chartOfAccounts, glAccount, shortText, longText));
             }
 
             // OData v4 server-driven paging
@@ -246,6 +271,10 @@ public class S4HanaClient {
 
         return new PageResult(accounts, nextLink);
     }
+
+    // -------------------------------------------------------------------------
+    // Inner record per il risultato di una pagina
+    // -------------------------------------------------------------------------
 
     private record PageResult(List<GlAccount> accounts, String nextLink) {}
 }

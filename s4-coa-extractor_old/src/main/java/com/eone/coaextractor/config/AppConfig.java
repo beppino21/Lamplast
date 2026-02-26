@@ -52,7 +52,7 @@ public class AppConfig {
         this.companyCode     = get("s4.company.code", "S001");
         this.chartOfAccounts = get("s4.chart.of.accounts", "");
         this.language        = get("s4.language", "IT").toUpperCase();
-        this.pageSize        = getInt("s4.page.size", 1000);
+        this.pageSize        = getInt("s4.page.size", 500);
         this.httpTimeoutConnect = getInt("s4.http.timeout.connect", 30);
         this.httpTimeoutRead    = getInt("s4.http.timeout.read", 120);
 
@@ -81,6 +81,7 @@ public class AppConfig {
                 throw new ConfigException("Impossibile leggere il file di configurazione: " + configPath, e);
             }
         } else {
+            // Fallback classpath (utile in sviluppo con config.properties in src/main/resources)
             log.info("config.properties non trovato su filesystem, ricerca nel classpath...");
             try (InputStream is = AppConfig.class.getClassLoader().getResourceAsStream("config.properties")) {
                 if (is == null) {

@@ -1,16 +1,17 @@
 package com.eone.coaextractor;
 
+import java.nio.file.Path;
+import java.util.List;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.eone.coaextractor.client.S4HanaClient;
 import com.eone.coaextractor.client.S4HanaClientException;
 import com.eone.coaextractor.config.AppConfig;
 import com.eone.coaextractor.config.ConfigException;
 import com.eone.coaextractor.model.GlAccount;
 import com.eone.coaextractor.writer.CsvWriter;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import java.nio.file.Path;
-import java.util.List;
 
 /**
  * Entry point dell'applicazione.

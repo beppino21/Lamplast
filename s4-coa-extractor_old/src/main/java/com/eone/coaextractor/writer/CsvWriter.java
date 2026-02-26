@@ -28,6 +28,8 @@ public class CsvWriter {
 
     private static final Logger log = LoggerFactory.getLogger(CsvWriter.class);
 
+    // Header CSV (nomi colonne)
+    //private static final String[] HEADERS = {"Società", "CodiceConto", "DescrizioneBreve", "DescrizioneLunga"};
     private static final String[] HEADERS = {"CodiceConto", "DescrizioneBreve", "DescrizioneLunga"};
 
     private final AppConfig config;
@@ -36,9 +38,18 @@ public class CsvWriter {
         this.config = config;
     }
 
+    // -------------------------------------------------------------------------
+    // Public API
+    // -------------------------------------------------------------------------
+
+    /**
+     * Scrive i conti su file CSV e restituisce il Path del file creato.
+     */
     public Path write(List<GlAccount> accounts) throws IOException {
+        // Assicura che la directory di output esista
         Files.createDirectories(config.outputDirectory);
 
+        // Risolve il nome file (con eventuale pattern di data)
         String filename = resolveFilename(config.outputFilenamePattern);
         Path outputPath = config.outputDirectory.resolve(filename);
 
@@ -50,20 +61,25 @@ public class CsvWriter {
         try (BufferedWriter writer = Files.newBufferedWriter(outputPath, charset,
                 StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING)) {
 
-            // BOM per UTF-8 (compatibilità Excel su Windows)
+            // BOM per UTF-8 (utile per apertura in Excel su Windows)
             if ("UTF-8".equalsIgnoreCase(config.outputCharset)) {
                 writer.write('\uFEFF');
             }
 
+            // Header
             if (config.outputIncludeHeader) {
-                writer.write(buildRow(sep, HEADERS[0], HEADERS[1], HEADERS[2]));
-                writer.newLine();
+               // writer.write(buildRow(sep, HEADERS[0], HEADERS[1], HEADERS[2], HEADERS[3]));
+            	writer.write(buildRow(sep, HEADERS[0], HEADERS[1], HEADERS[2]));
+            	writer.newLine();
             }
 
+            // Righe dati
             int written = 0;
             for (GlAccount account : accounts) {
                 String shortText = nullToEmpty(account.shortText());
                 String longText  = nullToEmpty(account.longText());
+
+                //writer.write(buildRow(sep, account.companyCode(), account.glAccount(), shortText, longText));
                 writer.write(buildRow(sep, account.glAccount(), shortText, longText));
                 writer.newLine();
                 written++;
@@ -79,6 +95,10 @@ public class CsvWriter {
     // Helpers
     // -------------------------------------------------------------------------
 
+    /**
+     * Costruisce una riga CSV con i campi separati da {@code sep}.
+     * Applica quoting RFC 4180 se necessario.
+     */
     private String buildRow(String sep, String... fields) {
         StringBuilder sb = new StringBuilder();
         for (int i = 0; i < fields.length; i++) {
@@ -88,6 +108,10 @@ public class CsvWriter {
         return sb.toString();
     }
 
+    /**
+     * Quota un campo CSV se contiene il separatore, doppi apici o a capo.
+     * Raddoppia i doppi apici interni (RFC 4180).
+     */
     private String csvEscape(String value, String sep) {
         if (value == null) return "";
         boolean needsQuoting = value.contains(sep)
@@ -99,30 +123,26 @@ public class CsvWriter {
     }
 
     /**
-     * Risolve il pattern del nome file sostituendo i token di data.
-     * Esempio: "coa_export_yyyyMMdd_HHmm.csv" -> "coa_export_20260219_1430.csv"
+     * Risolve il pattern del nome file sostituendo eventuali token di data.
+     * Esempio: "coa_export_yyyyMMdd_HHmm.csv" -> "coa_export_20260218_1045.csv"
      *
-     * Strategia: applica DateTimeFormatter solo alla parte del nome PRIMA
-     * dell'ultimo punto (estensione), poi riattacca l'estensione invariata.
-     * Questo evita che lettere nell'estensione (es: 's' in .csv) vengano
-     * interpretate come token di data.
+     * I caratteri non-formato (underscore, punto, trattino, ecc.) vengono
+     * automaticamente escapati con apici singoli per DateTimeFormatter.
      */
     private String resolveFilename(String pattern) {
         if (pattern == null || pattern.isBlank()) {
             return "coa_export.csv";
         }
-
-        // Separa nome ed estensione
-        int dotIndex = pattern.lastIndexOf('.');
-        String namePart = dotIndex >= 0 ? pattern.substring(0, dotIndex) : pattern;
-        String extPart  = dotIndex >= 0 ? pattern.substring(dotIndex) : "";
-
-        // Se il nome non contiene token di data, restituisce il pattern invariato
-        if (!namePart.matches(".*[yMdHms].*")) {
+        // Se il pattern non contiene token di data, usarlo come nome fisso
+        if (!pattern.matches(".*[yMdHmsSE].*")) {
             return pattern;
         }
-
         try {
+            // Separa nome ed estensione: applica il formatter solo al nome
+            int dotIndex = pattern.lastIndexOf('.');
+            String namePart = dotIndex >= 0 ? pattern.substring(0, dotIndex) : pattern;
+            String extPart  = dotIndex >= 0 ? pattern.substring(dotIndex) : "";
+
             String dtfPattern = toDateTimeFormatterPattern(namePart);
             log.debug("Pattern data risolto: '{}' -> '{}{}'", pattern, dtfPattern, extPart);
             DateTimeFormatter formatter = DateTimeFormatter.ofPattern(dtfPattern);
@@ -134,14 +154,14 @@ public class CsvWriter {
     }
 
     /**
-     * Converte un pattern semplice tipo "coa_yyyyMMdd_HHmm"
-     * nel formato atteso da DateTimeFormatter: "'coa_'yyyyMMdd'_'HHmm"
+     * Converte un pattern semplice tipo "coa_yyyyMMdd_HHmm.csv"
+     * nel formato atteso da DateTimeFormatter: "'coa_'yyyyMMdd'_'HHmm'.csv'"
      *
-     * Solo i token utili in un nome file sono riconosciuti: y M d H m s
-     * Tutti gli altri caratteri vengono wrappati in apici singoli.
+     * I caratteri di formato data vengono lasciati inalterati.
+     * Tutti gli altri caratteri vengono raggruppati e wrappati in apici singoli.
      */
     private String toDateTimeFormatterPattern(String pattern) {
-        // Solo i token sicuri per nomi file (niente n, N, z, Z ecc.)
+        // Solo i token utili in un nome file: anno, mese, giorno, ora, minuto, secondo
         final String DATE_LETTERS = "yMdHms";
         StringBuilder result = new StringBuilder();
         StringBuilder literal = new StringBuilder();
