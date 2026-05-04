@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<workplaceFunctionTreeInfoNode>
+    <folderOpened>false</folderOpened>
+    <subNodes>
+        <text>Workplace Top Node 1</text>
+        <folderOpened>true</folderOpened>
+        <subNodes>
+            <text>Workplace Sub Node 1</text>
+            <folderOpened>true</folderOpened>
+            <subNodes>
+                <text>Some Entity 1</text>
+                <workpageStartInfo>
+                    <pageBeanName>Entity1List</pageBeanName>
+                    <openMultipleInstances>false</openMultipleInstances>
+                    <decorated>true</decorated>
+                    <popupSupported>true</popupSupported>
+                    <closeSupported>true</closeSupported>
+                    <openAsPopupByDefault>false</openAsPopupByDefault>
+                    <excludeFromSavePerspective>false</excludeFromSavePerspective>
+                    <paramMap/>
+                    <sortIndex>-1</sortIndex>
+                </workpageStartInfo>
+            </subNodes>
+            <subNodes>
+                <text>Some Entity 2</text>
+                <workpageStartInfo>
+                    <pageBeanName>Entity2List</pageBeanName>
+                    <openMultipleInstances>false</openMultipleInstances>
+                    <decorated>true</decorated>
+                    <popupSupported>true</popupSupported>
+                    <closeSupported>true</closeSupported>
+                    <openAsPopupByDefault>false</openAsPopupByDefault>
+                    <excludeFromSavePerspective>false</excludeFromSavePerspective>
+                    <paramMap/>
+                    <sortIndex>-1</sortIndex>
+                </workpageStartInfo>
+            </subNodes>
+        </subNodes>
+    </subNodes>
+</workplaceFunctionTreeInfoNode>

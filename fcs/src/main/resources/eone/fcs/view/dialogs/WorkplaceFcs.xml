@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<t:layoutdefinition xmlns:t="http://www.captaincasa.com/controllibrary/t" xmlns:tdba="http://www.captaincasa.com/controllibrary/tdba" >
+    <t:pagebeanroot id="g_1" beantype="PageBeanComponent" >
+        <t:pane id="g_2" comment="Only one component is allowed below pagebeanroot!" width="100%" height="100%" >
+            <t:beanprocessing id="g_1" beanbinding="#{d.WorkplaceFcs}" />
+            <t:row id="g_2" >
+                <tdba:ccworkplacewithlogon id="g_4" />
+            </t:row>
+        </t:pane>
+    </t:pagebeanroot>
+</t:layoutdefinition>

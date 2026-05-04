@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<t:layoutdefinition xmlns:t="http://www.captaincasa.com/controllibrary/t" xmlns:tdap="http://www.captaincasa.com/controllibrary/tdap" xmlns:tpbc="http://www.captaincasa.com/controllibrary/tpbc" >
+
+<t:beanprocessing id="g_1" beanbinding="#{d.FCST001List}" />
+<t:row id="g_16" >
+<tdap:beangridwitheditor id="g_4" pagebeanbinding="#{d.FCST001List.gridWithEditor}" >
+<tpbc:datagridview2column id="g_18" propertyName="mtart" title="#{rr.fcs[&#39;PROP.FCST001.mtart&#39;]}" />
+<tpbc:datagridview2column id="g_2" propertyName="werks" title="#{rr.fcs[&#39;PROP.FCST001.werks&#39;]}" />
+<tpbc:datagridview2column id="g_3" propertyName="exp2fcs" title="#{rr.fcs[&#39;PROP.FCST001.exp2fcs&#39;]}" />
+</tdap:beangridwitheditor>
+</t:row>
+
+</t:layoutdefinition>

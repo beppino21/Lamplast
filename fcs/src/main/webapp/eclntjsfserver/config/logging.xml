@@ -1,0 +1,5 @@
+<logging level="INFO"
+         console="true"
+         plaintext="false"
+         outputclassmethod="false">
+</logging>

@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<t:layoutdefinition xmlns:t="http://www.captaincasa.com/controllibrary/t" xmlns:tdap="http://www.captaincasa.com/controllibrary/tdap" xmlns:tpbc="http://www.captaincasa.com/controllibrary/tpbc" >
+
+<t:beanprocessing id="g_1" beanbinding="#{d.FCSMSEGHSTList}" />
+<t:row id="g_16" >
+<tdap:beangridwitheditor id="g_4" pagebeanbinding="#{d.FCSMSEGHSTList.gridWithEditor}" >
+<tpbc:datagridview2column id="g_23" propertyName="ebeln" title="#{rr.fcs[&#39;PROP.FCSMSEGHST.ebeln&#39;]}" />
+<tpbc:datagridview2column id="g_2" propertyName="ebelp" title="#{rr.fcs[&#39;PROP.FCSMSEGHST.ebelp&#39;]}" />
+<tpbc:datagridview2column id="g_3" propertyName="etenr" title="#{rr.fcs[&#39;PROP.FCSMSEGHST.etenr&#39;]}" />
+<tpbc:datagridview2column id="g_24" propertyName="in_xblnr" title="#{rr.fcs[&#39;PROP.FCSMSEGHST.in_xblnr&#39;]}" />
+<tpbc:datagridview2column id="g_5" propertyName="in_charg" title="#{rr.fcs[&#39;PROP.FCSMSEGHST.in_charg&#39;]}" />
+<tpbc:datagridview2column id="g_6" propertyName="mblnr" title="#{rr.fcs[&#39;PROP.FCSMSEGHST.mblnr&#39;]}" />
+<tpbc:datagridview2column id="g_7" propertyName="mjahr" title="#{rr.fcs[&#39;PROP.FCSMSEGHST.mjahr&#39;]}" />
+<tpbc:datagridview2column id="g_8" propertyName="kappl" title="#{rr.fcs[&#39;PROP.FCSMSEGHST.kappl&#39;]}" />
+<tpbc:datagridview2column id="g_9" propertyName="id_eket" title="#{rr.fcs[&#39;PROP.FCSMSEGHST.id_eket&#39;]}" />
+<tpbc:datagridview2column id="g_10" propertyName="bemid" title="#{rr.fcs[&#39;PROP.FCSMSEGHST.bemid&#39;]}" />
+<tpbc:datagridview2column id="g_11" propertyName="mtart" title="#{rr.fcs[&#39;PROP.FCSMSEGHST.mtart&#39;]}" />
+<tpbc:datagridview2column id="g_12" propertyName="matnr" title="#{rr.fcs[&#39;PROP.FCSMSEGHST.matnr&#39;]}" />
+<tpbc:datagridview2column id="g_13" propertyName="charg" title="#{rr.fcs[&#39;PROP.FCSMSEGHST.charg&#39;]}" />
+<tpbc:datagridview2column id="g_14" propertyName="maktx" title="#{rr.fcs[&#39;PROP.FCSMSEGHST.maktx&#39;]}" />
+<tpbc:datagridview2column id="g_15" propertyName="meins" title="#{rr.fcs[&#39;PROP.FCSMSEGHST.meins&#39;]}" />
+<tpbc:datagridview2column id="g_25" propertyName="in_mange" title="#{rr.fcs[&#39;PROP.FCSMSEGHST.in_mange&#39;]}" />
+<tpbc:datagridview2column id="g_17" propertyName="in_werks" title="#{rr.fcs[&#39;PROP.FCSMSEGHST.in_werks&#39;]}" />
+<tpbc:datagridview2column id="g_18" propertyName="in_lgort" title="#{rr.fcs[&#39;PROP.FCSMSEGHST.in_lgort&#39;]}" />
+<tpbc:datagridview2column id="g_19" propertyName="datum" title="#{rr.fcs[&#39;PROP.FCSMSEGHST.datum&#39;]}" />
+<tpbc:datagridview2column id="g_20" propertyName="uzeit" title="#{rr.fcs[&#39;PROP.FCSMSEGHST.uzeit&#39;]}" />
+<tpbc:datagridview2column id="g_21" propertyName="ernam" title="#{rr.fcs[&#39;PROP.FCSMSEGHST.ernam&#39;]}" />
+</tdap:beangridwitheditor>
+</t:row>
+
+</t:layoutdefinition>

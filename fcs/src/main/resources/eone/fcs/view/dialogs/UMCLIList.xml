@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<t:layoutdefinition xmlns:t="http://www.captaincasa.com/controllibrary/t" xmlns:tdap="http://www.captaincasa.com/controllibrary/tdap" xmlns:tpbc="http://www.captaincasa.com/controllibrary/tpbc" >
+
+<t:beanprocessing id="g_1" beanbinding="#{d.UMCLIList}" />
+<t:row id="g_16" >
+<tdap:beangridwitheditor id="g_4" pagebeanbinding="#{d.UMCLIList.gridWithEditor}" >
+<tpbc:datagridview2column id="g_18" propertyName="matnr" title="#{rr.fcs[&#39;PROP.UMCLI.matnr&#39;]}" />
+<tpbc:datagridview2column id="g_2" propertyName="kunnr" title="#{rr.fcs[&#39;PROP.UMCLI.kunnr&#39;]}" />
+<tpbc:datagridview2column id="g_3" propertyName="bstme" title="#{rr.fcs[&#39;PROP.UMCLI.bstme&#39;]}" />
+<tpbc:datagridview2column id="g_19" propertyName="datab" title="#{rr.fcs[&#39;PROP.UMCLI.datab&#39;]}" />
+<tpbc:datagridview2column id="g_5" propertyName="meins" title="#{rr.fcs[&#39;PROP.UMCLI.meins&#39;]}" />
+<tpbc:datagridview2column id="g_6" propertyName="mengexbstme" title="#{rr.fcs[&#39;PROP.UMCLI.mengexbstme&#39;]}" />
+<tpbc:datagridview2column id="g_7" propertyName="bstmexpallet" title="#{rr.fcs[&#39;PROP.UMCLI.bstmexpallet&#39;]}" />
+</tdap:beangridwitheditor>
+</t:row>
+
+</t:layoutdefinition>

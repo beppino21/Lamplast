@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="utf-8"?>
+<t:layoutdefinition xmlns:t="http://www.captaincasa.com/controllibrary/t" xmlns:tdap="http://www.captaincasa.com/controllibrary/tdap" xmlns:tpbc="http://www.captaincasa.com/controllibrary/tpbc" >
+
+<t:beanprocessing id="g_1" beanbinding="#{d.FCSEKETHSTList}" />
+<t:row id="g_16" >
+<tdap:beangridwitheditor id="g_4" pagebeanbinding="#{d.FCSEKETHSTList.gridWithEditor}" >
+<tpbc:datagridview2column id="g_49" propertyName="ebeln" title="#{rr.fcs[&#39;PROP.FCSEKETHST.ebeln&#39;]}" />
+<tpbc:datagridview2column id="g_2" propertyName="ebelp" title="#{rr.fcs[&#39;PROP.FCSEKETHST.ebelp&#39;]}" />
+<tpbc:datagridview2column id="g_3" propertyName="etenr" title="#{rr.fcs[&#39;PROP.FCSEKETHST.etenr&#39;]}" />
+<tpbc:datagridview2column id="g_50" propertyName="mblnr" title="#{rr.fcs[&#39;PROP.FCSEKETHST.mblnr&#39;]}" />
+<tpbc:datagridview2column id="g_5" propertyName="mjahr" title="#{rr.fcs[&#39;PROP.FCSEKETHST.mjahr&#39;]}" />
+<tpbc:datagridview2column id="g_6" propertyName="kappl" title="#{rr.fcs[&#39;PROP.FCSEKETHST.kappl&#39;]}" />
+<tpbc:datagridview2column id="g_7" propertyName="id_eket" title="#{rr.fcs[&#39;PROP.FCSEKETHST.id_eket&#39;]}" />
+<tpbc:datagridview2column id="g_8" propertyName="xchpf" title="#{rr.fcs[&#39;PROP.FCSEKETHST.xchpf&#39;]}" />
+<tpbc:datagridview2column id="g_9" propertyName="eindt" title="#{rr.fcs[&#39;PROP.FCSEKETHST.eindt&#39;]}" />
+<tpbc:datagridview2column id="g_10" propertyName="reswk" title="#{rr.fcs[&#39;PROP.FCSEKETHST.reswk&#39;]}" />
+<tpbc:datagridview2column id="g_11" propertyName="lifnr" title="#{rr.fcs[&#39;PROP.FCSEKETHST.lifnr&#39;]}" />
+<tpbc:datagridview2column id="g_12" propertyName="name1" title="#{rr.fcs[&#39;PROP.FCSEKETHST.name1&#39;]}" />
+<tpbc:datagridview2column id="g_13" propertyName="mtart" title="#{rr.fcs[&#39;PROP.FCSEKETHST.mtart&#39;]}" />
+<tpbc:datagridview2column id="g_14" propertyName="charg" title="#{rr.fcs[&#39;PROP.FCSEKETHST.charg&#39;]}" />
+<tpbc:datagridview2column id="g_15" propertyName="maktx" title="#{rr.fcs[&#39;PROP.FCSEKETHST.maktx&#39;]}" />
+<tpbc:datagridview2column id="g_51" propertyName="werks" title="#{rr.fcs[&#39;PROP.FCSEKETHST.werks&#39;]}" />
+<tpbc:datagridview2column id="g_17" propertyName="lgort" title="#{rr.fcs[&#39;PROP.FCSEKETHST.lgort&#39;]}" />
+<tpbc:datagridview2column id="g_18" propertyName="menge" title="#{rr.fcs[&#39;PROP.FCSEKETHST.menge&#39;]}" />
+<tpbc:datagridview2column id="g_19" propertyName="ameng" title="#{rr.fcs[&#39;PROP.FCSEKETHST.ameng&#39;]}" />
+<tpbc:datagridview2column id="g_20" propertyName="wemng" title="#{rr.fcs[&#39;PROP.FCSEKETHST.wemng&#39;]}" />
+<tpbc:datagridview2column id="g_21" propertyName="wamng" title="#{rr.fcs[&#39;PROP.FCSEKETHST.wamng&#39;]}" />
+<tpbc:datagridview2column id="g_22" propertyName="menge_open" title="#{rr.fcs[&#39;PROP.FCSEKETHST.menge_open&#39;]}" />
+<tpbc:datagridview2column id="g_23" propertyName="meins" title="#{rr.fcs[&#39;PROP.FCSEKETHST.meins&#39;]}" />
+<tpbc:datagridview2column id="g_24" propertyName="bstme" title="#{rr.fcs[&#39;PROP.FCSEKETHST.bstme&#39;]}" />
+<tpbc:datagridview2column id="g_25" propertyName="mengexbstme" title="#{rr.fcs[&#39;PROP.FCSEKETHST.mengexbstme&#39;]}" />
+<tpbc:datagridview2column id="g_26" propertyName="qtaxtag" title="#{rr.fcs[&#39;PROP.FCSEKETHST.qtaxtag&#39;]}" />
+<tpbc:datagridview2column id="g_27" propertyName="bstmexpallet" title="#{rr.fcs[&#39;PROP.FCSEKETHST.bstmexpallet&#39;]}" />
+<tpbc:datagridview2column id="g_28" propertyName="qtaxbag" title="#{rr.fcs[&#39;PROP.FCSEKETHST.qtaxbag&#39;]}" />
+<tpbc:datagridview2column id="g_29" propertyName="tag_filler" title="#{rr.fcs[&#39;PROP.FCSEKETHST.tag_filler&#39;]}" />
+<tpbc:datagridview2column id="g_30" propertyName="nrtag" title="#{rr.fcs[&#39;PROP.FCSEKETHST.nrtag&#39;]}" />
+<tpbc:datagridview2column id="g_31" propertyName="nrbag" title="#{rr.fcs[&#39;PROP.FCSEKETHST.nrbag&#39;]}" />
+<tpbc:datagridview2column id="g_32" propertyName="brgew_row" title="#{rr.fcs[&#39;PROP.FCSEKETHST.brgew_row&#39;]}" />
+<tpbc:datagridview2column id="g_33" propertyName="ntgew_row" title="#{rr.fcs[&#39;PROP.FCSEKETHST.ntgew_row&#39;]}" />
+<tpbc:datagridview2column id="g_34" propertyName="datum" title="#{rr.fcs[&#39;PROP.FCSEKETHST.datum&#39;]}" />
+<tpbc:datagridview2column id="g_35" propertyName="uzeit" title="#{rr.fcs[&#39;PROP.FCSEKETHST.uzeit&#39;]}" />
+<tpbc:datagridview2column id="g_36" propertyName="ernam" title="#{rr.fcs[&#39;PROP.FCSEKETHST.ernam&#39;]}" />
+<tpbc:datagridview2column id="g_37" propertyName="bemid" title="#{rr.fcs[&#39;PROP.FCSEKETHST.bemid&#39;]}" />
+<tpbc:datagridview2column id="g_38" propertyName="gewei" title="#{rr.fcs[&#39;PROP.FCSEKETHST.gewei&#39;]}" />
+<tpbc:datagridview2column id="g_39" propertyName="wmsst" title="#{rr.fcs[&#39;PROP.FCSEKETHST.wmsst&#39;]}" />
+<tpbc:datagridview2column id="g_40" propertyName="in_xblnr" title="#{rr.fcs[&#39;PROP.FCSEKETHST.in_xblnr&#39;]}" />
+<tpbc:datagridview2column id="g_41" propertyName="in_bldat" title="#{rr.fcs[&#39;PROP.FCSEKETHST.in_bldat&#39;]}" />
+<tpbc:datagridview2column id="g_42" propertyName="in_traid" title="#{rr.fcs[&#39;PROP.FCSEKETHST.in_traid&#39;]}" />
+<tpbc:datagridview2column id="g_43" propertyName="in_colli_tot" title="#{rr.fcs[&#39;PROP.FCSEKETHST.in_colli_tot&#39;]}" />
+<tpbc:datagridview2column id="g_44" propertyName="in_brgew_tot" title="#{rr.fcs[&#39;PROP.FCSEKETHST.in_brgew_tot&#39;]}" />
+<tpbc:datagridview2column id="g_45" propertyName="in_ntgew_tot" title="#{rr.fcs[&#39;PROP.FCSEKETHST.in_ntgew_tot&#39;]}" />
+<tpbc:datagridview2column id="g_46" propertyName="in_qtaxtag" title="#{rr.fcs[&#39;PROP.FCSEKETHST.in_qtaxtag&#39;]}" />
+<tpbc:datagridview2column id="g_47" propertyName="in_data_arrivo" title="#{rr.fcs[&#39;PROP.FCSEKETHST.in_data_arrivo&#39;]}" />
+</tdap:beangridwitheditor>
+</t:row>
+
+</t:layoutdefinition>

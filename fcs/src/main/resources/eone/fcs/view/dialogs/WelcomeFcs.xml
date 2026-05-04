@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8"?>
+<t:layoutdefinition
+    xmlns:t="http://www.captaincasa.com/controllibrary/t">
+
+    <t:pagebeanroot id="g_101" beantype="PageBeanComponent">
+        <t:pane id="g_102"
+            comment="Only one component is allowed below pagebeanroot!"
+            height="100%" width="100%">
+            <t:beanprocessing id="g_1"
+                beanbinding="#{d.WelcomeFcs}" />
+            <t:row id="g_6">
+                <t:overlayarea id="g_2" height="100%" width="100%">
+                    <t:overlayareabaseitem id="g_3">
+                        <t:image id="g_5" height="100%"
+                            image="#{d.WelcomeFcs.welcomeImage}"
+                            keepratiofitmode="cover" width="100%" />
+                    </t:overlayareabaseitem>
+                    <t:overlayareaitem id="g_8" height="100%"
+                        width="100%" zindex="2">
+                        <t:pane id="g_10" padding="20">
+                            <t:rowdistance id="g_37" height="100" />
+                            <t:row id="g_31">
+                                <t:coldistance id="g_35" width="150" />
+                                <t:label id="g_33" cutwidth="true"
+                                    font="size:50;weight:bold" foreground="#000000A0"
+                                    text="#{d.WelcomeFcs.welcomeHeadline}" width="100%" />
+                            </t:row>
+                            <t:rowdistance id="g_14" height="80%" />
+                            <t:row id="g_7">
+                                <t:coldistance id="g_18" width="80%" />
+                                <t:pane id="g_22" background="#FFFFFFA0" padding="40"
+                                    rounding="10" rowdistance="20">
+                                    <t:row id="g_23">
+                                        <t:label id="g_12" font="weight:bold;size:30"
+                                            foreground="#000000A0"
+                                            text="#{d.WelcomeFcs.welcomeTitle}" />
+                                    </t:row>
+                                    <t:row id="g_27">
+                                        <t:textpane id="g_29"
+                                            text="#{d.WelcomeFcs.welcomeDescription}" width="350" />
+                                    </t:row>
+                                </t:pane>
+                                <t:coldistance id="g_25" width="20%;100" />
+                            </t:row>
+                            <t:rowdistance id="g_16" height="20%;100" />
+                        </t:pane>
+                    </t:overlayareaitem>
+                </t:overlayarea>
+            </t:row>
+        </t:pane>
+    </t:pagebeanroot>
+
+</t:layoutdefinition>

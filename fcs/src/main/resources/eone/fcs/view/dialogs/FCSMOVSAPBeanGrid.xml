@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<t:layoutdefinition xmlns:t="http://www.CaptainCasa.com/controllibrary/t" 
+                    xmlns:tpbc="http://www.CaptainCasa.com/controllibrary/tpbc" 
+                    xmlns:tdap="http://www.CaptainCasa.com/controllibrary/tdap">
+
+<t:beanprocessing id="g_1" beanbinding="#{d.FCSMOVSAPBeanGrid}" />
+<t:row id="g_2" >
+    <t:pane id="g_100" width="100%" rowdistance="#{ccstylevalue[&#39;@defaultrowdistancebig@&#39;]}">
+        <t:row id="g_101">
+            <tdap:framelisteditor id="fle" pagebeanbinding="#{d.FCSMOVSAPBeanGrid.frame}" shownullcontent="true" width="100%">
+                <tdap:framelisteditorbody id="fleb" width="100%" >
+                    <t:row id="flebrow" >
+                        <t:fixgrid id="fgr" adapterbinding="#{d.FCSMOVSAPBeanGrid.gridAdapter}" width="100%">
+                            <t:gridcol id="gcstatus" width="30" >
+                                <t:image id="gcstatusimage" image=".{statusOverallImage}" stylevariant="ccdataapp_errorindicator_gridline" />
+                            </t:gridcol>
+                        </t:fixgrid>
+                    </t:row>
+                </tdap:framelisteditorbody>
+            </tdap:framelisteditor>
+        </t:row>
+        <t:row id="rowdet" rendered="#{d.FCSMOVSAPBeanGrid.availableSelectedBeanDetailUI}">
+            <t:pagebeaninclude id="det" pagebeanbinding="#{d.FCSMOVSAPBeanGrid.selectedBeanDetailUI}" />
+        </t:row>
+    </t:pane>
+</t:row>
+
+</t:layoutdefinition>

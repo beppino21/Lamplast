@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="utf-8"?>
+<t:layoutdefinition xmlns:t="http://www.captaincasa.com/controllibrary/t" xmlns:tdap="http://www.captaincasa.com/controllibrary/tdap" >
+
+<t:beanprocessing id="g_1" beanbinding="#{d.FCSMOVSAPDetail}" />
+<t:row id="g_22" >
+<tdap:framedetaileditor id="g_24" pagebeanbinding="#{d.FCSMOVSAPDetail.frame}" shownullcontent="true" >
+<tdap:framedetaileditorbody id="g_25" height="100%" rowdistance="#{ccstylevalue[&#39;@defaultrowdistance@&#39;]}" width="100%" >
+<tdap:rowareas id="g_26" >
+<tdap:containerarea id="g_27" text="Some title" >
+<t:row id="g_48" coldistance="#{ccstylevalue[&#39;@defaultcoldistance@&#39;]}" >
+<t:field id="g_2" adapterbinding="#{d.FCSMOVSAPDetail.adapters.movid}" />
+</t:row>
+<t:row id="g_3" coldistance="#{ccstylevalue[&#39;@defaultcoldistance@&#39;]}" >
+<t:field id="g_4" adapterbinding="#{d.FCSMOVSAPDetail.adapters.bwart}" />
+</t:row>
+<t:row id="g_5" coldistance="#{ccstylevalue[&#39;@defaultcoldistance@&#39;]}" >
+<t:field id="g_6" adapterbinding="#{d.FCSMOVSAPDetail.adapters.lifnr}" />
+</t:row>
+<t:row id="g_7" coldistance="#{ccstylevalue[&#39;@defaultcoldistance@&#39;]}" >
+<t:field id="g_8" adapterbinding="#{d.FCSMOVSAPDetail.adapters.kunnr}" />
+</t:row>
+<t:row id="g_9" coldistance="#{ccstylevalue[&#39;@defaultcoldistance@&#39;]}" >
+<t:field id="g_10" adapterbinding="#{d.FCSMOVSAPDetail.adapters.kostl}" />
+</t:row>
+<t:row id="g_11" coldistance="#{ccstylevalue[&#39;@defaultcoldistance@&#39;]}" >
+<t:field id="g_12" adapterbinding="#{d.FCSMOVSAPDetail.adapters.aufnr}" />
+</t:row>
+<t:row id="g_13" coldistance="#{ccstylevalue[&#39;@defaultcoldistance@&#39;]}" >
+<t:field id="g_14" adapterbinding="#{d.FCSMOVSAPDetail.adapters.prctr}" />
+</t:row>
+<t:row id="g_15" coldistance="#{ccstylevalue[&#39;@defaultcoldistance@&#39;]}" >
+<t:field id="g_16" adapterbinding="#{d.FCSMOVSAPDetail.adapters.sobkz}" />
+</t:row>
+<t:row id="g_17" coldistance="#{ccstylevalue[&#39;@defaultcoldistance@&#39;]}" >
+<t:field id="g_18" adapterbinding="#{d.FCSMOVSAPDetail.adapters.werks}" />
+</t:row>
+<t:row id="g_19" coldistance="#{ccstylevalue[&#39;@defaultcoldistance@&#39;]}" >
+<t:field id="g_20" adapterbinding="#{d.FCSMOVSAPDetail.adapters.lgort}" />
+</t:row>
+<t:row id="g_21" coldistance="#{ccstylevalue[&#39;@defaultcoldistance@&#39;]}" >
+<t:field id="g_49" adapterbinding="#{d.FCSMOVSAPDetail.adapters.matnr}" />
+</t:row>
+<t:row id="g_23" coldistance="#{ccstylevalue[&#39;@defaultcoldistance@&#39;]}" >
+<t:field id="g_50" adapterbinding="#{d.FCSMOVSAPDetail.adapters.charg}" />
+</t:row>
+<t:row id="g_51" coldistance="#{ccstylevalue[&#39;@defaultcoldistance@&#39;]}" >
+<t:formattedfield id="g_52" adapterbinding="#{d.FCSMOVSAPDetail.adapters.menge}" />
+</t:row>
+<t:row id="g_53" coldistance="#{ccstylevalue[&#39;@defaultcoldistance@&#39;]}" >
+<t:field id="g_28" adapterbinding="#{d.FCSMOVSAPDetail.adapters.werks_to}" />
+</t:row>
+<t:row id="g_29" coldistance="#{ccstylevalue[&#39;@defaultcoldistance@&#39;]}" >
+<t:field id="g_30" adapterbinding="#{d.FCSMOVSAPDetail.adapters.lgort_to}" />
+</t:row>
+<t:row id="g_31" coldistance="#{ccstylevalue[&#39;@defaultcoldistance@&#39;]}" >
+<t:field id="g_32" adapterbinding="#{d.FCSMOVSAPDetail.adapters.matnr_to}" />
+</t:row>
+<t:row id="g_33" coldistance="#{ccstylevalue[&#39;@defaultcoldistance@&#39;]}" >
+<t:field id="g_34" adapterbinding="#{d.FCSMOVSAPDetail.adapters.charg_to}" />
+</t:row>
+<t:row id="g_35" coldistance="#{ccstylevalue[&#39;@defaultcoldistance@&#39;]}" >
+<t:formattedfield id="g_36" adapterbinding="#{d.FCSMOVSAPDetail.adapters.menge_to}" />
+</t:row>
+<t:row id="g_37" coldistance="#{ccstylevalue[&#39;@defaultcoldistance@&#39;]}" >
+<t:field id="g_38" adapterbinding="#{d.FCSMOVSAPDetail.adapters.meins}" />
+</t:row>
+<t:row id="g_39" coldistance="#{ccstylevalue[&#39;@defaultcoldistance@&#39;]}" >
+<t:field id="g_40" adapterbinding="#{d.FCSMOVSAPDetail.adapters.wmsst}" />
+</t:row>
+<t:row id="g_41" coldistance="#{ccstylevalue[&#39;@defaultcoldistance@&#39;]}" >
+<t:calendarfield id="g_42" adapterbinding="#{d.FCSMOVSAPDetail.adapters.datum}" />
+</t:row>
+<t:row id="g_43" coldistance="#{ccstylevalue[&#39;@defaultcoldistance@&#39;]}" >
+<t:calendarfield id="g_44" adapterbinding="#{d.FCSMOVSAPDetail.adapters.uzeit}" />
+</t:row>
+<t:row id="g_45" coldistance="#{ccstylevalue[&#39;@defaultcoldistance@&#39;]}" >
+<t:field id="g_46" adapterbinding="#{d.FCSMOVSAPDetail.adapters.uname}" />
+</t:row>
+</tdap:containerarea>
+</tdap:rowareas>
+</tdap:framedetaileditorbody>
+</tdap:framedetaileditor>
+</t:row>
+
+</t:layoutdefinition>

@@ -1,0 +1,4 @@
+<resources>
+    <resource name="fcs"
+              package="bcigen.fcs.i18n"/>
+</resources>

@@ -1,0 +1,8 @@
+<!--
+This is only a copy!
+    The original information is kept in: resources/eclntjsfserver/config/resources.xml
+-->
+<resources>
+    <resource name="fcs"
+              package="bcigen.fcs.i18n"/>
+</resources>

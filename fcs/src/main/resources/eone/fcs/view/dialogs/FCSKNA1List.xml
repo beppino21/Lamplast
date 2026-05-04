@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<t:layoutdefinition xmlns:t="http://www.captaincasa.com/controllibrary/t" xmlns:tdap="http://www.captaincasa.com/controllibrary/tdap" xmlns:tpbc="http://www.captaincasa.com/controllibrary/tpbc" >
+
+<t:beanprocessing id="g_1" beanbinding="#{d.FCSKNA1List}" />
+<t:row id="g_16" >
+<tdap:beangridwitheditor id="g_4" pagebeanbinding="#{d.FCSKNA1List.gridWithEditor}" >
+<tpbc:datagridview2column id="g_18" propertyName="kunnr" title="#{rr.fcs[&#39;PROP.FCSKNA1.kunnr&#39;]}" />
+<tpbc:datagridview2column id="g_2" propertyName="name1" title="#{rr.fcs[&#39;PROP.FCSKNA1.name1&#39;]}" />
+<tpbc:datagridview2column id="g_3" propertyName="name2" title="#{rr.fcs[&#39;PROP.FCSKNA1.name2&#39;]}" />
+<tpbc:datagridview2column id="g_19" propertyName="stcd1" title="#{rr.fcs[&#39;PROP.FCSKNA1.stcd1&#39;]}" />
+<tpbc:datagridview2column id="g_5" propertyName="stcd2" title="#{rr.fcs[&#39;PROP.FCSKNA1.stcd2&#39;]}" />
+<tpbc:datagridview2column id="g_6" propertyName="stceg" title="#{rr.fcs[&#39;PROP.FCSKNA1.stceg&#39;]}" />
+<tpbc:datagridview2column id="g_7" propertyName="datum" title="#{rr.fcs[&#39;PROP.FCSKNA1.datum&#39;]}" />
+<tpbc:datagridview2column id="g_8" propertyName="uzeit" title="#{rr.fcs[&#39;PROP.FCSKNA1.uzeit&#39;]}" />
+<tpbc:datagridview2column id="g_9" propertyName="uname" title="#{rr.fcs[&#39;PROP.FCSKNA1.uname&#39;]}" />
+<tpbc:datagridview2column id="g_10" propertyName="updfl" title="#{rr.fcs[&#39;PROP.FCSKNA1.updfl&#39;]}" />
+</tdap:beangridwitheditor>
+</t:row>
+
+</t:layoutdefinition>

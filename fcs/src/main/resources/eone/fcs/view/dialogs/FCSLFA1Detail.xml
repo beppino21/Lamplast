@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<t:layoutdefinition xmlns:t="http://www.captaincasa.com/controllibrary/t" xmlns:tdap="http://www.captaincasa.com/controllibrary/tdap" >
+
+<t:beanprocessing id="g_1" beanbinding="#{d.FCSLFA1Detail}" />
+<t:row id="g_22" >
+<tdap:framedetaileditor id="g_24" pagebeanbinding="#{d.FCSLFA1Detail.frame}" shownullcontent="true" >
+<tdap:framedetaileditorbody id="g_25" height="100%" rowdistance="#{ccstylevalue[&#39;@defaultrowdistance@&#39;]}" width="100%" >
+<tdap:rowareas id="g_26" >
+<tdap:containerarea id="g_27" text="Some title" >
+<t:row id="g_29" coldistance="#{ccstylevalue[&#39;@defaultcoldistance@&#39;]}" >
+<t:field id="g_2" adapterbinding="#{d.FCSLFA1Detail.adapters.lifnr}" />
+</t:row>
+<t:row id="g_3" coldistance="#{ccstylevalue[&#39;@defaultcoldistance@&#39;]}" >
+<t:field id="g_4" adapterbinding="#{d.FCSLFA1Detail.adapters.name1}" />
+</t:row>
+<t:row id="g_5" coldistance="#{ccstylevalue[&#39;@defaultcoldistance@&#39;]}" >
+<t:field id="g_6" adapterbinding="#{d.FCSLFA1Detail.adapters.name2}" />
+</t:row>
+<t:row id="g_7" coldistance="#{ccstylevalue[&#39;@defaultcoldistance@&#39;]}" >
+<t:field id="g_8" adapterbinding="#{d.FCSLFA1Detail.adapters.stcd1}" />
+</t:row>
+<t:row id="g_9" coldistance="#{ccstylevalue[&#39;@defaultcoldistance@&#39;]}" >
+<t:field id="g_10" adapterbinding="#{d.FCSLFA1Detail.adapters.stcd2}" />
+</t:row>
+<t:row id="g_11" coldistance="#{ccstylevalue[&#39;@defaultcoldistance@&#39;]}" >
+<t:field id="g_12" adapterbinding="#{d.FCSLFA1Detail.adapters.stceg}" />
+</t:row>
+<t:row id="g_13" coldistance="#{ccstylevalue[&#39;@defaultcoldistance@&#39;]}" >
+<t:calendarfield id="g_14" adapterbinding="#{d.FCSLFA1Detail.adapters.datum}" />
+</t:row>
+<t:row id="g_15" coldistance="#{ccstylevalue[&#39;@defaultcoldistance@&#39;]}" >
+<t:calendarfield id="g_16" adapterbinding="#{d.FCSLFA1Detail.adapters.uzeit}" />
+</t:row>
+<t:row id="g_17" coldistance="#{ccstylevalue[&#39;@defaultcoldistance@&#39;]}" >
+<t:field id="g_18" adapterbinding="#{d.FCSLFA1Detail.adapters.uname}" />
+</t:row>
+<t:row id="g_19" coldistance="#{ccstylevalue[&#39;@defaultcoldistance@&#39;]}" >
+<t:checkbox id="g_20" adapterbinding="#{d.FCSLFA1Detail.adapters.updfl}" />
+</t:row>
+</tdap:containerarea>
+</tdap:rowareas>
+</tdap:framedetaileditorbody>
+</tdap:framedetaileditor>
+</t:row>
+
+</t:layoutdefinition>

@@ -1,0 +1,5 @@
+<system>
+    <sessionmanagement type="COOKIE"/>
+    <streamstore name="org.eclnt.jsfserver.streamstore.StreamStoreJDBC" />
+    <jdbcconnectionprovider name="org.eclnt.ccee.db.util.StreamStoreJDBCConnectionProvider"/>
+</system>

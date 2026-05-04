@@ -1,0 +1,296 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<metaData authorityRequestClassPackage="org.eclnt.dataapp.logic.authority" beanGridUIBaseClassName="org.eclnt.dataapp.view.app.util.EditorBeanGridFrameListEditor" controllerBaseClassName="org.eclnt.dataapp.controller.app.BeanInstanceControllerDOFW" controllerClassPackage="eone.fcs.logic.controllers" dataContextBaseClassName="org.eclnt.dataapp.logic.entities.datacontext.DCDataContext" dataContextClassGeneratedSuffix="_GENERATED" dataContextClassPackage="eone.fcs.data.datacontexts" dataContextClassPrefix="DC" detailUIBaseClassName="org.eclnt.dataapp.view.app.util.EditorBeanInstanceFrameOutestEditor" entityClassPackage="eone.fcs.data.entities" entityClassPrefix="DO" entityTablePrefix="TAB" entityViewClassPrefix="VI" id="fcs" isPublic="false" listControllerBaseClassName="org.eclnt.dataapp.controller.app.BeanListControllerBaseDOFW" listOneCellUIBaseClassName="org.eclnt.jsfserver.pagebean.PageBean" listUIBaseClassName="org.eclnt.jsfserver.pagebean.PageBean" tenantColumn="tenant" text="fcs" viewClassPackage="eone.fcs.view.dialogs">
+    <dataType charMaxLength="12" className="String" id="AUFNR" isPublic="false" text="Ordine/Commessa"/>
+    <dataType className="UUID" id="BEMID" isPublic="false" text="BEM ID"/>
+    <dataType className="LocalDate" id="BLDAT" isPublic="false" text="Data doc. di riferimento"/>
+    <dataType charMaxLength="3" className="String" id="BSTME" isPublic="false" text="UM dell'ordine d'acquisto"/>
+    <dataType charMaxLength="3" className="String" id="BWART" isPublic="false" text="Tipo movimento"/>
+    <dataType charMaxLength="10" className="String" id="CHARG_D" isPublic="false" text="Numero partita"/>
+    <dataType className="LocalDate" id="DATUM" isPublic="false" text="Data"/>
+    <dataType charMaxLength="10" className="String" id="EBELN" isPublic="false" text="Numero Ordine d'acquisto"/>
+    <dataType charMaxLength="5" className="String" id="EBELP" isPublic="false" text="Numero Posizione Ordine d'acquisto"/>
+    <dataType className="LocalDate" id="EINDT" isPublic="false" text="Data di consegna della posizione"/>
+    <dataType charMaxLength="12" className="String" id="ERNAM" isPublic="false" text="Creato da"/>
+    <dataType charMaxLength="4" className="String" id="ETENR" isPublic="false" text="Numero schedulazione"/>
+    <dataType className="Float" id="ETMEN" isPublic="false" numericPrecision="13" numericScale="3" text="Quantità schedulata"/>
+    <dataType charMaxLength="3" className="String" id="GEWEI" isPublic="false" text="Unità di peso"/>
+    <dataType charMaxLength="19" className="String" id="ID_EKET" isPublic="false" text="Stringa unificata chiave EKET"/>
+    <dataType charMaxLength="2" className="String" id="KAPPL" isPublic="false" text="Applicazione"/>
+    <dataType charMaxLength="10" className="String" id="KOSTL" isPublic="false" text="Centro di Costo"/>
+    <dataType charMaxLength="10" className="String" id="KUNNR" isPublic="false" text="Codice Cliente"/>
+    <dataType charMaxLength="4" className="String" id="LGORT_D" isPublic="false" text="Magazzino"/>
+    <dataType charMaxLength="10" className="String" id="LIFNR" isPublic="false" text="Codice Fornitore"/>
+    <dataType charMaxLength="40" className="String" id="MAKTX" isPublic="false" text="Testo breve materiale"/>
+    <dataType charMaxLength="9" className="String" id="MATKL" isPublic="false" text="Gruppo merci"/>
+    <dataType charMaxLength="18" className="String" id="MATNR" isPublic="false" text="Codice materiale"/>
+    <dataType charMaxLength="10" className="String" id="MBLNR" isPublic="false" text="Numero documento materiale"/>
+    <dataType charMaxLength="3" className="String" id="MEINS" isPublic="false" text="Unità di misura"/>
+    <dataType className="Float" id="MENGE_D" isPublic="false" numericPrecision="13" numericScale="3" text="Quantità"/>
+    <dataType charMaxLength="4" className="String" id="MJAHR" isPublic="false" text="Esercizio documento materiale"/>
+    <dataType charMaxLength="4" className="String" id="MTART" isPublic="false" text="Tipo materiale"/>
+    <dataType charMaxLength="80" className="String" id="NAME1" isPublic="false" text="Nome"/>
+    <dataType charMaxLength="80" className="String" id="NAME2" isPublic="false" text="Nome 2"/>
+    <dataType charMaxLength="10" className="String" id="PRCTR" isPublic="false" text="Profit Center"/>
+    <dataType charMaxLength="4" className="String" id="RESWK" isPublic="false" text="Devisione fornitrice dell'ordne di trasporto"/>
+    <dataType charMaxLength="1" className="String" id="SOBKZ" isPublic="false" text="Cd. stock speciale"/>
+    <dataType charMaxLength="16" className="String" id="STCD1" isPublic="false" text="Partita IVA 1"/>
+    <dataType charMaxLength="11" className="String" id="STCD2" isPublic="false" text="Partita IVA"/>
+    <dataType charMaxLength="20" className="String" id="STCEG" isPublic="false" text="Partita IVA CEE"/>
+    <dataType charMaxLength="20" className="String" id="TRAID" isPublic="false" text="Identificazione trasporto"/>
+    <dataType charMaxLength="12" className="String" id="UNAME" isPublic="false" text="Utente"/>
+    <dataType className="Boolean" id="UPDFL" isPublic="false" text="Flag di aggiornamento"/>
+    <dataType className="LocalTime" id="UZEIT" isPublic="false" text="Ora"/>
+    <dataType className="Float" id="VOMNG" isPublic="false" numericPrecision="13" numericScale="3" text="Quantità precedente per schedulazioni"/>
+    <dataType className="Float" id="WAMNG" isPublic="false" numericPrecision="13" numericScale="3" text="Quantità uscita"/>
+    <dataType className="Float" id="WEENG" isPublic="false" numericPrecision="13" numericScale="3" text="Quantità entrata merci"/>
+    <dataType charMaxLength="4" className="String" id="WERKS_D" isPublic="false" text="Divisione"/>
+    <dataType charMaxLength="1" className="String" id="WMSST" isPublic="false" text="SAP-FCS Event Status"/>
+    <dataType charMaxLength="16" className="String" id="XBLNR" isPublic="false" text="Num. doc. di riferimento"/>
+    <dataType className="Boolean" id="XCHPF" isPublic="false" text="Obbligo gestione a partita"/>
+    <dataType className="Float" id="ZBRGEW_EXANTE" isPublic="false" numericPrecision="13" numericScale="3" text="Peso lordo &quot;Ex ante&quot;"/>
+    <dataType className="Float" id="ZBRGEW_EXPOST" isPublic="false" numericPrecision="13" numericScale="3" text="Peso lordo &quot;Ex post&quot;"/>
+    <dataType className="Integer" id="ZCOLLI_ROW" isPublic="false" numericPrecision="5" text="Numero colli per posizione"/>
+    <dataType className="Integer" id="ZFCS_BSTMEXPALLET" isPublic="false" numericPrecision="10" text="Qta in UM di movimentazione per Pallet (Bag x Pallet)"/>
+    <dataType className="Float" id="ZFCS_FILLER" isPublic="false" numericPrecision="13" numericScale="3" text="A completamento Qta x TAG"/>
+    <dataType className="LocalDate" id="ZFCS_IN_DATA_ARRIVO" isPublic="false" text="Data arrivo (data registrazione EM)"/>
+    <dataType className="Float" id="ZFCS_IN_QTAXTAG" isPublic="false" numericPrecision="13" numericScale="3" text="Quantità media effettiva per TAG"/>
+    <dataType className="Float" id="ZFCS_MENGEXBSTME" isPublic="false" numericPrecision="10" numericScale="3" text="Quantità per UM di acquisizione e movimentazione"/>
+    <dataType className="Integer" id="ZFCS_NRBAG" isPublic="false" numericPrecision="10" text="Numero di BAG"/>
+    <dataType className="Integer" id="ZFCS_NRTAG" isPublic="false" numericPrecision="10" text="Numero do TAG"/>
+    <dataType className="Float" id="ZFCS_QTAXBAG" isPublic="false" numericPrecision="13" numericScale="3" text="Quantità teorica per per BAK"/>
+    <dataType className="Float" id="ZFCS_QTAXTAG" isPublic="false" numericPrecision="13" numericScale="3" text="Quantità teorica per TAG"/>
+    <dataType className="Float" id="ZNTGEW_EXANTE" isPublic="false" numericPrecision="13" numericScale="3" text="Peso netto &quot;Ex ante&quot;"/>
+    <dataType className="Float" id="ZNTGEW_EXPOST" isPublic="false" numericPrecision="13" numericScale="3" text="Peso netto &quot;Ex post&quot;"/>
+    <entity id="FCSEKET" isPublic="true" text="Scehdulazioni attese">
+        <property dataType="EBELN" id="ebeln" key="true" mandatory="false" sequence="1" text="Numero del documento d'acquisto"/>
+        <property dataType="EBELP" id="ebelp" key="true" mandatory="false" sequence="2" text="Posizione del documento"/>
+        <property dataType="ETENR" id="etenr" key="true" mandatory="false" sequence="3" text="Numero schedulazione"/>
+        <property dataType="VOMNG" id="ameng" mandatory="false" sequence="18" text="Quantità precedente per schedulazione"/>
+        <property dataType="BEMID" id="bemid" mandatory="false" sequence="36" text="BEM ID"/>
+        <property dataType="ZBRGEW_EXANTE" id="brgew_row" mandatory="false" sequence="31" text="Peso lordo &quot;Ex ante&quot;"/>
+        <property dataType="BSTME" id="bstme" mandatory="false" sequence="23" text="UM dell'ordin d'acquisto"/>
+        <property dataType="ZFCS_BSTMEXPALLET" id="bstmexpallet" mandatory="false" sequence="26" text="Quantità in UM di movimentazione (Bag x Pallet)"/>
+        <property dataType="CHARG_D" id="charg" mandatory="false" sequence="13" text="Partita"/>
+        <property dataType="DATUM" id="datum" mandatory="false" sequence="33" text="Data"/>
+        <property dataType="EINDT" id="eindt" mandatory="false" sequence="7" text="Data di consegna"/>
+        <property dataType="ERNAM" id="ernam" mandatory="false" sequence="35" text="Creato da"/>
+        <property dataType="GEWEI" id="gewei" mandatory="false" sequence="37" text="Unità di peso"/>
+        <property dataType="ID_EKET" id="id_eket" mandatory="false" sequence="5" text="Chiave concatenata"/>
+        <property dataType="BLDAT" id="in_bldat" mandatory="false" sequence="40" text="Data Doc. di riferimento"/>
+        <property dataType="ZBRGEW_EXPOST" id="in_brgew_row" mandatory="false" sequence="50" text="Peso lordo &quot;Ex post&quot;"/>
+        <property dataType="ZBRGEW_EXPOST" id="in_brgew_tot" mandatory="false" sequence="43" text="Peso lordo &quot;Ex post&quot;"/>
+        <property dataType="CHARG_D" id="in_charg" mandatory="false" sequence="45" text="Partita"/>
+        <property dataType="ZCOLLI_ROW" id="in_colli_row" mandatory="false" sequence="49" text="Numero colli per posizioni"/>
+        <property dataType="ZCOLLI_ROW" id="in_colli_tot" mandatory="false" sequence="42" text="Num. colli per posizione"/>
+        <property dataType="ZFCS_IN_DATA_ARRIVO" id="in_data_arrivo" mandatory="false" sequence="53" text="Data arrivo (data reg. EM)"/>
+        <property dataType="LGORT_D" id="in_lgort" mandatory="false" sequence="48" text="Magazzino"/>
+        <property dataType="MENGE_D" id="in_menge" mandatory="false" sequence="46" text="Quantità"/>
+        <property dataType="ZNTGEW_EXPOST" id="in_ntgew_row" mandatory="false" sequence="51" text="Peso netto &quot;Ex post&quot;"/>
+        <property dataType="ZNTGEW_EXPOST" id="in_ntgew_tot" mandatory="false" sequence="44" text="Peso netto &quot;Ex post&quot;"/>
+        <property dataType="ZFCS_IN_QTAXTAG" id="in_qtaxtag" mandatory="false" sequence="52" text="Qta media effettiva per TAG"/>
+        <property dataType="TRAID" id="in_traid" mandatory="false" sequence="41" text="Identificazione trasporto"/>
+        <property dataType="WERKS_D" id="in_werks" mandatory="false" sequence="47" text="Divisione"/>
+        <property dataType="XBLNR" id="in_xblnr" mandatory="false" sequence="39" text="Num. Doc. di riferimento"/>
+        <property dataType="KAPPL" id="kappl" mandatory="false" sequence="4" text="Applicazione"/>
+        <property dataType="LGORT_D" id="lgort" mandatory="false" sequence="16" text="Magazzino"/>
+        <property dataType="LIFNR" id="lifnr" mandatory="false" sequence="9" text="Fornitore"/>
+        <property dataType="MAKTX" id="maktx" mandatory="false" sequence="14" text="Testo breve materiale"/>
+        <property dataType="MATNR" id="matnr" mandatory="false" sequence="12" text="Codice materiale"/>
+        <property dataType="MEINS" id="meins" mandatory="false" sequence="22" text="Unità di misura di base"/>
+        <property dataType="ETMEN" id="menge" mandatory="false" sequence="17" text="Quantità schedulata"/>
+        <property dataType="MENGE_D" id="menge_open" mandatory="false" sequence="21" text="Quantità open"/>
+        <property dataType="MENGE_D" id="mengexbstme" mandatory="false" sequence="24" text="Quantità"/>
+        <property dataType="MTART" id="mtart" mandatory="false" sequence="11" text="Tipo di materiale"/>
+        <property dataType="NAME1" id="name1" mandatory="false" sequence="10" text="Nome"/>
+        <property dataType="ZFCS_NRBAG" id="nrbag" mandatory="false" sequence="30" text="Numero di BAG"/>
+        <property dataType="ZFCS_NRTAG" id="nrtag" mandatory="false" sequence="29" text="Numero di TAG"/>
+        <property dataType="ZNTGEW_EXANTE" id="ntgew_row" mandatory="false" sequence="32" text="peso netto &quot;Ex ante&quot;"/>
+        <property dataType="ZFCS_QTAXBAG" id="qtaxbag" mandatory="false" sequence="27" text="Quantità teorica x BAG"/>
+        <property dataType="ZFCS_QTAXTAG" id="qtaxtag" mandatory="false" sequence="25" text="Quantità teorica per TAG"/>
+        <property dataType="RESWK" id="reswk" mandatory="false" sequence="8" text="Divisione fornitrice"/>
+        <property dataType="ZFCS_FILLER" id="tag_filler" mandatory="false" sequence="28" text="A completamento Qta x BAG"/>
+        <property dataType="UZEIT" id="uzeit" mandatory="false" sequence="34" text="Ora"/>
+        <property dataType="WAMNG" id="wamng" mandatory="false" sequence="20" text="Quantità uscita"/>
+        <property dataType="WEENG" id="wemng" mandatory="false" sequence="19" text="Quantità entrata merci"/>
+        <property dataType="WERKS_D" id="werks" mandatory="false" sequence="15" text="Divisione"/>
+        <property dataType="WMSST" id="wmsst" mandatory="false" sequence="38" text="SAP-FCS Event Status"/>
+        <property dataType="XCHPF" id="xchpf" mandatory="false" sequence="6" text="Obbligo gestione a partita"/>
+    </entity>
+    <entity id="FCSEKETHST" isPublic="true" text="Storicizzazione FCSEKET">
+        <property dataType="EBELN" id="ebeln" key="true" mandatory="false" sequence="1" text="Numero ordine d'acquisto"/>
+        <property dataType="EBELP" id="ebelp" key="true" mandatory="false" sequence="2" text="Numero posizione ordine d'acquisto"/>
+        <property dataType="ETENR" id="etenr" key="true" mandatory="false" sequence="3" text="Numero schedulazione"/>
+        <property dataType="MBLNR" id="mblnr" key="true" mandatory="false" sequence="4" text="Numero documento materiale"/>
+        <property dataType="MJAHR" id="mjahr" key="true" mandatory="false" sequence="5" text="Esercizio documento materiale"/>
+        <property dataType="VOMNG" id="ameng" mandatory="false" sequence="19" text="Qta precedente per schedulazioni"/>
+        <property dataType="BEMID" id="bemid" mandatory="false" sequence="37" text="BEM ID"/>
+        <property dataType="ZBRGEW_EXANTE" id="brgew_row" mandatory="false" sequence="32" text="Peso lordo &quot;Ex ante&quot;"/>
+        <property dataType="BSTME" id="bstme" mandatory="false" sequence="24" text="UM dell'ordine d'acquisto"/>
+        <property dataType="ZFCS_BSTMEXPALLET" id="bstmexpallet" mandatory="false" sequence="27" text="Qta di acquisto per pallet"/>
+        <property dataType="CHARG_D" id="charg" mandatory="false" sequence="14" text="Partita"/>
+        <property dataType="DATUM" id="datum" mandatory="false" sequence="34" text="Data"/>
+        <property dataType="EINDT" id="eindt" mandatory="false" sequence="9" text="Data di consegna "/>
+        <property dataType="ERNAM" id="ernam" mandatory="false" sequence="36" text="Utente"/>
+        <property dataType="GEWEI" id="gewei" mandatory="false" sequence="38" text="Unità di peso"/>
+        <property dataType="ID_EKET" id="id_eket" mandatory="false" sequence="7" text="Chiave concatenata"/>
+        <property dataType="BLDAT" id="in_bldat" mandatory="false" sequence="41" text="Data del documento di riferimento"/>
+        <property dataType="ZBRGEW_EXPOST" id="in_brgew_tot" mandatory="false" sequence="44" text="Peso lordo &quot;Ex post&quot;"/>
+        <property dataType="ZCOLLI_ROW" id="in_colli_tot" mandatory="false" sequence="43" text="Totale colli per posizione"/>
+        <property dataType="ZFCS_IN_DATA_ARRIVO" id="in_data_arrivo" mandatory="false" sequence="47" text="Data arrivo (data reg. EM)"/>
+        <property dataType="ZNTGEW_EXPOST" id="in_ntgew_tot" mandatory="false" sequence="45" text="Peso netto &quot;Ex post&quot;"/>
+        <property dataType="ZFCS_IN_QTAXTAG" id="in_qtaxtag" mandatory="false" sequence="46" text="Qta media effettiva per TAG"/>
+        <property dataType="TRAID" id="in_traid" mandatory="false" sequence="42" text="Identificazione trasporto"/>
+        <property dataType="XBLNR" id="in_xblnr" mandatory="false" sequence="40" text="Numero del documento di riferimento"/>
+        <property dataType="KAPPL" id="kappl" mandatory="false" sequence="6" text="Applicazione"/>
+        <property dataType="LGORT_D" id="lgort" mandatory="false" sequence="17" text="Magazzino"/>
+        <property dataType="LIFNR" id="lifnr" mandatory="false" sequence="11" text="Codice fornitore"/>
+        <property dataType="MAKTX" id="maktx" mandatory="false" sequence="15" text="Testo breve materiale"/>
+        <property dataType="MEINS" id="meins" mandatory="false" sequence="23" text="UM di misura di base"/>
+        <property dataType="MENGE_D" id="menge" mandatory="false" sequence="18" text="Quantità schedulata"/>
+        <property dataType="MENGE_D" id="menge_open" mandatory="false" sequence="22" text="Quantità attesa"/>
+        <property dataType="ZFCS_MENGEXBSTME" id="mengexbstme" mandatory="false" sequence="25" text="Quantità x UM di acquisto"/>
+        <property dataType="MTART" id="mtart" mandatory="false" sequence="13" text="Tipo di materiale"/>
+        <property dataType="NAME1" id="name1" mandatory="false" sequence="12" text="Nome fornitore"/>
+        <property dataType="ZFCS_NRBAG" id="nrbag" mandatory="false" sequence="31" text="Numero di BAG"/>
+        <property dataType="ZFCS_NRTAG" id="nrtag" mandatory="false" sequence="30" text="Numero di TAG"/>
+        <property dataType="ZNTGEW_EXANTE" id="ntgew_row" mandatory="false" sequence="33" text="Peso netto &quot;Ex ante&quot;"/>
+        <property dataType="ZFCS_QTAXBAG" id="qtaxbag" mandatory="false" sequence="28" text="Quantità teorica per BAG"/>
+        <property dataType="ZFCS_QTAXTAG" id="qtaxtag" mandatory="false" sequence="26" text="Qta teorica per TAG"/>
+        <property dataType="RESWK" id="reswk" mandatory="false" sequence="10" text="Divisione fornitrice"/>
+        <property dataType="ZFCS_FILLER" id="tag_filler" mandatory="false" sequence="29" text="A completamento qta x TAG"/>
+        <property dataType="UZEIT" id="uzeit" mandatory="false" sequence="35" text="Ora"/>
+        <property dataType="MENGE_D" id="wamng" mandatory="false" sequence="21" text="Qta uscita"/>
+        <property dataType="MENGE_D" id="wemng" mandatory="false" sequence="20" text="Qta entrata merci"/>
+        <property dataType="WERKS_D" id="werks" mandatory="false" sequence="16" text="Divisione"/>
+        <property dataType="WMSST" id="wmsst" mandatory="false" sequence="39" text="SAP-FCS Event Status"/>
+        <property dataType="XCHPF" id="xchpf" mandatory="false" sequence="8" text="Obbligo gestione a partita"/>
+    </entity>
+    <entity id="FCSKNA1" isPublic="true" text="Anagrafiche Clienti esposte per FCS">
+        <property dataType="KUNNR" id="kunnr" key="true" mandatory="false" sequence="1" text="Codice Cliente"/>
+        <property dataType="DATUM" id="datum" mandatory="false" sequence="7" text="Data"/>
+        <property dataType="NAME1" id="name1" mandatory="false" sequence="2" text="Nome"/>
+        <property dataType="NAME2" id="name2" mandatory="false" sequence="3" text="Nome 2"/>
+        <property dataType="STCD1" id="stcd1" mandatory="false" sequence="4" text="Partita IVA 1"/>
+        <property dataType="STCD2" id="stcd2" mandatory="false" sequence="5" text="Partita IVA"/>
+        <property dataType="STCEG" id="stceg" mandatory="false" sequence="6" text="Partita IVA CEE"/>
+        <property dataType="UNAME" id="uname" mandatory="false" sequence="9" text="Utente"/>
+        <property dataType="UPDFL" id="updfl" mandatory="false" sequence="10" text="Flag aggiornamento"/>
+        <property dataType="UZEIT" id="uzeit" mandatory="false" sequence="8" text="Ora"/>
+    </entity>
+    <entity id="FCSLFA1" isPublic="true" text="Anagrafiche Fornitori esposte per FCS">
+        <property dataType="LIFNR" id="lifnr" key="true" mandatory="false" sequence="1" text="Codice Fornitore"/>
+        <property dataType="DATUM" id="datum" mandatory="false" sequence="7" text="Data"/>
+        <property dataType="NAME1" id="name1" mandatory="false" sequence="2" text="Nome"/>
+        <property dataType="NAME2" id="name2" mandatory="false" sequence="3" text="Nome 2"/>
+        <property dataType="STCD1" id="stcd1" mandatory="false" sequence="4" text="Partita IVA 1"/>
+        <property dataType="STCD2" id="stcd2" mandatory="false" sequence="5" text="Partita IVA"/>
+        <property dataType="STCEG" id="stceg" mandatory="false" sequence="6" text="Partita IVA CEE"/>
+        <property dataType="UNAME" id="uname" mandatory="false" sequence="9" text="Utente"/>
+        <property dataType="UPDFL" id="updfl" mandatory="false" sequence="10" text="Flag di aggiornamento"/>
+        <property dataType="UZEIT" id="uzeit" mandatory="false" sequence="8" text="Ora"/>
+    </entity>
+    <entity id="FCSMARA" isPublic="true" text="eOne: esportazione anagrafica Materiali per FCS">
+        <property dataType="MATNR" id="matnr" key="true" mandatory="false" sequence="1" text="Codice materiale"/>
+        <property dataType="BSTME" id="bstme" mandatory="false" sequence="6" text="Unità di misura dell'ordine d'acquisto"/>
+        <property dataType="DATUM" id="datum" mandatory="false" sequence="7" text="Data"/>
+        <property dataType="MAKTX" id="maktx" mandatory="false" sequence="2" text="Descrizione materiale"/>
+        <property dataType="MATKL" id="matkl" mandatory="false" sequence="4" text="Gruppo merci"/>
+        <property dataType="MEINS" id="meins" mandatory="false" sequence="5" text="Unità di misura di base"/>
+        <property dataType="MTART" id="mtart" mandatory="false" sequence="3" text="Tipo di materiale"/>
+        <property dataType="UNAME" id="uname" mandatory="false" sequence="9" text="Nome utente"/>
+        <property dataType="UPDFL" id="updfl" mandatory="false" sequence="10" text="Flag di aggiornamento"/>
+        <property dataType="UZEIT" id="uzeit" mandatory="false" sequence="8" text="Ora"/>
+    </entity>
+    <entity id="FCSMOVSAP" isPublic="true" text="SAP-FCS: Movimenti MM - Magazzino">
+        <property dataType="ccda_base.UUID" id="movid" key="true" mandatory="false" sequence="1" text="MOV ID"/>
+        <property dataType="AUFNR" id="aufnr" mandatory="false" sequence="6" text="Ordine/Commessa"/>
+        <property dataType="BWART" id="bwart" mandatory="false" sequence="2" text="Tipo moviment"/>
+        <property dataType="CHARG_D" id="charg" mandatory="false" sequence="12" text="partita"/>
+        <property dataType="CHARG_D" id="charg_to" mandatory="false" sequence="17" text="Partita di destinazione"/>
+        <property dataType="DATUM" id="datum" mandatory="false" sequence="21" text="Data "/>
+        <property dataType="KOSTL" id="kostl" mandatory="false" sequence="5" text="Centro di Costo"/>
+        <property dataType="KUNNR" id="kunnr" mandatory="false" sequence="4" text="Codice Cliente"/>
+        <property dataType="LGORT_D" id="lgort" mandatory="false" sequence="10" text="Magazzino"/>
+        <property dataType="LGORT_D" id="lgort_to" mandatory="false" sequence="15" text="Magazzino di destinazione"/>
+        <property dataType="LIFNR" id="lifnr" mandatory="false" sequence="3" text="Codice Fornitore"/>
+        <property dataType="MATNR" id="matnr" mandatory="false" sequence="11" text="Materiale"/>
+        <property dataType="MATNR" id="matnr_to" mandatory="false" sequence="16" text="Materiale di destinazione"/>
+        <property dataType="MEINS" id="meins" mandatory="false" sequence="19" text="Unità di misura di base"/>
+        <property dataType="MENGE_D" id="menge" mandatory="false" sequence="13" text="Quantità"/>
+        <property dataType="MENGE_D" id="menge_to" mandatory="false" sequence="18" text="Quantità di arrivo"/>
+        <property dataType="PRCTR" id="prctr" mandatory="false" sequence="7" text="Profit Center"/>
+        <property dataType="SOBKZ" id="sobkz" mandatory="false" sequence="8" text="Cd. stock speciale"/>
+        <property dataType="UNAME" id="uname" mandatory="false" sequence="23" text="Utente"/>
+        <property dataType="UZEIT" id="uzeit" mandatory="false" sequence="22" text="Ora"/>
+        <property dataType="WERKS_D" id="werks" mandatory="false" sequence="9" text="Divisione"/>
+        <property dataType="WERKS_D" id="werks_to" mandatory="false" sequence="14" text="Divisione di destinazione"/>
+        <property dataType="WMSST" id="wmsst" mandatory="false" sequence="20" text="SAP-FCS Event Status"/>
+    </entity>
+    <entity id="FCSMSEG" isPublic="true" text="Per registrazione a fronte di scarico ZFCS_EKET">
+        <property dataType="EBELN" id="ebeln" key="true" mandatory="false" sequence="1" text="Numero ordine d'acquisto"/>
+        <property dataType="EBELP" id="ebelp" key="true" mandatory="false" sequence="2" text="Posizione ordine d'acquisto"/>
+        <property dataType="ETENR" id="etenr" key="true" mandatory="false" sequence="3" text="Numero schedulazione"/>
+        <property dataType="CHARG_D" id="in_charg" key="true" mandatory="false" sequence="5" text="Numero partita"/>
+        <property dataType="XBLNR" id="in_xblnr" key="true" mandatory="false" sequence="4" text="Numero documento di riferimento"/>
+        <property dataType="BEMID" id="bemid" mandatory="false" sequence="8" text="BEM ID"/>
+        <property dataType="CHARG_D" id="charg" mandatory="false" sequence="11" text="Partita"/>
+        <property dataType="DATUM" id="datum" mandatory="true" sequence="17" text="Data"/>
+        <property dataType="ERNAM" id="ernam" mandatory="false" sequence="19" text="Utente"/>
+        <property dataType="ID_EKET" id="id_eket" mandatory="false" sequence="7" text="Chiave concatenata"/>
+        <property dataType="LGORT_D" id="in_lgort" mandatory="false" sequence="16" text="Magazzino IN"/>
+        <property dataType="MENGE_D" id="in_menge" mandatory="false" sequence="14" text="Quantità IN"/>
+        <property dataType="WERKS_D" id="in_werks" mandatory="false" sequence="15" text="Divisione IN"/>
+        <property dataType="KAPPL" id="kappl" mandatory="false" sequence="6" text="Applicazione "/>
+        <property dataType="MAKTX" id="maktx" mandatory="false" sequence="12" text="Testo breve materiale"/>
+        <property dataType="MEINS" id="meins" mandatory="false" sequence="13" text="UM di base"/>
+        <property dataType="MTART" id="mtart" mandatory="false" sequence="9" text="Tipo di materiale"/>
+        <property dataType="UZEIT" id="uzeit" mandatory="false" sequence="18" text="ora"/>
+        <property dataType="XCHPF" id="xchpf" mandatory="false" sequence="10" text="Obbligo gestione a partita"/>
+    </entity>
+    <entity id="FCSMSEGHST" isPublic="true" text="Stircizzazione di ZFCSMSEG">
+        <property dataType="EBELN" id="ebeln" key="true" mandatory="false" sequence="1" text="Numero ordine d'acquisto"/>
+        <property dataType="EBELP" id="ebelp" key="true" mandatory="false" sequence="2" text="Posizione ordine d'acquisto"/>
+        <property dataType="ETENR" id="etenr" key="true" mandatory="false" sequence="3" text="Numero schedulazione"/>
+        <property dataType="CHARG_D" id="in_charg" key="true" mandatory="false" sequence="5" text="partita"/>
+        <property dataType="XBLNR" id="in_xblnr" key="true" mandatory="false" sequence="4" text="Numero documento di riferimento"/>
+        <property dataType="MBLNR" id="mblnr" key="true" mandatory="false" sequence="6" text="Numero documento materiale"/>
+        <property dataType="MJAHR" id="mjahr" key="true" mandatory="false" sequence="7" text="Esercizio documento materiale"/>
+        <property dataType="BEMID" id="bemid" mandatory="false" sequence="10" text="BEM ID"/>
+        <property dataType="CHARG_D" id="charg" mandatory="false" sequence="13" text="Partita"/>
+        <property dataType="DATUM" id="datum" mandatory="false" sequence="19" text="Data"/>
+        <property dataType="ERNAM" id="ernam" mandatory="false" sequence="21" text="Utente"/>
+        <property dataType="ID_EKET" id="id_eket" mandatory="false" sequence="9" text="Chiave concatenata"/>
+        <property dataType="LGORT_D" id="in_lgort" mandatory="false" sequence="18" text="Magazzino IN"/>
+        <property dataType="MENGE_D" id="in_mange" mandatory="false" sequence="16" text="Quantità IN"/>
+        <property dataType="WERKS_D" id="in_werks" mandatory="false" sequence="17" text="Divisione IN"/>
+        <property dataType="KAPPL" id="kappl" mandatory="false" sequence="8" text="Applicazione "/>
+        <property dataType="MAKTX" id="maktx" mandatory="false" sequence="14" text="Testo breve materiale"/>
+        <property dataType="MATNR" id="matnr" mandatory="false" sequence="12" text="Codice materiale"/>
+        <property dataType="MEINS" id="meins" mandatory="false" sequence="15" text="UM di base"/>
+        <property dataType="MTART" id="mtart" mandatory="false" sequence="11" text="Tipo di materiale "/>
+        <property dataType="UZEIT" id="uzeit" mandatory="false" sequence="20" text="Ora"/>
+    </entity>
+    <entity id="FCST001" isPublic="true" text="SAP-FCS:Parametrizzazoine per tipo materiale">
+        <property dataType="MTART" id="mtart" key="true" mandatory="false" sequence="1" text="Tipo materiale"/>
+        <property dataType="WERKS_D" id="werks" key="true" mandatory="false" sequence="2" text="Divisione"/>
+        <property dataType="ccda_base.Boolean" id="exp2fcs" mandatory="false" sequence="3" text="Esporta verso FCS"/>
+    </entity>
+    <entity id="UMCLI" isPublic="true" isTransient="false" text="Unità di misura specifiche per Materiale / Cliente">
+        <property dataType="BSTME" id="bstme" key="true" mandatory="false" sequence="3" text="UM dell'ordine d'acquisto"/>
+        <property dataType="ccda_base.localDate" id="datab" key="true" mandatory="false" sequence="4" text="Data inizio validità"/>
+        <property dataType="KUNNR" id="kunnr" key="true" mandatory="false" sequence="2" text="Codice Cliente"/>
+        <property dataType="MATNR" id="matnr" key="true" mandatory="false" sequence="1" text="Codice materiale"/>
+        <property dataType="ZFCS_BSTMEXPALLET" id="bstmexpallet" mandatory="false" sequence="7" text="Qta in UM di movimentazione per Pallet (Bag x pallet)"/>
+        <property dataType="MEINS" id="meins" key="false" mandatory="false" sequence="5" text="Unità di misura di base"/>
+        <property dataType="ZFCS_MENGEXBSTME" id="mengexbstme" mandatory="false" sequence="6" text="Qta per UM"/>
+    </entity>
+    <entity id="UMFOR" isPublic="true" text="Unità di misura specifiche per Materiale/Forniore">
+        <property dataType="BSTME" id="bstme" key="true" mandatory="false" sequence="3" text="UM dell'ordine d'acquisto"/>
+        <property dataType="ccda_base.localDate" id="datab" key="true" mandatory="false" sequence="4" text="Data inizio validità"/>
+        <property dataType="LIFNR" id="lifnr" key="true" mandatory="false" sequence="2" text="Codice Fornitore"/>
+        <property dataType="MATNR" id="matnr" key="true" mandatory="false" sequence="1" text="Codice materiale"/>
+        <property dataType="ZFCS_BSTMEXPALLET" id="bstmexpallet" mandatory="false" sequence="7" text="Quantità in UM di movimentazione per Pallet (Bag x pallet)"/>
+        <property dataType="MEINS" id="meins" mandatory="false" sequence="5" text="Unità di misura di base"/>
+        <property dataType="ZFCS_MENGEXBSTME" id="mengexbstme" mandatory="false" sequence="6" text="Qta per UM di acquisizione moviumentazione"/>
+    </entity>
+</metaData>

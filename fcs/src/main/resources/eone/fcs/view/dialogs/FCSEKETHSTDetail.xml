@@ -1,0 +1,157 @@
+<?xml version="1.0" encoding="utf-8"?>
+<t:layoutdefinition xmlns:t="http://www.captaincasa.com/controllibrary/t" xmlns:tdap="http://www.captaincasa.com/controllibrary/tdap" >
+
+<t:beanprocessing id="g_1" beanbinding="#{d.FCSEKETHSTDetail}" />
+<t:row id="g_22" >
+<tdap:framedetaileditor id="g_24" pagebeanbinding="#{d.FCSEKETHSTDetail.frame}" shownullcontent="true" >
+<tdap:framedetaileditorbody id="g_25" height="100%" rowdistance="#{ccstylevalue[&#39;@defaultrowdistance@&#39;]}" width="100%" >
+<tdap:rowareas id="g_26" >
+<tdap:containerarea id="g_27" text="Some title" >
+<t:row id="g_96" coldistance="#{ccstylevalue[&#39;@defaultcoldistance@&#39;]}" >
+<t:field id="g_2" adapterbinding="#{d.FCSEKETHSTDetail.adapters.ebeln}" />
+</t:row>
+<t:row id="g_3" coldistance="#{ccstylevalue[&#39;@defaultcoldistance@&#39;]}" >
+<t:field id="g_4" adapterbinding="#{d.FCSEKETHSTDetail.adapters.ebelp}" />
+</t:row>
+<t:row id="g_5" coldistance="#{ccstylevalue[&#39;@defaultcoldistance@&#39;]}" >
+<t:field id="g_6" adapterbinding="#{d.FCSEKETHSTDetail.adapters.etenr}" />
+</t:row>
+<t:row id="g_7" coldistance="#{ccstylevalue[&#39;@defaultcoldistance@&#39;]}" >
+<t:field id="g_8" adapterbinding="#{d.FCSEKETHSTDetail.adapters.mblnr}" />
+</t:row>
+<t:row id="g_9" coldistance="#{ccstylevalue[&#39;@defaultcoldistance@&#39;]}" >
+<t:field id="g_10" adapterbinding="#{d.FCSEKETHSTDetail.adapters.mjahr}" />
+</t:row>
+<t:row id="g_11" coldistance="#{ccstylevalue[&#39;@defaultcoldistance@&#39;]}" >
+<t:field id="g_12" adapterbinding="#{d.FCSEKETHSTDetail.adapters.kappl}" />
+</t:row>
+<t:row id="g_13" coldistance="#{ccstylevalue[&#39;@defaultcoldistance@&#39;]}" >
+<t:field id="g_14" adapterbinding="#{d.FCSEKETHSTDetail.adapters.id_eket}" />
+</t:row>
+<t:row id="g_15" coldistance="#{ccstylevalue[&#39;@defaultcoldistance@&#39;]}" >
+<t:checkbox id="g_16" adapterbinding="#{d.FCSEKETHSTDetail.adapters.xchpf}" />
+</t:row>
+<t:row id="g_17" coldistance="#{ccstylevalue[&#39;@defaultcoldistance@&#39;]}" >
+<t:calendarfield id="g_18" adapterbinding="#{d.FCSEKETHSTDetail.adapters.eindt}" />
+</t:row>
+<t:row id="g_19" coldistance="#{ccstylevalue[&#39;@defaultcoldistance@&#39;]}" >
+<t:field id="g_20" adapterbinding="#{d.FCSEKETHSTDetail.adapters.reswk}" />
+</t:row>
+<t:row id="g_21" coldistance="#{ccstylevalue[&#39;@defaultcoldistance@&#39;]}" >
+<t:field id="g_97" adapterbinding="#{d.FCSEKETHSTDetail.adapters.lifnr}" />
+</t:row>
+<t:row id="g_23" coldistance="#{ccstylevalue[&#39;@defaultcoldistance@&#39;]}" >
+<t:field id="g_98" adapterbinding="#{d.FCSEKETHSTDetail.adapters.name1}" />
+</t:row>
+<t:row id="g_99" coldistance="#{ccstylevalue[&#39;@defaultcoldistance@&#39;]}" >
+<t:field id="g_100" adapterbinding="#{d.FCSEKETHSTDetail.adapters.mtart}" />
+</t:row>
+<t:row id="g_101" coldistance="#{ccstylevalue[&#39;@defaultcoldistance@&#39;]}" >
+<t:field id="g_28" adapterbinding="#{d.FCSEKETHSTDetail.adapters.charg}" />
+</t:row>
+<t:row id="g_29" coldistance="#{ccstylevalue[&#39;@defaultcoldistance@&#39;]}" >
+<t:field id="g_30" adapterbinding="#{d.FCSEKETHSTDetail.adapters.maktx}" />
+</t:row>
+<t:row id="g_31" coldistance="#{ccstylevalue[&#39;@defaultcoldistance@&#39;]}" >
+<t:field id="g_32" adapterbinding="#{d.FCSEKETHSTDetail.adapters.werks}" />
+</t:row>
+<t:row id="g_33" coldistance="#{ccstylevalue[&#39;@defaultcoldistance@&#39;]}" >
+<t:field id="g_34" adapterbinding="#{d.FCSEKETHSTDetail.adapters.lgort}" />
+</t:row>
+<t:row id="g_35" coldistance="#{ccstylevalue[&#39;@defaultcoldistance@&#39;]}" >
+<t:formattedfield id="g_36" adapterbinding="#{d.FCSEKETHSTDetail.adapters.menge}" />
+</t:row>
+<t:row id="g_37" coldistance="#{ccstylevalue[&#39;@defaultcoldistance@&#39;]}" >
+<t:formattedfield id="g_38" adapterbinding="#{d.FCSEKETHSTDetail.adapters.ameng}" />
+</t:row>
+<t:row id="g_39" coldistance="#{ccstylevalue[&#39;@defaultcoldistance@&#39;]}" >
+<t:formattedfield id="g_40" adapterbinding="#{d.FCSEKETHSTDetail.adapters.wemng}" />
+</t:row>
+<t:row id="g_41" coldistance="#{ccstylevalue[&#39;@defaultcoldistance@&#39;]}" >
+<t:formattedfield id="g_42" adapterbinding="#{d.FCSEKETHSTDetail.adapters.wamng}" />
+</t:row>
+<t:row id="g_43" coldistance="#{ccstylevalue[&#39;@defaultcoldistance@&#39;]}" >
+<t:formattedfield id="g_44" adapterbinding="#{d.FCSEKETHSTDetail.adapters.menge_open}" />
+</t:row>
+<t:row id="g_45" coldistance="#{ccstylevalue[&#39;@defaultcoldistance@&#39;]}" >
+<t:field id="g_46" adapterbinding="#{d.FCSEKETHSTDetail.adapters.meins}" />
+</t:row>
+<t:row id="g_47" coldistance="#{ccstylevalue[&#39;@defaultcoldistance@&#39;]}" >
+<t:field id="g_48" adapterbinding="#{d.FCSEKETHSTDetail.adapters.bstme}" />
+</t:row>
+<t:row id="g_49" coldistance="#{ccstylevalue[&#39;@defaultcoldistance@&#39;]}" >
+<t:formattedfield id="g_50" adapterbinding="#{d.FCSEKETHSTDetail.adapters.mengexbstme}" />
+</t:row>
+<t:row id="g_51" coldistance="#{ccstylevalue[&#39;@defaultcoldistance@&#39;]}" >
+<t:formattedfield id="g_52" adapterbinding="#{d.FCSEKETHSTDetail.adapters.qtaxtag}" />
+</t:row>
+<t:row id="g_53" coldistance="#{ccstylevalue[&#39;@defaultcoldistance@&#39;]}" >
+<t:formattedfield id="g_54" adapterbinding="#{d.FCSEKETHSTDetail.adapters.bstmexpallet}" />
+</t:row>
+<t:row id="g_55" coldistance="#{ccstylevalue[&#39;@defaultcoldistance@&#39;]}" >
+<t:formattedfield id="g_56" adapterbinding="#{d.FCSEKETHSTDetail.adapters.qtaxbag}" />
+</t:row>
+<t:row id="g_57" coldistance="#{ccstylevalue[&#39;@defaultcoldistance@&#39;]}" >
+<t:formattedfield id="g_58" adapterbinding="#{d.FCSEKETHSTDetail.adapters.tag_filler}" />
+</t:row>
+<t:row id="g_59" coldistance="#{ccstylevalue[&#39;@defaultcoldistance@&#39;]}" >
+<t:formattedfield id="g_60" adapterbinding="#{d.FCSEKETHSTDetail.adapters.nrtag}" />
+</t:row>
+<t:row id="g_61" coldistance="#{ccstylevalue[&#39;@defaultcoldistance@&#39;]}" >
+<t:formattedfield id="g_62" adapterbinding="#{d.FCSEKETHSTDetail.adapters.nrbag}" />
+</t:row>
+<t:row id="g_63" coldistance="#{ccstylevalue[&#39;@defaultcoldistance@&#39;]}" >
+<t:formattedfield id="g_64" adapterbinding="#{d.FCSEKETHSTDetail.adapters.brgew_row}" />
+</t:row>
+<t:row id="g_65" coldistance="#{ccstylevalue[&#39;@defaultcoldistance@&#39;]}" >
+<t:formattedfield id="g_66" adapterbinding="#{d.FCSEKETHSTDetail.adapters.ntgew_row}" />
+</t:row>
+<t:row id="g_67" coldistance="#{ccstylevalue[&#39;@defaultcoldistance@&#39;]}" >
+<t:calendarfield id="g_68" adapterbinding="#{d.FCSEKETHSTDetail.adapters.datum}" />
+</t:row>
+<t:row id="g_69" coldistance="#{ccstylevalue[&#39;@defaultcoldistance@&#39;]}" >
+<t:calendarfield id="g_70" adapterbinding="#{d.FCSEKETHSTDetail.adapters.uzeit}" />
+</t:row>
+<t:row id="g_71" coldistance="#{ccstylevalue[&#39;@defaultcoldistance@&#39;]}" >
+<t:field id="g_72" adapterbinding="#{d.FCSEKETHSTDetail.adapters.ernam}" />
+</t:row>
+<t:row id="g_73" coldistance="#{ccstylevalue[&#39;@defaultcoldistance@&#39;]}" >
+<t:field id="g_74" adapterbinding="#{d.FCSEKETHSTDetail.adapters.bemid}" />
+</t:row>
+<t:row id="g_75" coldistance="#{ccstylevalue[&#39;@defaultcoldistance@&#39;]}" >
+<t:field id="g_76" adapterbinding="#{d.FCSEKETHSTDetail.adapters.gewei}" />
+</t:row>
+<t:row id="g_77" coldistance="#{ccstylevalue[&#39;@defaultcoldistance@&#39;]}" >
+<t:field id="g_78" adapterbinding="#{d.FCSEKETHSTDetail.adapters.wmsst}" />
+</t:row>
+<t:row id="g_79" coldistance="#{ccstylevalue[&#39;@defaultcoldistance@&#39;]}" >
+<t:field id="g_80" adapterbinding="#{d.FCSEKETHSTDetail.adapters.in_xblnr}" />
+</t:row>
+<t:row id="g_81" coldistance="#{ccstylevalue[&#39;@defaultcoldistance@&#39;]}" >
+<t:calendarfield id="g_82" adapterbinding="#{d.FCSEKETHSTDetail.adapters.in_bldat}" />
+</t:row>
+<t:row id="g_83" coldistance="#{ccstylevalue[&#39;@defaultcoldistance@&#39;]}" >
+<t:field id="g_84" adapterbinding="#{d.FCSEKETHSTDetail.adapters.in_traid}" />
+</t:row>
+<t:row id="g_85" coldistance="#{ccstylevalue[&#39;@defaultcoldistance@&#39;]}" >
+<t:formattedfield id="g_86" adapterbinding="#{d.FCSEKETHSTDetail.adapters.in_colli_tot}" />
+</t:row>
+<t:row id="g_87" coldistance="#{ccstylevalue[&#39;@defaultcoldistance@&#39;]}" >
+<t:formattedfield id="g_88" adapterbinding="#{d.FCSEKETHSTDetail.adapters.in_brgew_tot}" />
+</t:row>
+<t:row id="g_89" coldistance="#{ccstylevalue[&#39;@defaultcoldistance@&#39;]}" >
+<t:formattedfield id="g_90" adapterbinding="#{d.FCSEKETHSTDetail.adapters.in_ntgew_tot}" />
+</t:row>
+<t:row id="g_91" coldistance="#{ccstylevalue[&#39;@defaultcoldistance@&#39;]}" >
+<t:formattedfield id="g_92" adapterbinding="#{d.FCSEKETHSTDetail.adapters.in_qtaxtag}" />
+</t:row>
+<t:row id="g_93" coldistance="#{ccstylevalue[&#39;@defaultcoldistance@&#39;]}" >
+<t:calendarfield id="g_94" adapterbinding="#{d.FCSEKETHSTDetail.adapters.in_data_arrivo}" />
+</t:row>
+</tdap:containerarea>
+</tdap:rowareas>
+</tdap:framedetaileditorbody>
+</tdap:framedetaileditor>
+</t:row>
+
+</t:layoutdefinition>

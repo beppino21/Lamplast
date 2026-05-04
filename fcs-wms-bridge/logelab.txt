@@ -1,0 +1,57 @@
+12:58:57.653 [main] INFO  com.eone.fcs.Main - === FCS WMS Bridge - Extractor ===
+12:58:57.657 [main] INFO  com.eone.fcs.config.AppConfig - Caricamento configurazione da: C:\cc_eone\fcs-wms-bridge\config.properties
+12:58:57.667 [main] INFO  com.eone.fcs.Main - Configurazione caricata: AppConfig{s4BaseUrl='https://my434383-api.s4hana.cloud.sap', s4Username='COMM_USER_F46100', dbUrl='jdbc:postgresql://localhost:5432/fcs', dbTenant='undefined', s4CompanyCode='S001', s4Language='IT'}
+12:58:57.672 [main] INFO  com.eone.fcs.Main - Modalità estrazione: all
+12:58:58.006 [main] INFO  c.eone.fcs.repository.FcsRepository - Connessione PostgreSQL stabilita: jdbc:postgresql://localhost:5432/fcs
+12:58:58.007 [main] INFO  com.eone.fcs.Main - --- Estrazione PRODOTTI ---
+12:58:58.365 [main] INFO  com.eone.fcs.client.ProductClient - Avvio estrazione prodotti (lingua: IT)
+12:58:58.368 [main] DEBUG c.eone.fcs.client.AbstractS4Client - Pagina 1 - URL: https://my434383-api.s4hana.cloud.sap/sap/opu/odata/SAP/API_PRODUCT_SRV/A_Product?$select=Product,ProductType,BaseUnit,PurchaseOrderQuantityUnit,ProductGroup&$top=500
+12:58:59.193 [main] DEBUG c.eone.fcs.client.AbstractS4Client - HTTP 200 per https://my434383-api.s4hana.cloud.sap/sap/opu/odata/SAP/API_PRODUCT_SRV/A_Product?$select=Product,ProductType,BaseUnit,PurchaseOrderQuantityUnit,ProductGroup&$top=500
+12:58:59.213 [main] DEBUG c.eone.fcs.client.AbstractS4Client - Pagina 1: 108 record ricevuti
+12:58:59.213 [main] DEBUG c.eone.fcs.client.AbstractS4Client - Fetch completato: 108 record totali
+12:58:59.214 [main] INFO  com.eone.fcs.client.ProductClient - Prodotti base recuperati: 108
+12:58:59.215 [main] DEBUG c.eone.fcs.client.AbstractS4Client - Pagina 1 - URL: https://my434383-api.s4hana.cloud.sap/sap/opu/odata/SAP/API_PRODUCT_SRV/A_ProductDescription?$filter=Language+eq+%27IT%27&$select=Product,Language,ProductDescription&$top=500
+12:58:59.406 [main] DEBUG c.eone.fcs.client.AbstractS4Client - HTTP 200 per https://my434383-api.s4hana.cloud.sap/sap/opu/odata/SAP/API_PRODUCT_SRV/A_ProductDescription?$filter=Language+eq+%27IT%27&$select=Product,Language,ProductDescription&$top=500
+12:58:59.412 [main] DEBUG c.eone.fcs.client.AbstractS4Client - Pagina 1: 108 record ricevuti
+12:58:59.412 [main] DEBUG c.eone.fcs.client.AbstractS4Client - Fetch completato: 108 record totali
+12:58:59.413 [main] INFO  com.eone.fcs.client.ProductClient - Descrizioni prodotti recuperate
+12:58:59.422 [main] INFO  com.eone.fcs.client.ProductClient - Estrazione prodotti completata: 108 prodotti totali
+12:58:59.481 [main] INFO  c.eone.fcs.repository.FcsRepository - Prodotti upsertati: 108
+12:58:59.481 [main] INFO  com.eone.fcs.Main - --- Estrazione FORNITORI ---
+12:58:59.487 [main] INFO  c.e.fcs.client.BusinessPartnerClient - Avvio estrazione fornitori
+12:58:59.487 [main] DEBUG c.eone.fcs.client.AbstractS4Client - Pagina 1 - URL: https://my434383-api.s4hana.cloud.sap/sap/opu/odata/SAP/API_BUSINESS_PARTNER/A_BusinessPartner?$filter=Supplier+ne+%27%27&$select=BusinessPartner,BusinessPartnerFullName,BusinessPartnerName,Customer,Supplier&$top=500
+12:58:59.783 [main] DEBUG c.eone.fcs.client.AbstractS4Client - HTTP 200 per https://my434383-api.s4hana.cloud.sap/sap/opu/odata/SAP/API_BUSINESS_PARTNER/A_BusinessPartner?$filter=Supplier+ne+%27%27&$select=BusinessPartner,BusinessPartnerFullName,BusinessPartnerName,Customer,Supplier&$top=500
+12:58:59.785 [main] DEBUG c.eone.fcs.client.AbstractS4Client - Pagina 1: 18 record ricevuti
+12:58:59.785 [main] DEBUG c.eone.fcs.client.AbstractS4Client - Fetch completato: 18 record totali
+12:58:59.785 [main] DEBUG c.e.fcs.client.BusinessPartnerClient - Lettura dati fiscali Business Partner
+12:58:59.786 [main] DEBUG c.eone.fcs.client.AbstractS4Client - Pagina 1 - URL: https://my434383-api.s4hana.cloud.sap/sap/opu/odata/SAP/API_BUSINESS_PARTNER/A_BusinessPartnerTaxNumber?$select=BusinessPartner,BPTaxType,BPTaxNumber&$top=500
+12:58:59.936 [main] DEBUG c.eone.fcs.client.AbstractS4Client - HTTP 200 per https://my434383-api.s4hana.cloud.sap/sap/opu/odata/SAP/API_BUSINESS_PARTNER/A_BusinessPartnerTaxNumber?$select=BusinessPartner,BPTaxType,BPTaxNumber&$top=500
+12:58:59.938 [main] DEBUG c.eone.fcs.client.AbstractS4Client - Pagina 1: 39 record ricevuti
+12:58:59.938 [main] DEBUG c.eone.fcs.client.AbstractS4Client - Fetch completato: 39 record totali
+12:58:59.939 [main] DEBUG c.e.fcs.client.BusinessPartnerClient - Dati fiscali recuperati per 25 business partner
+12:58:59.941 [main] INFO  c.e.fcs.client.BusinessPartnerClient - Estrazione fornitori completata: 18 fornitori
+12:58:59.954 [main] INFO  c.eone.fcs.repository.FcsRepository - Fornitori upsertati: 18
+12:58:59.955 [main] INFO  com.eone.fcs.Main - --- Estrazione CLIENTI ---
+12:58:59.961 [main] INFO  c.e.fcs.client.BusinessPartnerClient - Avvio estrazione clienti
+12:58:59.962 [main] DEBUG c.eone.fcs.client.AbstractS4Client - Pagina 1 - URL: https://my434383-api.s4hana.cloud.sap/sap/opu/odata/SAP/API_BUSINESS_PARTNER/A_BusinessPartner?$filter=Customer+ne+%27%27&$select=BusinessPartner,BusinessPartnerFullName,BusinessPartnerName,Customer,Supplier&$top=500
+12:59:00.244 [main] DEBUG c.eone.fcs.client.AbstractS4Client - HTTP 200 per https://my434383-api.s4hana.cloud.sap/sap/opu/odata/SAP/API_BUSINESS_PARTNER/A_BusinessPartner?$filter=Customer+ne+%27%27&$select=BusinessPartner,BusinessPartnerFullName,BusinessPartnerName,Customer,Supplier&$top=500
+12:59:00.245 [main] DEBUG c.eone.fcs.client.AbstractS4Client - Pagina 1: 18 record ricevuti
+12:59:00.245 [main] DEBUG c.eone.fcs.client.AbstractS4Client - Fetch completato: 18 record totali
+12:59:00.245 [main] DEBUG c.e.fcs.client.BusinessPartnerClient - Lettura dati fiscali Business Partner
+12:59:00.245 [main] DEBUG c.eone.fcs.client.AbstractS4Client - Pagina 1 - URL: https://my434383-api.s4hana.cloud.sap/sap/opu/odata/SAP/API_BUSINESS_PARTNER/A_BusinessPartnerTaxNumber?$select=BusinessPartner,BPTaxType,BPTaxNumber&$top=500
+12:59:00.401 [main] DEBUG c.eone.fcs.client.AbstractS4Client - HTTP 200 per https://my434383-api.s4hana.cloud.sap/sap/opu/odata/SAP/API_BUSINESS_PARTNER/A_BusinessPartnerTaxNumber?$select=BusinessPartner,BPTaxType,BPTaxNumber&$top=500
+12:59:00.403 [main] DEBUG c.eone.fcs.client.AbstractS4Client - Pagina 1: 39 record ricevuti
+12:59:00.403 [main] DEBUG c.eone.fcs.client.AbstractS4Client - Fetch completato: 39 record totali
+12:59:00.403 [main] DEBUG c.e.fcs.client.BusinessPartnerClient - Dati fiscali recuperati per 25 business partner
+12:59:00.405 [main] INFO  c.e.fcs.client.BusinessPartnerClient - Estrazione clienti completata: 18 clienti
+12:59:00.417 [main] INFO  c.eone.fcs.repository.FcsRepository - Clienti upsertati: 18
+12:59:00.418 [main] INFO  com.eone.fcs.Main - --- Estrazione SCHEDULAZIONI OdA (EKET) ---
+12:59:00.430 [main] INFO  c.e.fcs.client.PurchaseOrderClient - Avvio estrazione schedulazioni OdA aperte
+12:59:00.430 [main] DEBUG c.eone.fcs.client.AbstractS4Client - Pagina 1 - URL: https://my434383-api.s4hana.cloud.sap/sap/opu/odata/SAP/API_PURCHASEORDER_PROCESS_SRV/A_PurchaseOrderScheduleLine?$top=500
+12:59:02.845 [main] DEBUG c.eone.fcs.client.AbstractS4Client - HTTP 200 per https://my434383-api.s4hana.cloud.sap/sap/opu/odata/SAP/API_PURCHASEORDER_PROCESS_SRV/A_PurchaseOrderScheduleLine?$top=500
+12:59:02.859 [main] DEBUG c.eone.fcs.client.AbstractS4Client - Pagina 1: 131 record ricevuti
+12:59:02.859 [main] DEBUG c.eone.fcs.client.AbstractS4Client - Fetch completato: 131 record totali
+12:59:02.860 [main] INFO  c.e.fcs.client.PurchaseOrderClient - Schedulazioni recuperate: 0 OdA con righe
+12:59:02.860 [main] WARN  com.eone.fcs.Main - Nessuna schedulazione aperta trovata.
+12:59:02.861 [main] INFO  c.eone.fcs.repository.FcsRepository - Connessione PostgreSQL chiusa.
+12:59:02.861 [main] INFO  com.eone.fcs.Main - === Estrazione completata con successo ===
