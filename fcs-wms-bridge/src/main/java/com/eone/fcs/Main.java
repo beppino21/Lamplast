@@ -1,5 +1,11 @@
 package com.eone.fcs;
 
+import java.util.List;
+import java.util.Map;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.eone.fcs.client.BusinessPartnerClient;
 import com.eone.fcs.client.ProductClient;
 import com.eone.fcs.client.PurchaseOrderClient;
@@ -10,10 +16,6 @@ import com.eone.fcs.model.EketLine;
 import com.eone.fcs.model.Product;
 import com.eone.fcs.model.Supplier;
 import com.eone.fcs.repository.FcsRepository;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import java.util.List;
 
 /**
  * Entry point dell'applicazione FCS WMS Bridge - Extractor.
@@ -140,7 +142,25 @@ public class Main {
             log.warn("Nessuna schedulazione aperta trovata.");
             return;
         }
-        // DELETE righe in attesa + INSERT nuove
-        repo.syncEketLines(lines);
+        // 2. Carica fattori di conversione UMFOR per i matnr estratti
+        //    (solo per kappl='ME'; si estende con UMCLI quando necessario)
+        java.util.Set<String> matnrs = lines.stream()
+                .map(EketLine::matnr)
+                .filter(m -> m != null && !m.isBlank())
+                .collect(java.util.stream.Collectors.toSet());
+        
+        // 2a. Fattori di conversione UMFOR (matnr+lifnr → imballo)
+        Map<String, com.eone.fcs.model.Umfor> umforMap = repo.loadUmfor(matnrs);
+        log.info("UMFOR caricati: {} record", umforMap.size());
+
+        // 2b. Pesi unitari da tabfcsmara (matnr → brgew/ntgew/gewei)
+        Map<String, com.eone.fcs.model.PesoMateriale> pesiMap = repo.loadPesi(matnrs);
+        log.info("Pesi materiale caricati: {} record", pesiMap.size());
+
+        // 3. Arricchisci le righe con i campi Gruppo 2
+        List<EketLine> enriched = com.eone.fcs.service.EketEnricher.enrich(lines, umforMap, pesiMap);
+
+        // 4. DELETE righe in attesa + INSERT nuove (con Gruppo 2 valorizzato)
+        repo.syncEketLines(enriched);
     }
 }

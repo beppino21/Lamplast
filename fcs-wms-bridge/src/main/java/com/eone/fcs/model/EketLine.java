@@ -86,6 +86,18 @@ public record EketLine(
         private String    meins;
         private String    bstme;
         private String    wmsst     = " ";  // default: in attesa
+        
+// Campi Calcolati/Derivati        
+        private Double   mengexbstme;
+        private Double   qtaxtag;
+        private Integer  bstmexpallet;
+        private Double   qtaxbag;
+        private Double   tagFiller;
+        private Integer  nrtag;
+        private Integer  nrbag;
+        private Double   brgewRow;
+        private Double   ntgewRow;
+        private String   gewei;        
 
         public Builder tenant(String v)    { this.tenant = v;    return this; }
         public Builder ebeln(String v)     { this.ebeln = v;     return this; }
@@ -107,6 +119,18 @@ public record EketLine(
         public Builder bstme(String v)     { this.bstme = v;     return this; }
         public Builder wmsst(String v)     { this.wmsst = v;     return this; }
 
+// Campi Calcolati/Derivati        
+        public Builder mengexbstme(Double v)  { this.mengexbstme = v;  return this; }
+        public Builder qtaxtag(Double v)       { this.qtaxtag = v;      return this; }
+        public Builder bstmexpallet(Integer v) { this.bstmexpallet = v; return this; }
+        public Builder qtaxbag(Double v)       { this.qtaxbag = v;      return this; }
+        public Builder tagFiller(Double v)     { this.tagFiller = v;    return this; }
+        public Builder nrtag(Integer v)        { this.nrtag = v;        return this; }
+        public Builder nrbag(Integer v)        { this.nrbag = v;        return this; }
+        public Builder brgewRow(Double v)      { this.brgewRow = v;     return this; }
+        public Builder ntgewRow(Double v)      { this.ntgewRow = v;     return this; }
+        public Builder gewei(String v)         { this.gewei = v;        return this; }
+        
         public EketLine build() {
         	String id = String.format("%10s%5s%4s",
         	        ebeln != null ? ebeln : "",
@@ -118,9 +142,54 @@ public record EketLine(
                     kappl, id, xchpf, eindt,
                     lifnr, name1, mtart, matnr, maktx, werks, lgort,
                     menge, wemng, mengeOpen, meins, bstme,
-                    null, null, null, null, null, null, null, null, null, null,
+                    mengexbstme, qtaxtag, bstmexpallet, qtaxbag, tagFiller,
+                    nrtag, nrbag, brgewRow, ntgewRow, gewei,
                     LocalDate.now(), LocalTime.now(), "S4HC_SYNC", wmsst
             );
         }
+        
+// --- (b) Costruttore di copia (metodo statico da aggiungere al Builder) ---
+        /**
+         * Crea un Builder precompilato con tutti i valori di una EketLine esistente.
+         * Usato da EketEnricher per produrre una copia arricchita del record.
+         */
+        public static Builder from(EketLine e) {
+            Builder b = new Builder();
+            // Chiave
+            b.tenant       = e.tenant();
+            b.ebeln        = e.ebeln();
+            b.ebelp        = e.ebelp();
+            b.etenr        = e.etenr();
+            // Gruppo 1
+            b.kappl        = e.kappl();
+            b.xchpf        = e.xchpf();
+            b.eindt        = e.eindt();
+            b.lifnr        = e.lifnr();
+            b.name1        = e.name1();
+            b.mtart        = e.mtart();
+            b.matnr        = e.matnr();
+            b.maktx        = e.maktx();
+            b.werks        = e.werks();
+            b.lgort        = e.lgort();
+            b.menge        = e.menge();
+            b.wemng        = e.wemng();
+            b.mengeOpen    = e.mengeOpen();
+            b.meins        = e.meins();
+            b.bstme        = e.bstme();
+            // Gruppo 2 (potrebbero già essere valorizzati)
+            b.mengexbstme  = e.mengexbstme();
+            b.qtaxtag      = e.qtaxtag();
+            b.bstmexpallet = e.bstmexpallet();
+            b.qtaxbag      = e.qtaxbag();
+            b.tagFiller    = e.tagFiller();
+            b.nrtag        = e.nrtag();
+            b.nrbag        = e.nrbag();
+            b.brgewRow     = e.brgewRow();
+            b.ntgewRow     = e.ntgewRow();
+            b.gewei        = e.gewei();
+            // Gestione
+            b.wmsst        = e.wmsst();
+            return b;
+        }        
     }
 }

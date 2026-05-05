@@ -15,10 +15,10 @@ import java.util.Map;
  * Client per API_PRODUCT_SRV (OData V2).
  *
  * Legge:
- *   - A_Product          → matnr, mtart, meins, bstme, matkl
- *   - A_ProductDescription → maktx (filtro lingua IT)
+ *   - A_Product            → matnr, mtart, meins, bstme, matkl, brgew, ntgew, gewei
+ *   - A_ProductDescription → maktx (filtro lingua configurata)
  *
- * Chiamate separate + join in memoria su Product (matnr).
+ * Chiamate separate + join in memoria su matnr.
  */
 public class ProductClient extends AbstractS4Client {
 
@@ -34,22 +34,18 @@ public class ProductClient extends AbstractS4Client {
     // API pubblica
     // -------------------------------------------------------------------------
 
-    /**
-     * Recupera tutti i prodotti con le loro descrizioni nella lingua configurata.
-     * Esegue due chiamate separate e le unisce in memoria.
-     */
     public List<Product> fetchAllProducts() {
         log.info("Avvio estrazione prodotti (lingua: {})", config.s4Language);
 
-        // 1. Leggo tutti i prodotti (dati base)
+        // 1. Dati base + pesi
         Map<String, Product.Builder> builders = fetchProductBase();
         log.info("Prodotti base recuperati: {}", builders.size());
 
-        // 2. Leggo le descrizioni e le aggiungo ai builder
+        // 2. Descrizioni
         fetchProductDescriptions(builders);
         log.info("Descrizioni prodotti recuperate");
 
-        // 3. Costruisco i record finali
+        // 3. Build
         List<Product> products = new ArrayList<>();
         for (Product.Builder b : builders.values()) {
             products.add(b.build());
@@ -59,23 +55,18 @@ public class ProductClient extends AbstractS4Client {
         return products;
     }
 
-    /**
-     * Recupera un singolo prodotto per materiale.
-     * Usato per aggiornamenti puntuali.
-     */
     public Product fetchByMaterial(String matnr) {
         log.debug("Fetch prodotto singolo: {}", matnr);
 
-        String urlBase = buildUrl(SERVICE_PATH, "A_Product('" + matnr + "')");
-        String select  = "$select=Product,ProductType,BaseUnit,PurchaseOrderQuantityUnit,PrductGroup";
-        String url     = urlBase + "?" + select;
+        String url = buildUrl(SERVICE_PATH, "A_Product('" + matnr + "')") +
+                "?$select=Product,ProductType,BaseUnit,PurchaseOrderQuantityUnit," +
+                "ProductGroup,GrossWeight,NetWeight,WeightUnit";
 
         List<JsonNode> nodes = fetchSinglePage(url);
         if (nodes.isEmpty()) return null;
 
         Product.Builder b = toProductBuilder(nodes.get(0));
 
-        // Descrizione
         String descUrl = buildUrl(SERVICE_PATH, "A_ProductDescription") +
                 "?$filter=" + enc("Product eq '" + matnr + "' and Language eq '" + config.s4Language + "'") +
                 "&$select=Product,Language,ProductDescription&$top=1";
@@ -92,8 +83,10 @@ public class ProductClient extends AbstractS4Client {
     // -------------------------------------------------------------------------
 
     private Map<String, Product.Builder> fetchProductBase() {
+        // GrossWeight, NetWeight, WeightUnit sono campi standard di A_Product
         String url = buildUrl(SERVICE_PATH, "A_Product") +
-                "?$select=Product,ProductType,BaseUnit,PurchaseOrderQuantityUnit,ProductGroup" +
+                "?$select=Product,ProductType,BaseUnit,PurchaseOrderQuantityUnit," +
+                "ProductGroup,GrossWeight,NetWeight,WeightUnit" +
                 "&$top=" + config.s4PageSize;
 
         List<JsonNode> nodes = fetchAllPages(url);
@@ -128,6 +121,9 @@ public class ProductClient extends AbstractS4Client {
                 .mtart(str(n, "ProductType"))
                 .meins(str(n, "BaseUnit"))
                 .bstme(str(n, "PurchaseOrderQuantityUnit"))
-                .matkl(str(n, "ProductGroup"));
+                .matkl(str(n, "ProductGroup"))
+                .brgew(dbl(n, "GrossWeight"))   // peso lordo unitario
+                .ntgew(dbl(n, "NetWeight"))      // peso netto unitario
+                .gewei(str(n, "WeightUnit"));    // UM peso (es. KG)
     }
 }
