@@ -1,4 +1,5 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>eone</groupId>
@@ -7,98 +8,114 @@
 	<version>0.0.1</version>
 	<name>fcs Maven Webapp</name>
 	<url>http://maven.apache.org</url>
-    
+
 	<repositories>
 		<repository>
 			<id>org.eclnt</id>
 			<url>https://www.captaincasa.com/mavenrepository</url>
 		</repository>
-       <!-- Repository for dependent artifacts -->
-        <repository>
-            <id>mvnrepository.com</id>
-            <url>https://mvnrepository.com/repos/central</url>
-        </repository>
+		<!-- Repository for dependent artifacts -->
+		<repository>
+			<id>mvnrepository.com</id>
+			<url>https://mvnrepository.com/repos/central</url>
+		</repository>
 		<repository>
 			<id>org.outerj</id>
 			<url>https://maven.atlassian.com/3rdparty/</url>
 		</repository>
 	</repositories>
 
-    
-    <properties>
-        <!-- This is the CaptainCasa version to be used. -->
-        <cc.version>20260331</cc.version>
-        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
-    </properties>
-    
-    <dependencies>
+
+	<properties>
+		<!-- This is the CaptainCasa version to be used. -->
+		<cc.version>20260331</cc.version>
+		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+		<project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+	</properties>
+
+	<dependencies>
 		<dependency>
-		    <groupId>org.eclnt</groupId>
-		    <artifactId>eclntjsfserverRISC_jakarta</artifactId>
-		    <version>${cc.version}</version>
-		</dependency>        
-        <!--  Dependencies for dataapp -->
-        <dependency>
-            <groupId>org.eclnt</groupId>
-            <artifactId>eclntccee_jakarta</artifactId>
-            <version>${cc.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.eclnt</groupId>
-            <artifactId>eclntpbc_jakarta</artifactId>
-            <version>${cc.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.eclnt</groupId>
-            <artifactId>eclntdataapp_jakarta</artifactId>
-            <version>${cc.version}</version>
-        </dependency>
-        <!-- Useful CaptainCasa low code libraries -->
-        <dependency>
-            <groupId>org.eclnt</groupId>
-            <artifactId>ccdabase_jakarta</artifactId>
-            <version>${cc.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.eclnt</groupId>
-            <artifactId>ccdaclog_jakarta</artifactId>
-            <version>${cc.version}</version>
-        </dependency>
-        <!-- SQL -->
-        <dependency>
-            <groupId>org.postgresql</groupId>
-            <artifactId>postgresql</artifactId>
-            <version>42.2.5</version>
-        </dependency>
-        <dependency>
-            <groupId>org.hsqldb</groupId>
-            <artifactId>hsqldb</artifactId>
-            <version>2.7.4</version>
-        </dependency>
-        <!-- SAX parsing for Java execution during Maven build -->
-        <dependency>
-            <groupId>xerces</groupId>
-            <artifactId>xercesImpl</artifactId>
-            <version>2.12.2</version>
-        </dependency>
-        <!--  Predefined test environment -->
-        <dependency>
-            <groupId>org.junit.jupiter</groupId>
-            <artifactId>junit-jupiter-api</artifactId>
-            <version>5.12.1</version>
-            <scope>test</scope>
-        </dependency>
+			<groupId>org.eclnt</groupId>
+			<artifactId>eclntjsfserverRISC_jakarta</artifactId>
+			<version>${cc.version}</version>
+		</dependency>
+		<!--  Dependencies for dataapp -->
+		<dependency>
+			<groupId>org.eclnt</groupId>
+			<artifactId>eclntccee_jakarta</artifactId>
+			<version>${cc.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>org.eclnt</groupId>
+			<artifactId>eclntpbc_jakarta</artifactId>
+			<version>${cc.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>org.eclnt</groupId>
+			<artifactId>eclntdataapp_jakarta</artifactId>
+			<version>${cc.version}</version>
+		</dependency>
+		<!-- Useful CaptainCasa low code libraries -->
+		<dependency>
+			<groupId>org.eclnt</groupId>
+			<artifactId>ccdabase_jakarta</artifactId>
+			<version>${cc.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>org.eclnt</groupId>
+			<artifactId>ccdaclog_jakarta</artifactId>
+			<version>${cc.version}</version>
+		</dependency>
+		<!-- SQL -->
+		<dependency>
+			<groupId>org.postgresql</groupId>
+			<artifactId>postgresql</artifactId>
+			<version>42.2.5</version>
+		</dependency>
+		<!-- JAX-RS - REST endpoints per WMS RFID -->
+		<dependency>
+			<groupId>org.glassfish.jersey.containers</groupId>
+			<artifactId>jersey-container-servlet</artifactId>
+			<version>3.1.9</version>
+		</dependency>
+		<dependency>
+			<groupId>org.glassfish.jersey.media</groupId>
+			<artifactId>jersey-media-json-jackson</artifactId>
+			<version>3.1.9</version>
+		</dependency>
+		<dependency>
+			<groupId>org.glassfish.jersey.inject</groupId>
+			<artifactId>jersey-hk2</artifactId>
+			<version>3.1.9</version>
+		</dependency>
+		<dependency>
+			<groupId>org.hsqldb</groupId>
+			<artifactId>hsqldb</artifactId>
+			<version>2.7.4</version>
+		</dependency>
+		<!-- SAX parsing for Java execution during Maven build -->
+		<dependency>
+			<groupId>xerces</groupId>
+			<artifactId>xercesImpl</artifactId>
+			<version>2.12.2</version>
+		</dependency>
+		<!--  Predefined test environment -->
+		<dependency>
+			<groupId>org.junit.jupiter</groupId>
+			<artifactId>junit-jupiter-api</artifactId>
+			<version>5.12.1</version>
+			<scope>test</scope>
+		</dependency>
 	</dependencies>
-    
+
 	<build>
 		<finalName>fcs</finalName>
 		<plugins>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-war-plugin</artifactId>
-                <version>3.3.1</version>
-            </plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-war-plugin</artifactId>
+				<version>3.3.1</version>
+			</plugin>
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-compiler-plugin</artifactId>
@@ -108,18 +125,19 @@
 					<target>21</target>
 				</configuration>
 			</plugin>
-            <!-- ************************************************************** -->
-            <!-- OPTIONAL COPYING OF TOOLSET                                    -->
-            <!-- Copies the tools for the version into /cctoolset-directory of  -->
-            <!-- project. You may then directly start it, e.g. by batch file:   -->
-            <!-- /projectdirectory                                              -->
-            <!--   /cctoolset                                                   -->
-            <!--     eclnteditor_springboot.war                                 --> 
-            <!--     start.bat                                                  -->
-            <!-- In start.bat:                                                  --> 
-            <!-- java -jar eclnteditor_springboot.war configDir=../cctoolsetconfig -->
-            <!-- ************************************************************** -->
-            <!--
+			<!-- ************************************************************** -->
+			<!-- OPTIONAL COPYING OF TOOLSET                                    -->
+			<!-- Copies the tools for the version into /cctoolset-directory of  -->
+			<!-- project. You may then directly start it, e.g. by batch file:   -->
+			<!-- /projectdirectory                                              -->
+			<!--   /cctoolset                                                   -->
+			<!--     eclnteditor_springboot.war                                 -->
+			<!--     start.bat                                                  -->
+			<!-- In start.bat:                                                  -->
+			<!-- java -jar eclnteditor_springboot.war
+			configDir=../cctoolsetconfig -->
+			<!-- ************************************************************** -->
+			<!--
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-dependency-plugin</artifactId>
@@ -145,124 +163,156 @@
                 </executions>
             </plugin>
             -->
-            <!-- ************************************************************** -->
-            <!-- BUILD JAR MAVEN ARTIFACT                                       -->
-            <!-- This pom.xml is about a .war project. In the following         -->
-            <!-- section a .jar library version is built out of the project's   -->
-            <!-- content.                                                       -->
-            <!-- ************************************************************** -->
-            <!-- ************************************************************** -->
-            <!-- RAPIDAPP GENERATION                                            -->
-            <!-- Generation of artifacts based on ccda_metadata.xml             -->
-            <!-- ************************************************************** -->
-            <plugin>
-                <groupId>org.codehaus.mojo</groupId>
-                <artifactId>exec-maven-plugin</artifactId>
-                <version>3.3.0</version>
-                <executions>
-                    <!-- ************************************************************** -->
-                    <!-- BUILD JAR MAVEN ARTIFACT                                       -->
-                    <!-- ************************************************************** -->
-                    <execution>
-                        <id>CreatePomXml4Jar</id>
-                        <phase>generate-resources</phase>
-                        <goals><goal>java</goal></goals>
-                        <configuration>
-                            <mainClass>org.eclnt.jsfserver.tools.PomXmlUtilCallerCreatePomXml4Jar</mainClass>
-                            <arguments>
-                                <argument>${project.basedir}/pom.xml</argument>
-                                <argument>${project.basedir}/build/pom4jar.xml</argument>
-                                <!-- <argument>...explicitGroupId, otherwise groupId of this pom.xml...</argument> -->
-                                <!-- <argument>...explicitArtifactId, otherwise artifactId+_lib of this pom.xml...</argument> -->
-                            </arguments>
-                        </configuration>
-                    </execution>
-                    <execution>
-                        <!-- ************************************************************** -->
-                        <!-- RAPIDAPP GENERATION                                            -->
-                        <!-- ************************************************************** -->
-                        <id>generate-rapidapp</id>
-                        <phase>generate-sources</phase>
-                        <goals><goal>java</goal></goals>
-                        <configuration>
-                            <mainClass>org.eclnt.dataapp.logic.beancreation.BCIGeneratorALLCaller</mainClass>
-                            <arguments>
-                                <argument>${project.artifactId}</argument>
-                                <argument>${project.basedir}</argument>
-                            </arguments>
-                            <classpathScope>compile</classpathScope>
-                        </configuration>
-                    </execution>
-                </executions>
-            </plugin>
-            <plugin>
-                <artifactId>maven-antrun-plugin</artifactId>
-                <version>3.1.0</version>
-                <executions>
-                    <!-- ************************************************************** -->
-                    <!-- BUILD JAR MAVEN ARTIFACT                                       -->
-                    <!-- ************************************************************** -->
-                    <execution>
-                        <id>build-jar</id>
-                        <phase>package</phase>
-                        <goals><goal>run</goal></goals>
-                        <configuration>
-                            <target>
-                                <delete dir="${project.basedir}/target/tempjar" failonerror="false"/>
-                                <mkdir dir="${project.basedir}/target/tempjar/META-INF/maven/${project.groupId}/${project.artifactId}_lib"/>
-                                <copy file="${project.basedir}/build/pom4jar.xml"
-                                      tofile="${project.basedir}/target/tempjar/META-INF/maven/${project.groupId}/${project.artifactId}_lib/pom.xml"/>
-                                <jar destfile="${project.basedir}/target/${project.artifactId}_lib.jar">
-                                    <fileset dir="${project.basedir}/target/classes/">
-                                        <include name="**"/>
-                                        <exclude name="ccee_config.properties"/>
-                                    </fileset>
-                                    <fileset dir="${project.basedir}/target/tempjar/">
-                                        <include name="**/*.*"/>
-                                    </fileset>
-                                </jar>
-                                <delete dir="${project.basedir}/target/tempjar" failonerror="false"/>
-                                <jar destfile="${project.basedir}/target/${project.artifactId}_lib_sources.jar">
-                                    <fileset dir="${project.basedir}/src/main/java">
-                                        <include name="**/**"/>
-                                    </fileset>
-                                    <fileset dir="${project.basedir}/src/main/resources">
-                                        <include name="**/**"/>
-                                    </fileset>
-                                </jar>
-                            </target>
-                        </configuration>
-                    </execution>
-                </executions>
-            </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-install-plugin</artifactId>
-                <version>2.5.2</version>
-                <executions>
-                    <!-- ************************************************************** -->
-                    <!-- BUILD JAR MAVEN ARTIFACT                                       -->
-                    <!-- ************************************************************** -->
-                    <execution>
-                        <id>versionArtifact</id>
-                        <phase>install</phase>
-                        <goals><goal>install-file</goal></goals>
-                        <configuration>
-                            <file>${project.basedir}/target/${project.artifactId}_lib.jar</file>
-                            <sources>${project.basedir}/target/${project.artifactId}_lib_sources.jar</sources>
-                            <groupId>${project.groupId}</groupId>
-                            <artifactId>${project.artifactId}_lib</artifactId>
-                            <version>${project.version}</version>
-                            <packaging>jar</packaging>
-                            <createChecksum>true</createChecksum>
-                            <pomFile>build/pom4jar.xml</pomFile>
-                        </configuration>
-                    </execution>
-                </executions>
-            </plugin>
-            <!-- ************************************************************** -->
+			<!-- ************************************************************** -->
+			<!-- BUILD JAR MAVEN ARTIFACT                                       -->
+			<!-- This pom.xml is about a .war project. In the following         -->
+			<!-- section a .jar library version is built out of the project's   -->
+			<!-- content.                                                       -->
+			<!-- ************************************************************** -->
+			<!-- ************************************************************** -->
+			<!-- RAPIDAPP GENERATION                                            -->
+			<!-- Generation of artifacts based on ccda_metadata.xml             -->
+			<!-- ************************************************************** -->
+			<plugin>
+				<groupId>org.codehaus.mojo</groupId>
+				<artifactId>exec-maven-plugin</artifactId>
+				<version>3.3.0</version>
+				<executions>
+					<!--
+					************************************************************** -->
+					<!-- BUILD JAR MAVEN ARTIFACT                                       -->
+					<!--
+					************************************************************** -->
+					<execution>
+						<id>CreatePomXml4Jar</id>
+						<phase>generate-resources</phase>
+						<goals>
+							<goal>java</goal>
+						</goals>
+						<configuration>
+							<mainClass>
+								org.eclnt.jsfserver.tools.PomXmlUtilCallerCreatePomXml4Jar</mainClass>
+							<arguments>
+								<argument>${project.basedir}/pom.xml</argument>
+								<argument>${project.basedir}/build/pom4jar.xml</argument>
+								<!-- <argument>...explicitGroupId, otherwise
+								groupId of this pom.xml...</argument> -->
+								<!-- <argument>...explicitArtifactId, otherwise
+								artifactId+_lib of this pom.xml...</argument> -->
+							</arguments>
+						</configuration>
+					</execution>
+					<execution>
+						<!--
+						************************************************************** -->
+						<!-- RAPIDAPP GENERATION                                            -->
+						<!--
+						************************************************************** -->
+						<id>generate-rapidapp</id>
+						<phase>generate-sources</phase>
+						<goals>
+							<goal>java</goal>
+						</goals>
+						<configuration>
+							<mainClass>
+								org.eclnt.dataapp.logic.beancreation.BCIGeneratorALLCaller</mainClass>
+							<arguments>
+								<argument>${project.artifactId}</argument>
+								<argument>${project.basedir}</argument>
+							</arguments>
+							<classpathScope>compile</classpathScope>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
+			<plugin>
+				<artifactId>maven-antrun-plugin</artifactId>
+				<version>3.1.0</version>
+				<executions>
+					<!--
+					************************************************************** -->
+					<!-- BUILD JAR MAVEN ARTIFACT                                       -->
+					<!--
+					************************************************************** -->
+					<execution>
+						<id>build-jar</id>
+						<phase>package</phase>
+						<goals>
+							<goal>run</goal>
+						</goals>
+						<configuration>
+							<target>
+								<delete dir="${project.basedir}/target/tempjar"
+									failonerror="false" />
+								<mkdir
+									dir="${project.basedir}/target/tempjar/META-INF/maven/${project.groupId}/${project.artifactId}_lib" />
+								<copy
+									file="${project.basedir}/build/pom4jar.xml"
+									tofile="${project.basedir}/target/tempjar/META-INF/maven/${project.groupId}/${project.artifactId}_lib/pom.xml" />
+								<jar
+									destfile="${project.basedir}/target/${project.artifactId}_lib.jar">
+									<fileset
+										dir="${project.basedir}/target/classes/">
+										<include name="**" />
+										<exclude name="ccee_config.properties" />
+									</fileset>
+									<fileset
+										dir="${project.basedir}/target/tempjar/">
+										<include name="**/*.*" />
+									</fileset>
+								</jar>
+								<delete dir="${project.basedir}/target/tempjar"
+									failonerror="false" />
+								<jar
+									destfile="${project.basedir}/target/${project.artifactId}_lib_sources.jar">
+									<fileset
+										dir="${project.basedir}/src/main/java">
+										<include name="**/**" />
+									</fileset>
+									<fileset
+										dir="${project.basedir}/src/main/resources">
+										<include name="**/**" />
+									</fileset>
+								</jar>
+							</target>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-install-plugin</artifactId>
+				<version>2.5.2</version>
+				<executions>
+					<!--
+					************************************************************** -->
+					<!-- BUILD JAR MAVEN ARTIFACT                                       -->
+					<!--
+					************************************************************** -->
+					<execution>
+						<id>versionArtifact</id>
+						<phase>install</phase>
+						<goals>
+							<goal>install-file</goal>
+						</goals>
+						<configuration>
+							<file>
+								${project.basedir}/target/${project.artifactId}_lib.jar</file>
+							<sources>
+								${project.basedir}/target/${project.artifactId}_lib_sources.jar</sources>
+							<groupId>${project.groupId}</groupId>
+							<artifactId>${project.artifactId}_lib</artifactId>
+							<version>${project.version}</version>
+							<packaging>jar</packaging>
+							<createChecksum>true</createChecksum>
+							<pomFile>build/pom4jar.xml</pomFile>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
+			<!-- ************************************************************** -->
 
- 		</plugins>
+		</plugins>
 	</build>
-    
+
 </project>
