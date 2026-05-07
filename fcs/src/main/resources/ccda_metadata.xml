@@ -66,7 +66,7 @@
         <property dataType="EBELP" id="ebelp" key="true" mandatory="false" sequence="2" text="Posizione del documento"/>
         <property dataType="ETENR" id="etenr" key="true" mandatory="false" sequence="3" text="Numero schedulazione"/>
         <property dataType="VOMNG" id="ameng" mandatory="false" sequence="18" text="Quantità precedente per schedulazione"/>
-        <property dataType="BEMID" id="bemid" mandatory="false" sequence="36" text="BEM ID"/>
+        <property dataType="ccda_base.idString50" id="bemid" mandatory="false" sequence="36" text="BEM ID"/>
         <property dataType="ZBRGEW_EXANTE" id="brgew_row" mandatory="false" sequence="31" text="Peso lordo &quot;Ex ante&quot;"/>
         <property dataType="BSTME" id="bstme" mandatory="false" sequence="23" text="UM dell'ordin d'acquisto"/>
         <property dataType="ZFCS_BSTMEXPALLET" id="bstmexpallet" mandatory="false" sequence="26" text="Quantità in UM di movimentazione (Bag x Pallet)"/>
@@ -123,7 +123,7 @@
         <property dataType="MBLNR" id="mblnr" key="true" mandatory="false" sequence="4" text="Numero documento materiale"/>
         <property dataType="MJAHR" id="mjahr" key="true" mandatory="false" sequence="5" text="Esercizio documento materiale"/>
         <property dataType="VOMNG" id="ameng" mandatory="false" sequence="19" text="Qta precedente per schedulazioni"/>
-        <property dataType="BEMID" id="bemid" mandatory="false" sequence="37" text="BEM ID"/>
+        <property autoIncrement="true" dataType="ccda_base.idString50" id="bemid" mandatory="false" sequence="37" text="BEM ID"/>
         <property dataType="ZBRGEW_EXANTE" id="brgew_row" mandatory="false" sequence="32" text="Peso lordo &quot;Ex ante&quot;"/>
         <property dataType="BSTME" id="bstme" mandatory="false" sequence="24" text="UM dell'ordine d'acquisto"/>
         <property dataType="ZFCS_BSTMEXPALLET" id="bstmexpallet" mandatory="false" sequence="27" text="Qta di acquisto per pallet"/>
@@ -232,7 +232,7 @@
         <property dataType="ETENR" id="etenr" key="true" mandatory="false" sequence="3" text="Numero schedulazione"/>
         <property dataType="CHARG_D" id="in_charg" key="true" mandatory="false" sequence="5" text="Numero partita"/>
         <property dataType="XBLNR" id="in_xblnr" key="true" mandatory="false" sequence="4" text="Numero documento di riferimento"/>
-        <property dataType="BEMID" id="bemid" mandatory="false" sequence="8" text="BEM ID"/>
+        <property dataType="ccda_base.idString50" id="bemid" mandatory="false" sequence="8" text="BEM ID"/>
         <property dataType="CHARG_D" id="charg" mandatory="false" sequence="11" text="Partita"/>
         <property dataType="DATUM" id="datum" mandatory="true" sequence="17" text="Data"/>
         <property dataType="ERNAM" id="ernam" mandatory="false" sequence="19" text="Utente"/>
@@ -255,7 +255,7 @@
         <property dataType="XBLNR" id="in_xblnr" key="true" mandatory="false" sequence="4" text="Numero documento di riferimento"/>
         <property dataType="MBLNR" id="mblnr" key="true" mandatory="false" sequence="6" text="Numero documento materiale"/>
         <property dataType="MJAHR" id="mjahr" key="true" mandatory="false" sequence="7" text="Esercizio documento materiale"/>
-        <property dataType="BEMID" id="bemid" mandatory="false" sequence="10" text="BEM ID"/>
+        <property dataType="ccda_base.idString50" id="bemid" mandatory="false" sequence="10" text="BEM ID"/>
         <property dataType="CHARG_D" id="charg" mandatory="false" sequence="13" text="Partita"/>
         <property dataType="DATUM" id="datum" mandatory="false" sequence="19" text="Data"/>
         <property dataType="ERNAM" id="ernam" mandatory="false" sequence="21" text="Utente"/>

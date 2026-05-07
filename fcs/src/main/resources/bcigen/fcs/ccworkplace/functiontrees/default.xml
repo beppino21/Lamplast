@@ -2,15 +2,17 @@
 <workplaceFunctionTreeInfoNode>
     <folderOpened>false</folderOpened>
     <subNodes>
-        <text>Workplace Top Node 1</text>
+        <text>eOne FCS SAP integration</text>
         <folderOpened>true</folderOpened>
         <subNodes>
-            <text>Workplace Sub Node 1</text>
+            <text>Dati anagrafici</text>
             <folderOpened>true</folderOpened>
             <subNodes>
-                <text>Some Entity 1</text>
+                <text>Clienti</text>
+                <folderOpened>false</folderOpened>
                 <workpageStartInfo>
-                    <pageBeanName>Entity1List</pageBeanName>
+                    <pageBeanName>eone.fcs.view.dialogs.FCSKNA1List</pageBeanName>
+                    <id>eone.fcs.view.dialogs.FCSKNA1List</id>
                     <openMultipleInstances>false</openMultipleInstances>
                     <decorated>true</decorated>
                     <popupSupported>true</popupSupported>
@@ -22,12 +24,50 @@
                 </workpageStartInfo>
             </subNodes>
             <subNodes>
-                <text>Some Entity 2</text>
+                <text>Fornitori</text>
+                <folderOpened>false</folderOpened>
                 <workpageStartInfo>
-                    <pageBeanName>Entity2List</pageBeanName>
+                    <pageBeanName>eone.fcs.view.dialogs.FCSLFA1List</pageBeanName>
+                    <id>eone.fcs.view.dialogs.FCSLFA1List</id>
                     <openMultipleInstances>false</openMultipleInstances>
                     <decorated>true</decorated>
                     <popupSupported>true</popupSupported>
+                    <closeSupported>true</closeSupported>
+                    <openAsPopupByDefault>false</openAsPopupByDefault>
+                    <excludeFromSavePerspective>false</excludeFromSavePerspective>
+                    <paramMap/>
+                    <sortIndex>-1</sortIndex>
+                </workpageStartInfo>
+            </subNodes>
+            <subNodes>
+                <text>Materiali</text>
+                <folderOpened>false</folderOpened>
+                <workpageStartInfo>
+                    <pageBeanName>eone.fcs.view.dialogs.FCSMARAList</pageBeanName>
+                    <id>eone.fcs.view.dialogs.FCSMARAList</id>
+                    <openMultipleInstances>true</openMultipleInstances>
+                    <decorated>true</decorated>
+                    <popupSupported>false</popupSupported>
+                    <closeSupported>true</closeSupported>
+                    <openAsPopupByDefault>false</openAsPopupByDefault>
+                    <excludeFromSavePerspective>false</excludeFromSavePerspective>
+                    <paramMap/>
+                    <sortIndex>-1</sortIndex>
+                </workpageStartInfo>
+            </subNodes>
+        </subNodes>
+        <subNodes>
+            <text>Staging tables</text>
+            <folderOpened>false</folderOpened>
+            <subNodes>
+                <text>Schedulazioni (EKET)</text>
+                <folderOpened>false</folderOpened>
+                <workpageStartInfo>
+                    <pageBeanName>eone.fcs.view.dialogs.FCSEKETList</pageBeanName>
+                    <id>eone.fcs.view.dialogs.FCSEKETList</id>
+                    <openMultipleInstances>true</openMultipleInstances>
+                    <decorated>true</decorated>
+                    <popupSupported>false</popupSupported>
                     <closeSupported>true</closeSupported>
                     <openAsPopupByDefault>false</openAsPopupByDefault>
                     <excludeFromSavePerspective>false</excludeFromSavePerspective>

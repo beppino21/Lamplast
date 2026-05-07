@@ -60,12 +60,12 @@ public class DOFCSMSEG
     public void setIn_xblnr(String value) { m_in_xblnr = value; }
 
     public static final String P_bemid = "bemid";
-    UUID m_bemid = UUID.randomUUID();
-    @doproperty(sequence=8,uuid2string=true)
-    @dovalidationinfo(charMaxLength=36)
+    String m_bemid;
+    @doproperty(sequence=8)
+    @dovalidationinfo(charMaxLength=50,convertEmptyToNull=true)
     @XmlAttribute()
-    public UUID getBemid() { return m_bemid; }
-    public void setBemid(UUID value) { m_bemid = value; }
+    public String getBemid() { return m_bemid; }
+    public void setBemid(String value) { m_bemid = value; }
 
     public static final String P_charg = "charg";
     String m_charg;

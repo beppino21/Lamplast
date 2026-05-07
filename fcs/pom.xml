@@ -25,7 +25,6 @@
 		</repository>
 	</repositories>
 
-
 	<properties>
 		<!-- This is the CaptainCasa version to be used. -->
 		<cc.version>20260331</cc.version>
@@ -93,6 +92,14 @@
 			<artifactId>hsqldb</artifactId>
 			<version>2.7.4</version>
 		</dependency>
+		
+		<!-- REST endpoints WMS RFID -->
+<!--		<dependency>-->
+<!--			<groupId>eone</groupId>-->
+<!--			<artifactId>fcs-rest</artifactId>-->
+<!--			<version>0.0.1</version>-->
+<!--		</dependency>		-->
+		
 		<!-- SAX parsing for Java execution during Maven build -->
 		<dependency>
 			<groupId>xerces</groupId>
@@ -106,6 +113,7 @@
 			<version>5.12.1</version>
 			<scope>test</scope>
 		</dependency>
+
 	</dependencies>
 
 	<build>

@@ -18,6 +18,11 @@
 
 	<!-- ********** CONTEXT PARAMETERS *************************************** -->
 
+	<context-param>
+		<param-name>eclnt_excludedpaths</param-name>
+		<param-value>/api/inbound</param-value>
+	</context-param>
+
 	<!-- JBoss Deployment - use the reference implementation that comes with 
 		CapatainCasa by default -->
 	<context-param>

@@ -38,7 +38,7 @@ public class EketRepository {
     public EketRepository() {
         Properties props = new Properties();
         try (InputStream is = getClass().getClassLoader()
-                .getResourceAsStream("ccee_config.properties")) {
+                .getResourceAsStream("eone/ccee_config.properties")) {
             if (is == null) {
                 throw new RepositoryException(
                     "ccee_config.properties non trovato nel classpath");

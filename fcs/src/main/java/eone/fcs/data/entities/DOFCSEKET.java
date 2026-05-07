@@ -52,12 +52,12 @@ public class DOFCSEKET
     public void setAmeng(Float value) { m_ameng = value; }
 
     public static final String P_bemid = "bemid";
-    UUID m_bemid = UUID.randomUUID();
-    @doproperty(sequence=36,uuid2string=true)
-    @dovalidationinfo(charMaxLength=36)
+    String m_bemid;
+    @doproperty(sequence=36)
+    @dovalidationinfo(charMaxLength=50,convertEmptyToNull=true)
     @XmlAttribute()
-    public UUID getBemid() { return m_bemid; }
-    public void setBemid(UUID value) { m_bemid = value; }
+    public String getBemid() { return m_bemid; }
+    public void setBemid(String value) { m_bemid = value; }
 
     public static final String P_brgew_row = "brgew_row";
     Float m_brgew_row;
