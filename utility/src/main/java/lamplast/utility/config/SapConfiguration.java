@@ -17,6 +17,10 @@ public class SapConfiguration {
     private final String password;
     private final String client;
 
+    // --- URL visualizzazione ordini ---
+    private final String urlVa03;
+    private final String urlFiori;
+
     // --- Nomi colonne Excel ---
     private final String colOrdine;
     private final String colPosizione;
@@ -36,6 +40,12 @@ public class SapConfiguration {
         this.username = props.getProperty("sap.username");
         this.password = props.getProperty("sap.password");
         this.client   = props.getProperty("sap.client");
+
+        // URL ordini (con default nel caso mancassero)
+        this.urlVa03  = props.getProperty("sap.url.va03",
+                            "/sap/bc/ui2/flp#SalesOrder-manage?SalesOrder=");
+        this.urlFiori = props.getProperty("sap.url.fiori",
+                            "/sap/bc/ui2/flp#SalesOrder-displayFactSheet?SalesOrder=");
 
         // Colonne Excel (con valori di default nel caso mancassero)
         this.colOrdine        = props.getProperty("excel.col.ordine",        "Ordine");
@@ -109,12 +119,28 @@ public class SapConfiguration {
                                           .encodeToString(credentials.getBytes());
     }
 
-    /**
-     * URL base dell'API OData Sales Order.
-     * Garantisce esattamente uno slash tra baseUrl e il path (no double-slash).
-     */
     public String getSalesOrderApiUrl() {
         return baseUrl + "/sap/opu/odata/SAP/API_SALES_ORDER_SRV/";
+    }
+
+    // -------------------------------------------------------
+    // GETTER — URL ordini
+    // -------------------------------------------------------
+
+    /**
+     * URL completo per app Fiori VA03 (Manage Sales Order).
+     * Aggiunge già baseUrl — basta appendere il numero ordine.
+     */
+    public String getFullUrlVa03(String salesOrder) {
+        return baseUrl + urlVa03 + salesOrder;
+    }
+
+    /**
+     * URL completo per Fiori FactSheet (vista rapida read-only).
+     * Aggiunge già baseUrl — basta appendere il numero ordine.
+     */
+    public String getFullUrlFiori(String salesOrder) {
+        return baseUrl + urlFiori + salesOrder;
     }
 
     // -------------------------------------------------------

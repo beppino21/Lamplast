@@ -35,8 +35,14 @@ public class Xlsx2schedlinesUI extends PageBean implements Serializable {
 
     private FIXGRIDListBinding<GridJSONdataItem> m_gridJSONdata = new FIXGRIDListBinding<>();
 
-    private Boolean m_enableVA03 = false;
-    private String  m_salesOrderNumber;
+    // Link VA03 - App Fiori Manage Sales Order
+    private Boolean m_enableVA03           = false;
+    private String  m_salesOrderNumberVA03;
+
+    // Link FioriVA03 - FactSheet Fiori (read-only)
+    private Boolean m_enableFioriVA03      = false;
+    private String  m_salesOrderNumberFiori;
+
     private String  m_fileName;
     private String  m_logText = "Nuova sessione";
 
@@ -90,9 +96,14 @@ public class Xlsx2schedlinesUI extends PageBean implements Serializable {
 
         private void showOrderDetails(String orderNumber) {
             Statusbar.outputSuccess("Ordine selezionato: " + orderNumber);
-            m_salesOrderNumber = sapConfig.getBaseUrl()
-                + "/sap/bc/ui2/flp#SalesOrder-displayFactSheet?SalesOrder=" + orderNumber;
-            m_enableVA03 = true;
+
+            // Link VA03 - App Fiori Manage Sales Order (transazionale)
+            m_salesOrderNumberVA03   = sapConfig.getFullUrlVa03(orderNumber);
+            m_enableVA03             = true;
+
+            // Link FioriVA03 - FactSheet Fiori (read-only)
+            m_salesOrderNumberFiori  = sapConfig.getFullUrlFiori(orderNumber);
+            m_enableFioriVA03        = true;
         }
     }
 
@@ -102,11 +113,9 @@ public class Xlsx2schedlinesUI extends PageBean implements Serializable {
 
     public Xlsx2schedlinesUI() {
         try {
-            // Carica config (SAP + label Excel) da config.properties
             this.sapConfig  = new SapConfiguration();
             this.sapService = new SapScheduleLineService(sapConfig);
 
-            // Label colonne lette dalla configurazione
             m_lblOrdine        = sapConfig.getColOrdine();
             m_lblPosizione     = sapConfig.getColPosizione();
             m_lblSchedulazione = sapConfig.getColSchedulazione();
@@ -116,8 +125,6 @@ public class Xlsx2schedlinesUI extends PageBean implements Serializable {
             m_lblDataProd      = sapConfig.getColDataProd();
 
         } catch (Exception e) {
-            // Se il config.properties non è trovato, lo segnaliamo chiaramente
-            // nella status bar invece di far esplodere tutta la pagina
             m_logText = "ERRORE CONFIGURAZIONE: " + e.getMessage()
                       + " — verificare che config.properties sia in src/main/resources/";
             Statusbar.outputAlert(m_logText);
@@ -130,9 +137,6 @@ public class Xlsx2schedlinesUI extends PageBean implements Serializable {
     // GESTORI EVENTI
     // =========================
 
-    /**
-     * Caricamento file Excel.
-     */
     public void onLoadXLSX(ActionEvent ae) {
 
         if (sapConfig == null) {
@@ -140,28 +144,27 @@ public class Xlsx2schedlinesUI extends PageBean implements Serializable {
             return;
         }
 
-        // Configurazione parser Excel con le label lette da config
         ExcelParser.ColumnMapping mapping = new ExcelParser.ColumnMapping();
-        mapping.orderColumn       = m_lblOrdine;
-        mapping.itemColumn        = m_lblPosizione;
-        mapping.scheduleColumn    = m_lblSchedulazione;
-        mapping.materialColumn    = m_lblMateriale;
-        mapping.materialTextColumn= m_lblMaterialeText;
-        mapping.quantityColumn    = m_lblQuantita;
-        mapping.dateColumn        = m_lblDataProd;
+        mapping.orderColumn        = m_lblOrdine;
+        mapping.itemColumn         = m_lblPosizione;
+        mapping.scheduleColumn     = m_lblSchedulazione;
+        mapping.materialColumn     = m_lblMateriale;
+        mapping.materialTextColumn = m_lblMaterialeText;
+        mapping.quantityColumn     = m_lblQuantita;
+        mapping.dateColumn         = m_lblDataProd;
 
         this.excelParser = new ExcelParser(mapping);
 
         // Reset stato
         m_gridJSONdata.getItems().clear();
-        m_salesOrderNumber = "";
-        m_enableVA03       = false;
-        m_logText          = "Nuova sessione";
-        scheduleLines      = null;
+        m_salesOrderNumberVA03  = "";
+        m_salesOrderNumberFiori = "";
+        m_enableVA03            = false;
+        m_enableFioriVA03       = false;
+        m_logText               = "Nuova sessione";
+        scheduleLines           = null;
 
-        if (!(ae instanceof BaseActionEventUpload)) {
-            return;
-        }
+        if (!(ae instanceof BaseActionEventUpload)) return;
 
         BaseActionEventUpload bae = (BaseActionEventUpload) ae;
         m_fileName = bae.getClientFileName();
@@ -183,9 +186,6 @@ public class Xlsx2schedlinesUI extends PageBean implements Serializable {
         }
     }
 
-    /**
-     * Aggiornamento schedulazioni su SAP.
-     */
     public void onUpdSchedLine(ActionEvent event) {
 
         if (!m_logText.equalsIgnoreCase("Nuova sessione")) {
@@ -235,12 +235,10 @@ public class Xlsx2schedlinesUI extends PageBean implements Serializable {
                     log.append("  ✗ Errore (HTTP ").append(response.getHttpStatus()).append(")\n");
                     data.setProcessingResult("✗ Errore");
                     data.setErrorMessage("HTTP " + response.getHttpStatus());
-                    if (response.getSapMessage() != null) {
+                    if (response.getSapMessage() != null)
                         log.append("    SAP: ").append(response.getSapMessage()).append("\n");
-                    }
-                    if (response.getSapCode() != null) {
+                    if (response.getSapCode() != null)
                         log.append("    Codice: ").append(response.getSapCode()).append("\n");
-                    }
                     errori++;
                 }
 
@@ -268,7 +266,7 @@ public class Xlsx2schedlinesUI extends PageBean implements Serializable {
     // =========================
 
     private byte[] hexStringToByteArray(String hex) {
-        int len    = hex.length();
+        int len     = hex.length();
         byte[] data = new byte[len / 2];
         for (int i = 0; i < len; i += 2) {
             data[i / 2] = (byte) ((Character.digit(hex.charAt(i),   16) << 4)
@@ -283,43 +281,44 @@ public class Xlsx2schedlinesUI extends PageBean implements Serializable {
 
     public FIXGRIDListBinding<GridJSONdataItem> getGridJSONdata() { return m_gridJSONdata; }
 
-    public String  getLblOrdine()        { return m_lblOrdine; }
-    public void    setLblOrdine(String v){ this.m_lblOrdine = v; }
+    // Link VA03
+    public Boolean getEnableVA03()              { return m_enableVA03; }
+    public void    setEnableVA03(Boolean v)     { this.m_enableVA03 = v; }
+    public String  getSalesOrderNumber()        { return m_salesOrderNumberVA03; }
+    public void    setSalesOrderNumber(String v){ this.m_salesOrderNumberVA03 = v; }
 
-    public String  getLblPosizione()        { return m_lblPosizione; }
-    public void    setLblPosizione(String v){ this.m_lblPosizione = v; }
+    // Link FioriVA03
+    public Boolean getEnableFioriVA03()              { return m_enableFioriVA03; }
+    public void    setEnableFioriVA03(Boolean v)     { this.m_enableFioriVA03 = v; }
+    public String  getSalesOrderNumberFiori()        { return m_salesOrderNumberFiori; }
+    public void    setSalesOrderNumberFiori(String v){ this.m_salesOrderNumberFiori = v; }
 
-    public String  getLblSchedulazione()        { return m_lblSchedulazione; }
-    public void    setLblSchedulazione(String v){ this.m_lblSchedulazione = v; }
+    // Label colonne
+    public String  getLblOrdine()           { return m_lblOrdine; }
+    public void    setLblOrdine(String v)   { this.m_lblOrdine = v; }
+    public String  getLblPosizione()           { return m_lblPosizione; }
+    public void    setLblPosizione(String v)   { this.m_lblPosizione = v; }
+    public String  getLblSchedulazione()           { return m_lblSchedulazione; }
+    public void    setLblSchedulazione(String v)   { this.m_lblSchedulazione = v; }
+    public String  getLblMateriale()           { return m_lblMateriale; }
+    public void    setLblMateriale(String v)   { this.m_lblMateriale = v; }
+    public String  getLblMaterialeText()           { return m_lblMaterialeText; }
+    public void    setLblMaterialeText(String v)   { this.m_lblMaterialeText = v; }
+    public String  getLblQuantita()           { return m_lblQuantita; }
+    public void    setLblQuantita(String v)   { this.m_lblQuantita = v; }
+    public String  getLblDataProd()           { return m_lblDataProd; }
+    public void    setLblDataProd(String v)   { this.m_lblDataProd = v; }
 
-    public String  getLblMateriale()        { return m_lblMateriale; }
-    public void    setLblMateriale(String v){ this.m_lblMateriale = v; }
-
-    public String  getLblMaterialeText()        { return m_lblMaterialeText; }
-    public void    setLblMaterialeText(String v){ this.m_lblMaterialeText = v; }
-
-    public String  getLblQuantita()        { return m_lblQuantita; }
-    public void    setLblQuantita(String v){ this.m_lblQuantita = v; }
-
-    public String  getLblDataProd()        { return m_lblDataProd; }
-    public void    setLblDataProd(String v){ this.m_lblDataProd = v; }
-
-    public Boolean getEnableVA03()         { return m_enableVA03; }
-    public void    setEnableVA03(Boolean v){ this.m_enableVA03 = v; }
-
-    public String  getSalesOrderNumber()         { return m_salesOrderNumber; }
-    public void    setSalesOrderNumber(String v)  { this.m_salesOrderNumber = v; }
-
-    public String  getLogText()         { return m_logText; }
+    // Altri
+    public String  getLogText()          { return m_logText; }
     public void    setLogText(String v)  { this.m_logText = v; }
-
     public String  getFileName()         { return m_fileName; }
-    public void    setFileName(String v)  { this.m_fileName = v; }
+    public void    setFileName(String v) { this.m_fileName = v; }
 
     // =========================
     // PAGEBEAN OVERRIDES
     // =========================
 
-    public String getPageName()              { return "/xlsx2schedlines.xml"; }
+    public String getPageName()                 { return "/xlsx2schedlines.xml"; }
     public String getRootExpressionUsedInPage() { return "#{d.Xlsx2schedlinesUI}"; }
 }

@@ -4,12 +4,12 @@
 <t:beanprocessing id="g_1" beanbinding="#{d.Xlsx2schedlinesUI}" />
 <t:rowtitlebar id="g_48" text="Aggiorna schedulazioni OdV da file XLSX" />
 <t:rowheader id="g_3" >
-<t:coldistance id="g_10" width="100%" />
+<t:coldistance id="g_10" />
 <t:fileuploadbutton id="g_42" actionListener="#{d.Xlsx2schedlinesUI.onLoadXLSX}" fileextensions="xlsx" text="Load XLSX" width="100+" />
 <t:coldistance id="g_71" width="20" />
 <t:button id="g_253" actionListener="#{d.Xlsx2schedlinesUI.onUpdSchedLine}" text="Aggiorna Ordini" width="100+" />
 </t:rowheader>
-<t:rowdistance id="g_67" height="25" />
+<t:rowdistance id="g_67" />
 <t:row id="g_65" />
 <t:rowdistance id="g_69" height="25" />
 <t:row id="g_5" />
@@ -22,8 +22,8 @@
 <t:pane id="g_138" height="100%" width="100%" >
 <t:row id="g_141" >
 <t:coldistance id="g_4" width="100%" />
-<t:hyperlink id="g_136" enabled="#{d.Xlsx2schedlinesUI.enableVA03}" text="VA03" url="#{d.Xlsx2schedlinesUI.salesOrderNumber}" />
-<t:coldistance id="g_6" />
+<t:hyperlink id="g_201" enabled="#{d.Xlsx2schedlinesUI.enableFioriVA03}" text="Visualizza Ordine" url="#{d.Xlsx2schedlinesUI.salesOrderNumberFiori}" />
+<t:coldistance id="g_255" width="60" />
 <t:link id="g_143" actionListener="#{d.Xlsx2schedlinesUI.gridJSONdata.onEditColumnDetails}" text="Colonne..." />
 <t:coldistance id="g_149" />
 <t:link id="g_145" actionListener="#{d.Xlsx2schedlinesUI.gridJSONdata.onOpenGridExportFunctions}" text="Export" />
