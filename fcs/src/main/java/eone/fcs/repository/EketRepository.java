@@ -7,6 +7,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.sql.*;
 import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Properties;
 
 /**
@@ -21,7 +23,7 @@ import java.util.Properties;
  *   T - updateTestata
  *   U - updateRiga
  *   I - setWmsst
- *   F - existsBemidWithStatus, insertMsegHst
+ *   F - loadRigheByBemid, upsertMseg, archiviaDopoGr, setWmsstErrore
  */
 public class EketRepository {
 
@@ -67,9 +69,9 @@ public class EketRepository {
         return DriverManager.getConnection(dbUrl, dbUsername, dbPassword);
     }
 
-    // -------------------------------------------------------------------------
+    // =========================================================================
     // C - Associa bemid alla riga, wmsst=1
-    // -------------------------------------------------------------------------
+    // =========================================================================
 
     /**
      * Associa il bemid (UUID) alla riga identificata da id_eket.
@@ -96,9 +98,9 @@ public class EketRepository {
         }
     }
 
-    // -------------------------------------------------------------------------
+    // =========================================================================
     // D - Annulla scarico: azzera campi in_*, wmsst=0
-    // -------------------------------------------------------------------------
+    // =========================================================================
 
     /**
      * Annulla tutte le righe con il bemid dato.
@@ -175,9 +177,9 @@ public class EketRepository {
         }
     }
 
-    // -------------------------------------------------------------------------
+    // =========================================================================
     // T - Aggiorna dati testata (targa, data arrivo)
-    // -------------------------------------------------------------------------
+    // =========================================================================
 
     /**
      * Aggiorna targa e/o data arrivo su tutte le righe del bemid.
@@ -214,9 +216,9 @@ public class EketRepository {
         }
     }
 
-    // -------------------------------------------------------------------------
+    // =========================================================================
     // U - Aggiorna dati di riga
-    // -------------------------------------------------------------------------
+    // =========================================================================
 
     /**
      * Aggiorna i dati di scarico di una riga specifica identificata da id_eket.
@@ -255,46 +257,19 @@ public class EketRepository {
         try (Connection conn = getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             int i = 1;
-            // in_xblnr (ddt)
-            ps.setBoolean(i++, ddt == null);
-            ps.setString (i++, ddt);
-            // in_bldat (dataDdt formato YYYYMMDD → ISO)
-            ps.setBoolean(i++, dataDdt == null);
-            ps.setString (i++, toIsoDate(dataDdt));
-            // in_menge
-            ps.setBoolean(i++, inMenge == null);
-            ps.setString (i++, inMenge);
-            // in_werks (se non passato usa werks della riga)
-            ps.setBoolean(i++, inWerks == null);
-            ps.setString (i++, inWerks);
-            // in_lgort
-            ps.setBoolean(i++, inLgort == null);
-            ps.setString (i++, inLgort);
-            // in_colli_tot
-            ps.setBoolean(i++, colliTot == null);
-            ps.setString (i++, colliTot);
-            // in_colli_row
-            ps.setBoolean(i++, colliRow == null);
-            ps.setString (i++, colliRow);
-            // in_brgew_tot
-            ps.setBoolean(i++, pesoLordoTot == null);
-            ps.setString (i++, pesoLordoTot);
-            // in_brgew_row
-            ps.setBoolean(i++, pesoLordoRow == null);
-            ps.setString (i++, pesoLordoRow);
-            // in_ntgew_tot
-            ps.setBoolean(i++, pesoNettoTot == null);
-            ps.setString (i++, pesoNettoTot);
-            // in_ntgew_row
-            ps.setBoolean(i++, pesoNettoRow == null);
-            ps.setString (i++, pesoNettoRow);
-            // in_qtaxtag
-            ps.setBoolean(i++, qtaxtag == null);
-            ps.setString (i++, qtaxtag);
-            // in_charg
-            ps.setBoolean(i++, inCharg == null);
-            ps.setString (i++, inCharg);
-            // WHERE
+            ps.setBoolean(i++, ddt == null);        ps.setString(i++, ddt);
+            ps.setBoolean(i++, dataDdt == null);    ps.setString(i++, toIsoDate(dataDdt));
+            ps.setBoolean(i++, inMenge == null);    ps.setString(i++, inMenge);
+            ps.setBoolean(i++, inWerks == null);    ps.setString(i++, inWerks);
+            ps.setBoolean(i++, inLgort == null);    ps.setString(i++, inLgort);
+            ps.setBoolean(i++, colliTot == null);   ps.setString(i++, colliTot);
+            ps.setBoolean(i++, colliRow == null);   ps.setString(i++, colliRow);
+            ps.setBoolean(i++, pesoLordoTot == null); ps.setString(i++, pesoLordoTot);
+            ps.setBoolean(i++, pesoLordoRow == null); ps.setString(i++, pesoLordoRow);
+            ps.setBoolean(i++, pesoNettoTot == null); ps.setString(i++, pesoNettoTot);
+            ps.setBoolean(i++, pesoNettoRow == null); ps.setString(i++, pesoNettoRow);
+            ps.setBoolean(i++, qtaxtag == null);    ps.setString(i++, qtaxtag);
+            ps.setBoolean(i++, inCharg == null);    ps.setString(i++, inCharg);
             ps.setString(i, idEket);
 
             int rows = ps.executeUpdate();
@@ -305,9 +280,9 @@ public class EketRepository {
         }
     }
 
-    // -------------------------------------------------------------------------
+    // =========================================================================
     // I / F - Aggiorna wmsst su tutte le righe del bemid
-    // -------------------------------------------------------------------------
+    // =========================================================================
 
     /**
      * Imposta wmsst su tutte le righe del bemid.
@@ -332,9 +307,9 @@ public class EketRepository {
         }
     }
 
-    // -------------------------------------------------------------------------
+    // =========================================================================
     // F - Verifica esistenza bemid con stato dato
-    // -------------------------------------------------------------------------
+    // =========================================================================
 
     public boolean existsBemidWithStatus(String uuid, String wmsst) {
         String sql = """
@@ -352,46 +327,336 @@ public class EketRepository {
         }
     }
 
-    // -------------------------------------------------------------------------
-    // F - Inserisce righe in tabfcsmseghst dopo creazione GR
-    // -------------------------------------------------------------------------
+    // =========================================================================
+    // F - Carica le righe EKET per bemid (input per GR e per MSEG)
+    // =========================================================================
 
     /**
-     * Copia le righe dello scarico da tabfcseket a tabfcsmseghst
-     * aggiungendo mblnr (numero doc. materiale SAP) e mjahr (anno esercizio).
+     * Legge tutte le righe di tabfcseket per il bemid dato.
+     * Restituisce una lista di record con tutti i campi necessari
+     * sia per popolare tabfcsmseg sia per costruire il payload GR verso S/4HC.
      */
-    public void insertMsegHst(String uuid, String mblnr) {
-        String mjahr = String.valueOf(LocalDate.now().getYear());
+    public List<EketRiga> loadRigheByBemid(String uuid) {
         String sql = """
-                INSERT INTO public.tabfcsmseghst
-                    (tenant, ebeln, ebelp, etenr, in_charg, in_xblnr,
-                     mblnr, mjahr, bemid, charg, datum, ernam, id_eket,
-                     in_lgort, in_menge, in_werks, kappl, maktx, matnr,
-                     meins, mtart, uzeit)
+                SELECT tenant, ebeln, ebelp, etenr, id_eket,
+                       kappl, matnr, maktx, mtart, lifnr,
+                       meins, werks, lgort, charg, xchpf,
+                       in_xblnr, in_charg, in_menge, in_werks, in_lgort,
+                       in_bldat, in_traid, in_data_arrivo,
+                       in_colli_tot, in_colli_row,
+                       in_brgew_tot, in_brgew_row,
+                       in_ntgew_tot, in_ntgew_row,
+                       in_qtaxtag, bemid, ernam
+                FROM public.tabfcseket
+                WHERE bemid = ?
+                ORDER BY ebeln, ebelp, etenr
+                """;
+        List<EketRiga> result = new ArrayList<>();
+        try (Connection conn = getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, uuid);
+            ResultSet rs = ps.executeQuery();
+            while (rs.next()) {
+                EketRiga r = new EketRiga();
+                r.tenant       = rs.getString("tenant");
+                r.ebeln        = rs.getString("ebeln");
+                r.ebelp        = rs.getString("ebelp");
+                r.etenr        = rs.getString("etenr");
+                r.idEket       = rs.getString("id_eket");
+                r.kappl        = rs.getString("kappl");
+                r.matnr        = rs.getString("matnr");
+                r.maktx        = rs.getString("maktx");
+                r.mtart        = rs.getString("mtart");
+                r.lifnr        = rs.getString("lifnr");
+                r.meins        = rs.getString("meins");
+                r.werks        = rs.getString("werks");
+                r.lgort        = rs.getString("lgort");
+                r.charg        = rs.getString("charg");
+                r.xchpf        = rs.getObject("xchpf", Boolean.class);
+                r.inXblnr      = rs.getString("in_xblnr");
+                r.inCharg      = rs.getString("in_charg");
+                r.inMenge      = rs.getObject("in_menge",  Float.class);
+                r.inWerks      = rs.getString("in_werks");
+                r.inLgort      = rs.getString("in_lgort");
+                r.inBldat      = rs.getObject("in_bldat",  java.time.LocalDate.class);
+                r.inTraid      = rs.getString("in_traid");
+                r.inDataArrivo = rs.getObject("in_data_arrivo", java.time.LocalDate.class);
+                r.inColliTot   = rs.getObject("in_colli_tot",   Integer.class);
+                r.inColliRow   = rs.getObject("in_colli_row",   Integer.class);
+                r.inBrgewTot   = rs.getObject("in_brgew_tot",   Float.class);
+                r.inBrgewRow   = rs.getObject("in_brgew_row",   Float.class);
+                r.inNtgewTot   = rs.getObject("in_ntgew_tot",   Float.class);
+                r.inNtgewRow   = rs.getObject("in_ntgew_row",   Float.class);
+                r.inQtaxtag    = rs.getObject("in_qtaxtag",     Float.class);
+                r.bemid        = rs.getString("bemid");
+                r.ernam        = rs.getString("ernam");
+                result.add(r);
+            }
+            log.debug("loadRigheByBemid uuid={} righe={}", uuid, result.size());
+            return result;
+        } catch (SQLException e) {
+            throw new RepositoryException("Errore loadRigheByBemid: " + e.getMessage(), e);
+        }
+    }
+
+    // =========================================================================
+    // F - Popola tabfcsmseg dalle righe EKET
+    // =========================================================================
+
+    /**
+     * Inserisce (o aggiorna) le righe in tabfcsmseg a partire dalle righe EKET.
+     * La chiave è (tenant, ebeln, ebelp, etenr, in_xblnr, in_charg).
+     * In caso di conflitto aggiorna i dati di scarico (quantità, plant, magazzino).
+     *
+     * Nota: in_xblnr e in_charg possono essere NULL — PostgreSQL tratta NULL
+     * come non uguale a NULL nelle chiavi, quindi usiamo COALESCE('') nella
+     * constraint. Verificare che la PK sulla tabella sia definita di conseguenza
+     * (es. using COALESCE o con colonne NOT NULL con default '').
+     */
+    public int upsertMseg(List<EketRiga> righe) {
+        String sql = """
+                INSERT INTO public.tabfcsmseg
+                    (tenant, ebeln, ebelp, etenr, in_xblnr, in_charg,
+                     id_eket, kappl, bemid, xchpf, mtart, charg,
+                     maktx, meins, in_menge, in_werks, in_lgort,
+                     datum, uzeit, ernam)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_DATE, CURRENT_TIME, ?)
+                ON CONFLICT (tenant, ebeln, ebelp, etenr, in_xblnr, in_charg) DO UPDATE SET
+                    id_eket  = EXCLUDED.id_eket,
+                    bemid    = EXCLUDED.bemid,
+                    xchpf    = EXCLUDED.xchpf,
+                    mtart    = EXCLUDED.mtart,
+                    charg    = EXCLUDED.charg,
+                    maktx    = EXCLUDED.maktx,
+                    meins    = EXCLUDED.meins,
+                    in_menge = EXCLUDED.in_menge,
+                    in_werks = EXCLUDED.in_werks,
+                    in_lgort = EXCLUDED.in_lgort,
+                    datum    = CURRENT_DATE,
+                    uzeit    = CURRENT_TIME,
+                    ernam    = EXCLUDED.ernam
+                """;
+        int count = 0;
+        try (Connection conn = getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            for (EketRiga r : righe) {
+                ps.setString(1,  r.tenant);
+                ps.setString(2,  r.ebeln);
+                ps.setString(3,  r.ebelp);
+                ps.setString(4,  r.etenr);
+                ps.setString(5,  r.inXblnr);   // può essere null
+                ps.setString(6,  r.inCharg);   // può essere null
+                ps.setString(7,  r.idEket);
+                ps.setString(8,  r.kappl);
+                ps.setString(9,  r.bemid);
+                ps.setObject(10, r.xchpf);
+                ps.setString(11, r.mtart);
+                ps.setString(12, r.charg);
+                ps.setString(13, r.maktx);
+                ps.setString(14, r.meins);
+                ps.setObject(15, r.inMenge);
+                ps.setString(16, r.inWerks != null ? r.inWerks : r.werks); // fallback su werks OdA
+                ps.setString(17, r.inLgort != null ? r.inLgort : r.lgort); // fallback su lgort OdA
+                ps.setString(18, r.ernam);
+                ps.addBatch();
+                count++;
+            }
+            ps.executeBatch();
+            log.info("upsertMseg: {} righe inserite/aggiornate in tabfcsmseg", count);
+            return count;
+        } catch (SQLException e) {
+            throw new RepositoryException("Errore upsertMseg: " + e.getMessage(), e);
+        }
+    }
+
+    // =========================================================================
+    // F - Archiviazione atomica post-GR (chiamata solo se GR ha avuto successo)
+    // =========================================================================
+
+    /**
+     * Esegue in un'unica transazione PostgreSQL le operazioni di archiviazione
+     * post-registrazione EM:
+     *   1. Copia tabfcseket  → tabfcsekethst  (aggiunge mblnr, mjahr)
+     *   2. Copia tabfcsmseg  → tabfcsmseghst  (aggiunge mblnr, mjahr)
+     *   3. Cancella da tabfcsmseg  le righe del bemid
+     *   4. Cancella da tabfcseket  le righe del bemid
+     *
+     * Se un qualsiasi passo fallisce, viene fatto rollback dell'intera
+     * transazione — nessun dato resta a metà tra live e storico.
+     *
+     * @param uuid  bemid dello scarico
+     * @param mblnr numero documento materiale restituito da S/4HC
+     */
+    public void archiviaDopoGr(String uuid, String mblnr) {
+        String mjahr = String.valueOf(LocalDate.now().getYear());
+
+        String sqlInsertEketHst = """
+                INSERT INTO public.tabfcsekethst
+                    (tenant, ebeln, ebelp, etenr, mblnr, mjahr,
+                     id_eket, kappl, xchpf, eindt, reswk, lifnr,
+                     name1, mtart, charg, maktx, werks, lgort,
+                     menge, ameng, wemng, wamng, menge_open,
+                     meins, bstme, mengexbstme, qtaxtag, bstmexpallet,
+                     qtaxbag, nrtag, nrbag, tag_filler, brgew_row, ntgew_row,
+                     datum, uzeit, ernam, bemid, gewei, wmsst,
+                     in_xblnr, in_traid, in_colli_tot, in_brgew_tot,
+                     in_ntgew_tot, in_qtaxtag, in_data_arrivo, in_bldat)
                 SELECT
-                    tenant, ebeln, ebelp, etenr, in_charg, in_xblnr,
-                    ?, ?, bemid, charg, CURRENT_DATE, ernam, id_eket,
-                    in_lgort, in_menge, in_werks, kappl, maktx, matnr,
-                    meins, mtart, CURRENT_TIME
+                    tenant, ebeln, ebelp, etenr, ?, ?,
+                    id_eket, kappl, xchpf, eindt, reswk, lifnr,
+                    name1, mtart, charg, maktx, werks, lgort,
+                    menge, ameng, wemng, wamng, menge_open,
+                    meins, bstme, mengexbstme, in_qtaxtag, bstmexpallet,
+                    qtaxbag, nrtag, nrbag, tag_filler, in_brgew_row, in_ntgew_row,
+                    CURRENT_DATE, CURRENT_TIME, ernam, bemid, gewei, wmsst,
+                    in_xblnr, in_traid, in_colli_tot, in_brgew_tot,
+                    in_ntgew_tot, in_qtaxtag, in_data_arrivo, in_bldat
                 FROM public.tabfcseket
                 WHERE bemid = ?
                 ON CONFLICT DO NOTHING
                 """;
-        try (Connection conn = getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setString(1, mblnr);
-            ps.setString(2, mjahr);
-            ps.setString(3, uuid);
-            int rows = ps.executeUpdate();
-            log.debug("insertMsegHst uuid={} mblnr={} rows={}", uuid, mblnr, rows);
+
+        String sqlInsertMsegHst = """
+                INSERT INTO public.tabfcsmseghst
+                    (tenant, ebeln, ebelp, etenr, in_xblnr, in_charg, mblnr, mjahr,
+                     id_eket, kappl, bemid, mtart, charg, maktx, meins,
+                     in_menge, in_werks, in_lgort, datum, uzeit, ernam)
+                SELECT
+                    tenant, ebeln, ebelp, etenr, in_xblnr, in_charg, ?, ?,
+                    id_eket, kappl, bemid, mtart, charg, maktx, meins,
+                    in_menge, in_werks, in_lgort, CURRENT_DATE, CURRENT_TIME, ernam
+                FROM public.tabfcsmseg
+                WHERE bemid = ?
+                ON CONFLICT DO NOTHING
+                """;
+
+        String sqlDeleteMseg  = "DELETE FROM public.tabfcsmseg  WHERE bemid = ?";
+        String sqlDeleteEket  = "DELETE FROM public.tabfcseket  WHERE bemid = ?";
+
+        try (Connection conn = getConnection()) {
+            conn.setAutoCommit(false);
+            try {
+                // 1. EKET → EKETHST
+                try (PreparedStatement ps = conn.prepareStatement(sqlInsertEketHst)) {
+                    ps.setString(1, mblnr);
+                    ps.setString(2, mjahr);
+                    ps.setString(3, uuid);
+                    int rows = ps.executeUpdate();
+                    log.info("archiviaDopoGr: {} righe copiate in tabfcsekethst", rows);
+                }
+
+                // 2. MSEG → MSEGHST
+                try (PreparedStatement ps = conn.prepareStatement(sqlInsertMsegHst)) {
+                    ps.setString(1, mblnr);
+                    ps.setString(2, mjahr);
+                    ps.setString(3, uuid);
+                    int rows = ps.executeUpdate();
+                    log.info("archiviaDopoGr: {} righe copiate in tabfcsmseghst", rows);
+                }
+
+                // 3. Cancella da MSEG
+                try (PreparedStatement ps = conn.prepareStatement(sqlDeleteMseg)) {
+                    ps.setString(1, uuid);
+                    int rows = ps.executeUpdate();
+                    log.info("archiviaDopoGr: {} righe cancellate da tabfcsmseg", rows);
+                }
+
+                // 4. Cancella da EKET
+                try (PreparedStatement ps = conn.prepareStatement(sqlDeleteEket)) {
+                    ps.setString(1, uuid);
+                    int rows = ps.executeUpdate();
+                    log.info("archiviaDopoGr: {} righe cancellate da tabfcseket", rows);
+                }
+
+                conn.commit();
+                log.info("archiviaDopoGr: transazione completata per uuid={} mblnr={}", uuid, mblnr);
+
+            } catch (SQLException e) {
+                conn.rollback();
+                log.error("archiviaDopoGr: rollback per uuid={} — {}", uuid, e.getMessage());
+                throw new RepositoryException("Errore archiviazione post-GR: " + e.getMessage(), e);
+            }
         } catch (SQLException e) {
-            throw new RepositoryException("Errore insertMsegHst: " + e.getMessage(), e);
+            throw new RepositoryException("Errore connessione in archiviaDopoGr: " + e.getMessage(), e);
         }
     }
 
-    // -------------------------------------------------------------------------
+    // =========================================================================
+    // F - Marca errore se GR fallisce
+    // =========================================================================
+
+    /**
+     * Imposta wmsst='E' su tutte le righe del bemid in caso di fallimento GR.
+     * Le righe rimangono in tabfcseket e tabfcsmseg per analisi e correzione.
+     */
+    public int setWmsstErrore(String uuid) {
+        String sql = """
+                UPDATE public.tabfcseket
+                SET wmsst = 'E',
+                    datum = CURRENT_DATE,
+                    uzeit = CURRENT_TIME
+                WHERE bemid = ?
+                AND wmsst NOT IN ('3', 'E')
+                """;
+        try (Connection conn = getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, uuid);
+            int rows = ps.executeUpdate();
+            log.warn("setWmsstErrore: {} righe marcate in errore per uuid={}", rows, uuid);
+            return rows;
+        } catch (SQLException e) {
+            throw new RepositoryException("Errore setWmsstErrore: " + e.getMessage(), e);
+        }
+    }
+
+    // =========================================================================
+    // DTO interno — riga EKET letta per evento F
+    // =========================================================================
+
+    /**
+     * Struttura dati che rappresenta una riga di tabfcseket letta per l'evento F.
+     * Usata internamente tra repository e resource/client GR.
+     * Classe pubblica statica per permettere l'accesso da EketResource e
+     * da GoodsReceiptClient senza dipendenze circolari.
+     */
+    public static class EketRiga {
+        public String tenant;
+        public String ebeln;
+        public String ebelp;
+        public String etenr;
+        public String idEket;
+        public String kappl;
+        public String matnr;
+        public String maktx;
+        public String mtart;
+        public String lifnr;
+        public String meins;
+        public String werks;
+        public String lgort;
+        public String charg;
+        public Boolean xchpf;
+        public String inXblnr;
+        public String inCharg;
+        public Float  inMenge;
+        public String inWerks;
+        public String inLgort;
+        public java.time.LocalDate inBldat;
+        public String inTraid;
+        public java.time.LocalDate inDataArrivo;
+        public Integer inColliTot;
+        public Integer inColliRow;
+        public Float   inBrgewTot;
+        public Float   inBrgewRow;
+        public Float   inNtgewTot;
+        public Float   inNtgewRow;
+        public Float   inQtaxtag;
+        public String  bemid;
+        public String  ernam;
+    }
+
+    // =========================================================================
     // Utility
-    // -------------------------------------------------------------------------
+    // =========================================================================
 
     /**
      * Converte data da formato ABAP YYYYMMDD a ISO YYYY-MM-DD.

@@ -123,13 +123,13 @@ public class DOFCSMSEGHST
     public String getIn_lgort() { return m_in_lgort; }
     public void setIn_lgort(String value) { m_in_lgort = value; }
 
-    public static final String P_in_mange = "in_mange";
-    Float m_in_mange;
+    public static final String P_in_menge = "in_menge";
+    Float m_in_menge;
     @doproperty(sequence=16)
     @dovalidationinfo(numericPrecision=13,numericScale=3)
     @XmlAttribute()
-    public Float getIn_mange() { return m_in_mange; }
-    public void setIn_mange(Float value) { m_in_mange = value; }
+    public Float getIn_menge() { return m_in_menge; }
+    public void setIn_menge(Float value) { m_in_menge = value; }
 
     public static final String P_in_werks = "in_werks";
     String m_in_werks;

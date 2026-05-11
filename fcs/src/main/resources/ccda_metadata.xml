@@ -261,7 +261,7 @@
         <property dataType="ERNAM" id="ernam" mandatory="false" sequence="21" text="Utente"/>
         <property dataType="ID_EKET" id="id_eket" mandatory="false" sequence="9" text="Chiave concatenata"/>
         <property dataType="LGORT_D" id="in_lgort" mandatory="false" sequence="18" text="Magazzino IN"/>
-        <property dataType="MENGE_D" id="in_mange" mandatory="false" sequence="16" text="Quantità IN"/>
+        <property dataType="MENGE_D" id="in_menge" mandatory="false" sequence="16" text="Quantità IN"/>
         <property dataType="WERKS_D" id="in_werks" mandatory="false" sequence="17" text="Divisione IN"/>
         <property dataType="KAPPL" id="kappl" mandatory="false" sequence="8" text="Applicazione "/>
         <property dataType="MAKTX" id="maktx" mandatory="false" sequence="14" text="Testo breve materiale"/>

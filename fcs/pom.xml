@@ -83,6 +83,11 @@
 			<version>3.1.9</version>
 		</dependency>
 		<dependency>
+			<groupId>com.fasterxml.jackson.datatype</groupId>
+			<artifactId>jackson-datatype-jsr310</artifactId>
+			<version>2.17.0</version>
+		</dependency>
+		<dependency>
 			<groupId>org.glassfish.jersey.inject</groupId>
 			<artifactId>jersey-hk2</artifactId>
 			<version>3.1.9</version>
@@ -92,14 +97,14 @@
 			<artifactId>hsqldb</artifactId>
 			<version>2.7.4</version>
 		</dependency>
-		
+
 		<!-- REST endpoints WMS RFID -->
-<!--		<dependency>-->
-<!--			<groupId>eone</groupId>-->
-<!--			<artifactId>fcs-rest</artifactId>-->
-<!--			<version>0.0.1</version>-->
-<!--		</dependency>		-->
-		
+		<!--		<dependency>-->
+		<!--			<groupId>eone</groupId>-->
+		<!--			<artifactId>fcs-rest</artifactId>-->
+		<!--			<version>0.0.1</version>-->
+		<!--		</dependency>		-->
+
 		<!-- SAX parsing for Java execution during Maven build -->
 		<dependency>
 			<groupId>xerces</groupId>
