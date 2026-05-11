@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<t:layoutdefinition xmlns:t="http://www.CaptainCasa.com/controllibrary/t"
+                    xmlns:tpbc="http://www.CaptainCasa.com/controllibrary/tpbc" 
+                    xmlns:tdap="http://www.CaptainCasa.com/controllibrary/tdap">
+
+<t:beanprocessing id="g_1" beanbinding="#{d.FCSMOVSAPHSTList}" />
+<t:row id="g_16" >
+<tdap:beangridwitheditor id="g_4" pagebeanbinding="#{d.FCSMOVSAPHSTList.gridWithEditor}">
+</tdap:beangridwitheditor>
+</t:row>
+
+</t:layoutdefinition>

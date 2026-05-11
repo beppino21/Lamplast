@@ -13,10 +13,10 @@ import jakarta.xml.bind.annotation.adapters.*;
 
 
 @XmlRootElement
-@doentity(table="TABFCSMOVSAP",tenantColumn="tenant")
-@doclassmapping(metaDataId="fcs",entityId="FCSMOVSAP",dataContextClassName="eone.fcs.data.datacontexts.DCFcsmovsap",controllerClassName="eone.fcs.logic.controllers.FCSMOVSAPController",detailUIClassName="eone.fcs.view.dialogs.FCSMOVSAPDetail",listControllerClassName="eone.fcs.logic.controllers.FCSMOVSAPListController",beanGridUIClassName="eone.fcs.view.dialogs.FCSMOVSAPBeanGrid")
+@doentity(table="TABFCSMOVSAPHST",tenantColumn="tenant")
+@doclassmapping(metaDataId="fcs",entityId="FCSMOVSAPHST",dataContextClassName="eone.fcs.data.datacontexts.DCFcsmovsaphst",controllerClassName="eone.fcs.logic.controllers.FCSMOVSAPHSTController",detailUIClassName="eone.fcs.view.dialogs.FCSMOVSAPHSTDetail",listControllerClassName="eone.fcs.logic.controllers.FCSMOVSAPHSTListController",beanGridUIClassName="eone.fcs.view.dialogs.FCSMOVSAPHSTBeanGrid")
 
-public class DOFCSMOVSAP
+public class DOFCSMOVSAPHST
     implements Serializable
 {
     public static final String P_movid = "movid";
@@ -34,6 +34,22 @@ public class DOFCSMOVSAP
     @XmlAttribute()
     public String getAufnr() { return m_aufnr; }
     public void setAufnr(String value) { m_aufnr = value; }
+
+    public static final String P_mblnr = "mblnr";
+    String m_mblnr;
+    @doproperty(sequence=23)
+    @dovalidationinfo(charMaxLength=10)
+    @XmlAttribute()
+    public String getMblnr() { return m_mblnr; }
+    public void setMblnr(String value) { m_mblnr = value; }
+
+    public static final String P_mjahr = "mjahr";
+    String m_mjahr;
+    @doproperty(sequence=24)
+    @dovalidationinfo(charMaxLength=4)
+    @XmlAttribute()
+    public String getMjahr() { return m_mjahr; }
+    public void setMjahr(String value) { m_mjahr = value; }
 
     public static final String P_bwart = "bwart";
     String m_bwart;
@@ -61,7 +77,7 @@ public class DOFCSMOVSAP
 
     public static final String P_datum = "datum";
     LocalDate m_datum;
-    @doproperty(sequence=21)
+    @doproperty(sequence=19)
     @XmlAttribute() @XmlJavaTypeAdapter(LocalDateAdapter.class)
 
     public LocalDate getDatum() { return m_datum; }
@@ -125,7 +141,7 @@ public class DOFCSMOVSAP
 
     public static final String P_meins = "meins";
     String m_meins;
-    @doproperty(sequence=19)
+    @doproperty(sequence=20)
     @dovalidationinfo(charMaxLength=3)
     @XmlAttribute()
     public String getMeins() { return m_meins; }
@@ -165,7 +181,7 @@ public class DOFCSMOVSAP
 
     public static final String P_uname = "uname";
     String m_uname;
-    @doproperty(sequence=23)
+    @doproperty(sequence=21)
     @dovalidationinfo(charMaxLength=12)
     @XmlAttribute()
     public String getUname() { return m_uname; }
@@ -197,7 +213,7 @@ public class DOFCSMOVSAP
 
     public static final String P_wmsst = "wmsst";
     String m_wmsst;
-    @doproperty(sequence=20)
+    @doproperty(sequence=25)
     @dovalidationinfo(charMaxLength=1)
     @XmlAttribute()
     public String getWmsst() { return m_wmsst; }

@@ -1,7 +1,7 @@
 CREATE TABLE IF NOT EXISTS TABFCSMOVSAP
 (
     tenant varchar(10),
-    movid varchar(36),
+    movid varchar(50),
     PRIMARY KEY (tenant,movid)
 );
 ALTER TABLE TABFCSMOVSAP ADD COLUMN aufnr varchar(12);

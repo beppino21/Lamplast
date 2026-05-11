@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<t:layoutdefinition xmlns:t="http://www.CaptainCasa.com/controllibrary/t" 
+                    xmlns:tpbc="http://www.CaptainCasa.com/controllibrary/tpbc" 
+                    xmlns:tdap="http://www.CaptainCasa.com/controllibrary/tdap">
+
+<t:beanprocessing id="g_1" beanbinding="#{d.FCSMOVSAPHSTDetail}" />
+<t:row id="g_22" >
+<tdap:framedetaileditor id="g_24" 
+    pagebeanbinding="#{d.FCSMOVSAPHSTDetail.frame}" 
+    shownullcontent="true"
+     
+     
+    >
+<tdap:framedetaileditorbody id="g_25" height="100%" rowdistance="#{ccstylevalue[&#39;@defaultrowdistance@&#39;]}" width="100%" >
+<tdap:rowareas id="g_26">
+<tdap:containerarea id="g_27" text="Some title">
+</tdap:containerarea>
+</tdap:rowareas>
+</tdap:framedetaileditorbody>
+</tdap:framedetaileditor>
+</t:row>
+
+</t:layoutdefinition>
