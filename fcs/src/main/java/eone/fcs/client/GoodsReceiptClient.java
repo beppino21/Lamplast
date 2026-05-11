@@ -32,8 +32,8 @@ import java.util.Properties;
  * GoodsMovementCode: 01 (Goods Receipt for Purchase Order)
  *
  * Flusso della chiamata:
- *   1. GET  .../A_MaterialDocumentHeader/$metadata → X-CSRF-Token (fetch)
- *   2. POST .../A_MaterialDocumentHeader           → crea il documento
+ *   1. GET  .../$metadata → X-CSRF-Token (fetch — endpoint standard S/4HC)
+ *   2. POST .../A_MaterialDocumentHeader → crea il documento
  *
  * Configurazione (da ccee_config.properties):
  *   s4.base.url   = https://my434383-api.s4hana.cloud.sap
@@ -67,7 +67,8 @@ public class GoodsReceiptClient {
     // Tipo movimento
     private static final String MV_TYPE      = "101";
 
-    private static final DateTimeFormatter DATE_FMT = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+    private static final DateTimeFormatter DATE_FMT =
+            DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss");
     private static final ObjectMapper JSON = new ObjectMapper();
 
     private final String baseUrl;
@@ -92,7 +93,10 @@ public class GoodsReceiptClient {
         this.baseUrl    = url;
         this.authHeader = "Basic " + Base64.getEncoder().encodeToString(
                 (username + ":" + password).getBytes(StandardCharsets.UTF_8));
-        this.http       = HttpClient.newHttpClient();
+        this.http       = HttpClient.newBuilder()
+                .cookieHandler(new java.net.CookieManager(
+                        null, java.net.CookiePolicy.ACCEPT_ALL))
+                .build();
 
         log.info("GoodsReceiptClient inizializzato: baseUrl={} user={}", url, username);
     }
@@ -142,13 +146,14 @@ public class GoodsReceiptClient {
      * SAP S/4HC richiede questo handshake per tutte le operazioni di scrittura.
      */
     private String fetchCsrfToken() {
-        String url = baseUrl + SERVICE_PATH + "/" + ENTITY_SET + "?$top=1";
+        String url = baseUrl + SERVICE_PATH + "/$metadata";
         try {
             HttpRequest req = HttpRequest.newBuilder()
                     .uri(URI.create(url))
                     .header("Authorization",  authHeader)
                     .header("X-CSRF-Token",   "Fetch")
-                    .header("Accept",         "application/json")
+                    .header("Accept",         "application/xml")
+                    .header("sap-language",   "IT")
                     .GET()
                     .build();
 
@@ -207,7 +212,7 @@ public class GoodsReceiptClient {
      */
     private String buildPayload(List<EketRiga> righe) {
         try {
-            String today = LocalDate.now().format(DATE_FMT);
+            String today = java.time.LocalDateTime.now().format(DATE_FMT);
 
             // Header del documento materiale
             ObjectNode header = JSON.createObjectNode();
@@ -237,15 +242,17 @@ public class GoodsReceiptClient {
                 item.put("PurchaseOrder",           padEbeln(r.ebeln));
                 item.put("PurchaseOrderItem",       padEbelp(r.ebelp));
 
-                // Quantità
-                double qty = r.inMenge != null ? r.inMenge : 0.0;
+                // Quantità — SAP OData V2 vuole stringa, non numero
+                String qty = r.inMenge != null
+                        ? new java.math.BigDecimal(r.inMenge)
+                            .setScale(3, java.math.RoundingMode.HALF_UP)
+                            .toPlainString()
+                        : "0.000";
                 item.put("QuantityInEntryUnit", qty);
                 item.put("EntryUnit",           nvl(r.meins, ""));
 
-                // DDT della singola riga (ExternalDeliveryNoteNumber)
-                if (r.inXblnr != null && !r.inXblnr.isBlank()) {
-                    item.put("ExternalDeliveryNoteNumber", r.inXblnr);
-                }
+                // DDT fornitore — portato in ReferenceDocument nell'header.
+                // ExternalDeliveryNoteNumber non è supportato in scrittura dall'API.
 
                 // Batch management
                 if (Boolean.TRUE.equals(r.xchpf)) {
@@ -273,10 +280,9 @@ public class GoodsReceiptClient {
                 throw new GoodsReceiptException("Nessuna posizione da inviare per la GR");
             }
 
-            // Associa le posizioni all'header tramite navigazione OData
-            ObjectNode toItems = JSON.createObjectNode();
-            toItems.set("results", items);
-            header.set("to_MaterialDocumentItem", toItems);
+            // to_MaterialDocumentItem come array diretto (non oggetto con "results")
+            // come da payload di esempio ufficiali SAP
+            header.set("to_MaterialDocumentItem", items);
 
             return JSON.writerWithDefaultPrettyPrinter().writeValueAsString(header);
 
@@ -296,8 +302,6 @@ public class GoodsReceiptClient {
      */
     private String postDocument(String csrfToken, String payload) {
         String url = baseUrl + SERVICE_PATH + "/" + ENTITY_SET + "?sap-client=100";
-        // Nota: sap-client va allineato al mandante del tenant. Se ccee_config.properties
-        // espone s4.client, usare quello. Per ora 100 come default per PE.
         try {
             HttpRequest req = HttpRequest.newBuilder()
                     .uri(URI.create(url))
@@ -314,7 +318,7 @@ public class GoodsReceiptClient {
                           ? resp.body().substring(0, 500) + "..." : resp.body());
 
             if (resp.statusCode() < 200 || resp.statusCode() >= 300) {
-                String sapError = extractSapError(resp.body());
+                String sapError = extractSapError(resp.body(), payload);
                 throw new GoodsReceiptException(
                     "S/4HC ha rifiutato la GR (HTTP " + resp.statusCode() + "): " + sapError);
             }
@@ -380,19 +384,25 @@ public class GoodsReceiptClient {
      *   }
      * }
      */
-    private String extractSapError(String body) {
-        if (body == null || body.isBlank()) return "(nessun dettaglio)";
-        try {
-            JsonNode root = JSON.readTree(body);
-            JsonNode msg  = root.path("error").path("message").path("value");
-            if (!msg.isMissingNode() && !msg.asText().isBlank()) {
-                return msg.asText();
+    private String extractSapError(String body, String payload) {
+        String sapMsg;
+        if (body == null || body.isBlank()) {
+            sapMsg = "(nessun dettaglio)";
+        } else {
+            try {
+                JsonNode root = JSON.readTree(body);
+                JsonNode msg  = root.path("error").path("message").path("value");
+                if (!msg.isMissingNode() && !msg.asText().isBlank()) {
+                    sapMsg = msg.asText();
+                } else {
+                    sapMsg = body.length() > 300 ? body.substring(0, 300) + "..." : body;
+                }
+            } catch (Exception e) {
+                sapMsg = body.length() > 300 ? body.substring(0, 300) + "..." : body;
             }
-            // Fallback: ritorna i primi 300 caratteri del body grezzo
-            return body.length() > 300 ? body.substring(0, 300) + "..." : body;
-        } catch (Exception e) {
-            return body.length() > 300 ? body.substring(0, 300) + "..." : body;
         }
+        // DEBUG: include il payload inviato — rimuovere dopo il go-live
+        return sapMsg + "\n\n=== PAYLOAD INVIATO ===\n" + payload;
     }
 
     // -------------------------------------------------------------------------

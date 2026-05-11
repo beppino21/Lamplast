@@ -205,7 +205,12 @@ public class EketRepository {
                 ps.setString(idx++, targa.isEmpty() ? null : targa);
             }
             if (dataArrivo != null) {
-                ps.setString(idx++, dataArrivo.isEmpty() ? null : dataArrivo);
+                if (dataArrivo.isEmpty()) {
+                    ps.setNull(idx++, java.sql.Types.DATE);
+                } else {
+                    ps.setObject(idx++,
+                        java.time.LocalDate.parse(toIsoDate(dataArrivo)));
+                }
             }
             ps.setString(idx, uuid);
             int rows = ps.executeUpdate();
@@ -258,7 +263,12 @@ public class EketRepository {
              PreparedStatement ps = conn.prepareStatement(sql)) {
             int i = 1;
             ps.setBoolean(i++, ddt == null);        ps.setString(i++, ddt);
-            ps.setBoolean(i++, dataDdt == null);    ps.setString(i++, toIsoDate(dataDdt));
+            ps.setBoolean(i++, dataDdt == null);
+            if (dataDdt == null || dataDdt.isBlank()) {
+                ps.setNull(i++, java.sql.Types.DATE);
+            } else {
+                ps.setObject(i++, java.time.LocalDate.parse(toIsoDate(dataDdt)));
+            }
             ps.setBoolean(i++, inMenge == null);    ps.setString(i++, inMenge);
             ps.setBoolean(i++, inWerks == null);    ps.setString(i++, inWerks);
             ps.setBoolean(i++, inLgort == null);    ps.setString(i++, inLgort);
@@ -372,22 +382,22 @@ public class EketRepository {
                 r.werks        = rs.getString("werks");
                 r.lgort        = rs.getString("lgort");
                 r.charg        = rs.getString("charg");
-                r.xchpf        = rs.getObject("xchpf", Boolean.class);
+                r.xchpf        = toBoolean(rs, "xchpf");
                 r.inXblnr      = rs.getString("in_xblnr");
                 r.inCharg      = rs.getString("in_charg");
-                r.inMenge      = rs.getObject("in_menge",  Float.class);
+                r.inMenge      = toFloat(rs, "in_menge");
                 r.inWerks      = rs.getString("in_werks");
                 r.inLgort      = rs.getString("in_lgort");
-                r.inBldat      = rs.getObject("in_bldat",  java.time.LocalDate.class);
+                r.inBldat      = toLocalDate(rs, "in_bldat");
                 r.inTraid      = rs.getString("in_traid");
-                r.inDataArrivo = rs.getObject("in_data_arrivo", java.time.LocalDate.class);
-                r.inColliTot   = rs.getObject("in_colli_tot",   Integer.class);
-                r.inColliRow   = rs.getObject("in_colli_row",   Integer.class);
-                r.inBrgewTot   = rs.getObject("in_brgew_tot",   Float.class);
-                r.inBrgewRow   = rs.getObject("in_brgew_row",   Float.class);
-                r.inNtgewTot   = rs.getObject("in_ntgew_tot",   Float.class);
-                r.inNtgewRow   = rs.getObject("in_ntgew_row",   Float.class);
-                r.inQtaxtag    = rs.getObject("in_qtaxtag",     Float.class);
+                r.inDataArrivo = toLocalDate(rs, "in_data_arrivo");
+                r.inColliTot   = toInteger(rs, "in_colli_tot");
+                r.inColliRow   = toInteger(rs, "in_colli_row");
+                r.inBrgewTot   = toFloat(rs, "in_brgew_tot");
+                r.inBrgewRow   = toFloat(rs, "in_brgew_row");
+                r.inNtgewTot   = toFloat(rs, "in_ntgew_tot");
+                r.inNtgewRow   = toFloat(rs, "in_ntgew_row");
+                r.inQtaxtag    = toFloat(rs, "in_qtaxtag");
                 r.bemid        = rs.getString("bemid");
                 r.ernam        = rs.getString("ernam");
                 result.add(r);
@@ -657,6 +667,40 @@ public class EketRepository {
     // =========================================================================
     // Utility
     // =========================================================================
+
+    /**
+     * Legge un campo NUMERIC/FLOAT dal ResultSet come Float, gestendo il NULL.
+     * Necessario perché getObject(col, Float.class) non è supportato da tutti
+     * i driver PostgreSQL per il tipo NUMERIC/DECIMAL.
+     */
+    private Float toFloat(ResultSet rs, String col) throws SQLException {
+        float val = rs.getFloat(col);
+        return rs.wasNull() ? null : val;
+    }
+
+    /**
+     * Legge un campo INTEGER dal ResultSet come Integer, gestendo il NULL.
+     */
+    private Integer toInteger(ResultSet rs, String col) throws SQLException {
+        int val = rs.getInt(col);
+        return rs.wasNull() ? null : val;
+    }
+
+    /**
+     * Legge un campo BOOLEAN dal ResultSet come Boolean, gestendo il NULL.
+     */
+    private Boolean toBoolean(ResultSet rs, String col) throws SQLException {
+        boolean val = rs.getBoolean(col);
+        return rs.wasNull() ? null : val;
+    }
+
+    /**
+     * Legge un campo DATE dal ResultSet come LocalDate, gestendo il NULL.
+     */
+    private java.time.LocalDate toLocalDate(ResultSet rs, String col) throws SQLException {
+        java.sql.Date val = rs.getDate(col);
+        return val == null ? null : val.toLocalDate();
+    }
 
     /**
      * Converte data da formato ABAP YYYYMMDD a ISO YYYY-MM-DD.
