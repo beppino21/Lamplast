@@ -179,7 +179,7 @@ public class MovSapResource {
 
             // Successo → archivia e rimuovi dallo staging
             repo.archiviaDopoMovimento(movid, result.mblnr, result.mjahr);
-            return ok("Documenti inviati a SAP");
+            return ok("Documenti inviati a SAP | Documento: " + result.mblnr + " / " + result.mjahr);
 
         } catch (MovementException e) {
             // Errore SAP → marca wmsst='E', la riga rimane in staging
@@ -225,4 +225,3 @@ public class MovSapResource {
         }
     }
 }
-

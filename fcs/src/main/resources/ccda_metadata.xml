@@ -191,20 +191,20 @@
     </entity>
     <entity id="FCSMARA" isPublic="true" text="eOne: esportazione anagrafica Materiali per FCS">
         <property dataType="MATNR" id="matnr" key="true" mandatory="false" sequence="1" text="Codice materiale"/>
+        <property dataType="ZBRGEW_EXANTE" id="brgew" mandatory="false" sequence="11" text="Peso lordo"/>
         <property dataType="BSTME" id="bstme" mandatory="false" sequence="6" text="Unità di misura dell'ordine d'acquisto"/>
         <property dataType="DATUM" id="datum" mandatory="false" sequence="7" text="Data"/>
+        <property dataType="GEWEI" id="gewei" mandatory="false" sequence="13" text="Unità di peso"/>
         <property dataType="MAKTX" id="maktx" mandatory="false" sequence="2" text="Descrizione materiale"/>
         <property dataType="MATKL" id="matkl" mandatory="false" sequence="4" text="Gruppo merci"/>
         <property dataType="MEINS" id="meins" mandatory="false" sequence="5" text="Unità di misura di base"/>
         <property dataType="MTART" id="mtart" mandatory="false" sequence="3" text="Tipo di materiale"/>
+        <property dataType="ZNTGEW_EXANTE" id="ntgew" mandatory="false" sequence="12" text="Peso Netto"/>
         <property dataType="UNAME" id="uname" mandatory="false" sequence="9" text="Nome utente"/>
         <property dataType="UPDFL" id="updfl" mandatory="false" sequence="10" text="Flag di aggiornamento"/>
         <property dataType="UZEIT" id="uzeit" mandatory="false" sequence="8" text="Ora"/>
-        <property dataType="ZBRGEW_EXANTE" id="brgew" mandatory="false" sequence="11" text="Peso lordo"/>
-        <property dataType="ZNTGEW_EXANTE" id="ntgew" mandatory="false" sequence="12" text="Peso Netto"/>
-        <property dataType="GEWEI" id="gewei" mandatory="false" sequence="13" text="Unità di peso"/>
     </entity>
-    <entity id="FCSMOVSAP" isPublic="true" text="SAP-FCS: Movimenti MM - Magazzino">
+    <entity id="FCSMOVSAP" isPublic="true" text="SAP-FCS: Movimenti MM - Magazzino no EM">
         <property dataType="ccda_base.idString50" id="movid" key="true" mandatory="false" sequence="1" text="MOV ID"/>
         <property dataType="AUFNR" id="aufnr" mandatory="false" sequence="6" text="Ordine/Commessa"/>
         <property dataType="BWART" id="bwart" mandatory="false" sequence="2" text="Tipo moviment"/>
