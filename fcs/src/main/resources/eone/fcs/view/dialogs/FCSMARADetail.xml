@@ -37,6 +37,15 @@
 <t:row id="g_19" coldistance="#{ccstylevalue[&#39;@defaultcoldistance@&#39;]}" >
 <t:checkbox id="g_20" adapterbinding="#{d.FCSMARADetail.adapters.updfl}" />
 </t:row>
+<t:row id="g_31" coldistance="#{ccstylevalue[&#39;@defaultcoldistance@&#39;]}" >
+<t:formattedfield id="g_32" adapterbinding="#{d.FCSMARADetail.adapters.brgew}" />
+</t:row>
+<t:row id="g_33" coldistance="#{ccstylevalue[&#39;@defaultcoldistance@&#39;]}" >
+<t:formattedfield id="g_34" adapterbinding="#{d.FCSMARADetail.adapters.ntgew}" />
+</t:row>
+<t:row id="g_35" coldistance="#{ccstylevalue[&#39;@defaultcoldistance@&#39;]}" >
+<t:field id="g_36" adapterbinding="#{d.FCSMARADetail.adapters.gewei}" />
+</t:row>
 </tdap:containerarea>
 </tdap:rowareas>
 </tdap:framedetaileditorbody>

@@ -1,11 +1,34 @@
 <?xml version="1.0" encoding="utf-8"?>
-<t:layoutdefinition xmlns:t="http://www.CaptainCasa.com/controllibrary/t"
-                    xmlns:tpbc="http://www.CaptainCasa.com/controllibrary/tpbc" 
-                    xmlns:tdap="http://www.CaptainCasa.com/controllibrary/tdap">
+<t:layoutdefinition xmlns:t="http://www.captaincasa.com/controllibrary/t" xmlns:tdap="http://www.captaincasa.com/controllibrary/tdap" xmlns:tpbc="http://www.captaincasa.com/controllibrary/tpbc" >
 
 <t:beanprocessing id="g_1" beanbinding="#{d.FCSMOVSAPHSTList}" />
 <t:row id="g_16" >
-<tdap:beangridwitheditor id="g_4" pagebeanbinding="#{d.FCSMOVSAPHSTList.gridWithEditor}">
+<tdap:beangridwitheditor id="g_4" pagebeanbinding="#{d.FCSMOVSAPHSTList.gridWithEditor}" >
+<tpbc:datagridview2column id="g_27" propertyName="movid" title="#{rr.fcs[&#39;PROP.FCSMOVSAPHST.movid&#39;]}" />
+<tpbc:datagridview2column id="g_2" propertyName="aufnr" title="#{rr.fcs[&#39;PROP.FCSMOVSAPHST.aufnr&#39;]}" />
+<tpbc:datagridview2column id="g_3" propertyName="bwart" title="#{rr.fcs[&#39;PROP.FCSMOVSAPHST.bwart&#39;]}" />
+<tpbc:datagridview2column id="g_28" propertyName="charg" title="#{rr.fcs[&#39;PROP.FCSMOVSAPHST.charg&#39;]}" />
+<tpbc:datagridview2column id="g_5" propertyName="charg_to" title="#{rr.fcs[&#39;PROP.FCSMOVSAPHST.charg_to&#39;]}" />
+<tpbc:datagridview2column id="g_6" propertyName="datum" title="#{rr.fcs[&#39;PROP.FCSMOVSAPHST.datum&#39;]}" />
+<tpbc:datagridview2column id="g_7" propertyName="kostl" title="#{rr.fcs[&#39;PROP.FCSMOVSAPHST.kostl&#39;]}" />
+<tpbc:datagridview2column id="g_8" propertyName="kunnr" title="#{rr.fcs[&#39;PROP.FCSMOVSAPHST.kunnr&#39;]}" />
+<tpbc:datagridview2column id="g_9" propertyName="lgort" title="#{rr.fcs[&#39;PROP.FCSMOVSAPHST.lgort&#39;]}" />
+<tpbc:datagridview2column id="g_10" propertyName="lgort_to" title="#{rr.fcs[&#39;PROP.FCSMOVSAPHST.lgort_to&#39;]}" />
+<tpbc:datagridview2column id="g_11" propertyName="lifnr" title="#{rr.fcs[&#39;PROP.FCSMOVSAPHST.lifnr&#39;]}" />
+<tpbc:datagridview2column id="g_12" propertyName="matnr" title="#{rr.fcs[&#39;PROP.FCSMOVSAPHST.matnr&#39;]}" />
+<tpbc:datagridview2column id="g_13" propertyName="matnr_to" title="#{rr.fcs[&#39;PROP.FCSMOVSAPHST.matnr_to&#39;]}" />
+<tpbc:datagridview2column id="g_14" propertyName="mblnr" title="#{rr.fcs[&#39;PROP.FCSMOVSAPHST.mblnr&#39;]}" />
+<tpbc:datagridview2column id="g_15" propertyName="meins" title="#{rr.fcs[&#39;PROP.FCSMOVSAPHST.meins&#39;]}" />
+<tpbc:datagridview2column id="g_29" propertyName="menge" title="#{rr.fcs[&#39;PROP.FCSMOVSAPHST.menge&#39;]}" />
+<tpbc:datagridview2column id="g_17" propertyName="menge_to" title="#{rr.fcs[&#39;PROP.FCSMOVSAPHST.menge_to&#39;]}" />
+<tpbc:datagridview2column id="g_18" propertyName="mjahr" title="#{rr.fcs[&#39;PROP.FCSMOVSAPHST.mjahr&#39;]}" />
+<tpbc:datagridview2column id="g_19" propertyName="prctr" title="#{rr.fcs[&#39;PROP.FCSMOVSAPHST.prctr&#39;]}" />
+<tpbc:datagridview2column id="g_20" propertyName="sobkz" title="#{rr.fcs[&#39;PROP.FCSMOVSAPHST.sobkz&#39;]}" />
+<tpbc:datagridview2column id="g_21" propertyName="uname" title="#{rr.fcs[&#39;PROP.FCSMOVSAPHST.uname&#39;]}" />
+<tpbc:datagridview2column id="g_22" propertyName="uzeit" title="#{rr.fcs[&#39;PROP.FCSMOVSAPHST.uzeit&#39;]}" />
+<tpbc:datagridview2column id="g_23" propertyName="werks" title="#{rr.fcs[&#39;PROP.FCSMOVSAPHST.werks&#39;]}" />
+<tpbc:datagridview2column id="g_24" propertyName="werks_to" title="#{rr.fcs[&#39;PROP.FCSMOVSAPHST.werks_to&#39;]}" />
+<tpbc:datagridview2column id="g_25" propertyName="wmsst" title="#{rr.fcs[&#39;PROP.FCSMOVSAPHST.wmsst&#39;]}" />
 </tdap:beangridwitheditor>
 </t:row>
 

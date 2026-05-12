@@ -75,6 +75,74 @@
                     <sortIndex>-1</sortIndex>
                 </workpageStartInfo>
             </subNodes>
+            <subNodes>
+                <text>MovSAP</text>
+                <folderOpened>false</folderOpened>
+                <workpageStartInfo>
+                    <pageBeanName>eone.fcs.view.dialogs.FCSMOVSAPList</pageBeanName>
+                    <id>eone.fcs.view.dialogs.FCSMOVSAPList</id>
+                    <openMultipleInstances>false</openMultipleInstances>
+                    <decorated>true</decorated>
+                    <popupSupported>false</popupSupported>
+                    <closeSupported>true</closeSupported>
+                    <openAsPopupByDefault>false</openAsPopupByDefault>
+                    <excludeFromSavePerspective>false</excludeFromSavePerspective>
+                    <paramMap/>
+                    <sortIndex>-1</sortIndex>
+                </workpageStartInfo>
+            </subNodes>
+        </subNodes>
+        <subNodes>
+            <text>Storico Staging tables</text>
+            <folderOpened>false</folderOpened>
+            <subNodes>
+                <text>HST Schedulazioni (EKET)</text>
+                <folderOpened>false</folderOpened>
+                <workpageStartInfo>
+                    <pageBeanName>eone.fcs.view.dialogs.FCSEKETHSTList</pageBeanName>
+                    <id>eone.fcs.view.dialogs.FCSEKETHSTList</id>
+                    <openMultipleInstances>false</openMultipleInstances>
+                    <decorated>true</decorated>
+                    <popupSupported>false</popupSupported>
+                    <closeSupported>true</closeSupported>
+                    <openAsPopupByDefault>false</openAsPopupByDefault>
+                    <excludeFromSavePerspective>false</excludeFromSavePerspective>
+                    <paramMap/>
+                    <sortIndex>-1</sortIndex>
+                </workpageStartInfo>
+            </subNodes>
+            <subNodes>
+                <text>Storico MSEG da EKET</text>
+                <folderOpened>false</folderOpened>
+                <workpageStartInfo>
+                    <pageBeanName>eone.fcs.view.dialogs.FCSMSEGHSTList</pageBeanName>
+                    <id>eone.fcs.view.dialogs.FCSMSEGHSTList</id>
+                    <openMultipleInstances>true</openMultipleInstances>
+                    <decorated>true</decorated>
+                    <popupSupported>false</popupSupported>
+                    <closeSupported>true</closeSupported>
+                    <openAsPopupByDefault>false</openAsPopupByDefault>
+                    <excludeFromSavePerspective>false</excludeFromSavePerspective>
+                    <paramMap/>
+                    <sortIndex>-1</sortIndex>
+                </workpageStartInfo>
+            </subNodes>
+            <subNodes>
+                <text>Storico MovSAP</text>
+                <folderOpened>false</folderOpened>
+                <workpageStartInfo>
+                    <pageBeanName>eone.fcs.view.dialogs.FCSMOVSAPHSTList</pageBeanName>
+                    <id>eone.fcs.view.dialogs.FCSMOVSAPHSTList</id>
+                    <openMultipleInstances>true</openMultipleInstances>
+                    <decorated>true</decorated>
+                    <popupSupported>false</popupSupported>
+                    <closeSupported>true</closeSupported>
+                    <openAsPopupByDefault>false</openAsPopupByDefault>
+                    <excludeFromSavePerspective>false</excludeFromSavePerspective>
+                    <paramMap/>
+                    <sortIndex>-1</sortIndex>
+                </workpageStartInfo>
+            </subNodes>
         </subNodes>
     </subNodes>
 </workplaceFunctionTreeInfoNode>

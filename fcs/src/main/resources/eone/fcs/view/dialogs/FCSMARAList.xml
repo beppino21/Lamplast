@@ -14,6 +14,9 @@
 <tpbc:datagridview2column id="g_8" propertyName="uzeit" title="#{rr.fcs[&#39;PROP.FCSMARA.uzeit&#39;]}" />
 <tpbc:datagridview2column id="g_9" propertyName="uname" title="#{rr.fcs[&#39;PROP.FCSMARA.uname&#39;]}" />
 <tpbc:datagridview2column id="g_10" propertyName="updfl" title="#{rr.fcs[&#39;PROP.FCSMARA.updfl&#39;]}" />
+<tpbc:datagridview2column id="g_21" propertyName="brgew" title="#{rr.fcs[&#39;PROP.FCSMARA.brgew&#39;]}" />
+<tpbc:datagridview2column id="g_22" propertyName="ntgew" title="#{rr.fcs[&#39;PROP.FCSMARA.ntgew&#39;]}" />
+<tpbc:datagridview2column id="g_23" propertyName="gewei" title="#{rr.fcs[&#39;PROP.FCSMARA.gewei&#39;]}" />
 </tdap:beangridwitheditor>
 </t:row>
 
