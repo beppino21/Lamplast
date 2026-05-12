@@ -35,22 +35,6 @@ public class DOFCSMOVSAPHST
     public String getAufnr() { return m_aufnr; }
     public void setAufnr(String value) { m_aufnr = value; }
 
-    public static final String P_mblnr = "mblnr";
-    String m_mblnr;
-    @doproperty(sequence=23)
-    @dovalidationinfo(charMaxLength=10)
-    @XmlAttribute()
-    public String getMblnr() { return m_mblnr; }
-    public void setMblnr(String value) { m_mblnr = value; }
-
-    public static final String P_mjahr = "mjahr";
-    String m_mjahr;
-    @doproperty(sequence=24)
-    @dovalidationinfo(charMaxLength=4)
-    @XmlAttribute()
-    public String getMjahr() { return m_mjahr; }
-    public void setMjahr(String value) { m_mjahr = value; }
-
     public static final String P_bwart = "bwart";
     String m_bwart;
     @doproperty(sequence=2)
@@ -139,6 +123,14 @@ public class DOFCSMOVSAPHST
     public String getMatnr_to() { return m_matnr_to; }
     public void setMatnr_to(String value) { m_matnr_to = value; }
 
+    public static final String P_mblnr = "mblnr";
+    String m_mblnr;
+    @doproperty(sequence=23)
+    @dovalidationinfo(charMaxLength=10)
+    @XmlAttribute()
+    public String getMblnr() { return m_mblnr; }
+    public void setMblnr(String value) { m_mblnr = value; }
+
     public static final String P_meins = "meins";
     String m_meins;
     @doproperty(sequence=20)
@@ -162,6 +154,14 @@ public class DOFCSMOVSAPHST
     @XmlAttribute()
     public Float getMenge_to() { return m_menge_to; }
     public void setMenge_to(Float value) { m_menge_to = value; }
+
+    public static final String P_mjahr = "mjahr";
+    String m_mjahr;
+    @doproperty(sequence=24)
+    @dovalidationinfo(charMaxLength=4)
+    @XmlAttribute()
+    public String getMjahr() { return m_mjahr; }
+    public void setMjahr(String value) { m_mjahr = value; }
 
     public static final String P_prctr = "prctr";
     String m_prctr;

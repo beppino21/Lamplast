@@ -98,5 +98,29 @@ public class DOFCSMARA
     public LocalTime getUzeit() { return m_uzeit; }
     public void setUzeit(LocalTime value) { m_uzeit = value; }
 
+    public static final String P_brgew = "brgew";
+    Float m_brgew;
+    @doproperty(sequence=11)
+    @dovalidationinfo(numericPrecision=13,numericScale=3)
+    @XmlAttribute()
+    public Float getBrgew() { return m_brgew; }
+    public void setBrgew(Float value) { m_brgew = value; }
+
+    public static final String P_ntgew = "ntgew";
+    Float m_ntgew;
+    @doproperty(sequence=12)
+    @dovalidationinfo(numericPrecision=13,numericScale=3)
+    @XmlAttribute()
+    public Float getNtgew() { return m_ntgew; }
+    public void setNtgew(Float value) { m_ntgew = value; }
+
+    public static final String P_gewei = "gewei";
+    String m_gewei;
+    @doproperty(sequence=13)
+    @dovalidationinfo(charMaxLength=3)
+    @XmlAttribute()
+    public String getGewei() { return m_gewei; }
+    public void setGewei(String value) { m_gewei = value; }
+
 
 }
