@@ -296,6 +296,7 @@ public class MovSapRepository {
         r.menge_to = toFloat(rs, "menge_to");
         r.meins    = rs.getString("meins");
         r.wmsst    = rs.getString("wmsst");
+        r.kostl    = rs.getString("kostl");
         r.datum    = toLocalDate(rs, "datum");
         r.uzeit    = toLocalTime(rs, "uzeit");
         r.uname    = rs.getString("uname");

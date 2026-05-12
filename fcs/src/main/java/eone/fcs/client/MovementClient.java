@@ -99,7 +99,7 @@ public class MovementClient {
         String payload = buildPayload(
                 odataDate, odataDate, headerText, refDoc,
                 r.bwart, r.werks, r.lgort, r.matnr, r.charg,
-                quantityStr, r.meins, itemText,
+                quantityStr, r.meins, itemText, r.kostl,
                 movePlant, moveSloc, moveMat, moveBatch
         );
 
@@ -144,7 +144,7 @@ public class MovementClient {
         String payload = buildPayload(
                 odataDate, odataDate, headerText, refDoc,
                 bwartEffettivo, r.werks, r.lgort, r.matnr, r.charg,
-                quantityStr, r.meins, itemText,
+                quantityStr, r.meins, itemText, r.kostl,
                 null, null, null, null
         );
 
@@ -218,7 +218,7 @@ public class MovementClient {
             String moveType,
             String plant, String stgeLoc, String material, String batch,
             String quantity, String entryUom,
-            String itemText,
+            String itemText, String costCenter,
             String movePlant, String moveSloc, String moveMat, String moveBatch) {
 
         StringBuilder item = new StringBuilder();
@@ -233,6 +233,9 @@ public class MovementClient {
         item.append("\"GoodsMovementRefDocType\":\" \",");
         item.append("\"MaterialDocumentItemText\":\"").append(escapeJson(itemText)).append("\"");
 
+        if (!isEmpty(costCenter)) {
+            item.append(",\"CostCenter\":\"").append(nvl(costCenter)).append("\"");
+        }
         if (!isEmpty(movePlant)) {
             item.append(",\"IssuingOrReceivingPlant\":\"").append(nvl(movePlant)).append("\"");
         }
