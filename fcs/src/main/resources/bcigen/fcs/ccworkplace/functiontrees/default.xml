@@ -133,7 +133,7 @@
                 <workpageStartInfo>
                     <pageBeanName>eone.fcs.view.dialogs.FCSMOVSAPHSTList</pageBeanName>
                     <id>eone.fcs.view.dialogs.FCSMOVSAPHSTList</id>
-                    <openMultipleInstances>true</openMultipleInstances>
+                    <openMultipleInstances>false</openMultipleInstances>
                     <decorated>true</decorated>
                     <popupSupported>false</popupSupported>
                     <closeSupported>true</closeSupported>

@@ -52,12 +52,12 @@ public class MovSapRepository {
                werks_to, lgort_to, matnr_to, charg_to, menge_to,
                meins, wmsst, datum, uzeit, uname)
             VALUES
-              ('tenant', ?, ?, ?, ?, ?, ?, ?, ?,
+              ('undefined', ?, ?, ?, ?, ?, ?, ?, ?,
                ?, ?, ?, ?, ?,
                ?, ?, ?, ?, ?,
                ?, NULL, CURRENT_DATE, CURRENT_TIME, ?)
             ON CONFLICT (tenant, movid) DO UPDATE SET
-               tenant   = 'tenant',
+               tenant   = 'undefined',
                bwart    = EXCLUDED.bwart,
                lifnr    = EXCLUDED.lifnr,
                kunnr    = EXCLUDED.kunnr,
@@ -200,7 +200,7 @@ public class MovSapRepository {
                meins, wmsst, datum, uzeit, uname,
                mblnr, mjahr)
             SELECT
-               'tenant', movid, bwart, lifnr, kunnr, kostl, aufnr, prctr, sobkz,
+               'undefined', movid, bwart, lifnr, kunnr, kostl, aufnr, prctr, sobkz,
                werks, lgort, matnr, charg, menge,
                werks_to, lgort_to, matnr_to, charg_to, menge_to,
                meins, '2', datum, uzeit, uname,
