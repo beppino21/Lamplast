@@ -21,11 +21,14 @@ public class MovSapRepository {
         try {
             java.io.InputStream is = getClass().getClassLoader()
                     .getResourceAsStream("eone/ccee_config.properties");
+            if (is == null) throw new Exception("File non trovato nel classpath");
             java.util.Properties props = new java.util.Properties();
             props.load(is);
-            String url  = props.getProperty("db.url");
-            String user = props.getProperty("db.username");
-            String pwd  = props.getProperty("db.password");
+            String url  = props.getProperty("db_url");
+            String user = props.getProperty("db_username");
+            String pwd  = props.getProperty("db_password");
+            if (url == null || url.isBlank())
+                throw new Exception("db_url non trovato in ccee_config.properties");
             return DriverManager.getConnection(url, user, pwd);
         } catch (Exception e) {
             throw new SQLException("Impossibile leggere ccee_config.properties: " + e.getMessage(), e);
@@ -44,16 +47,17 @@ public class MovSapRepository {
     public void upsertMovsap(MovsapRiga r) {
         String sql = """
             INSERT INTO tabfcsmovsap
-              (movid, bwart, lifnr, kunnr, kostl, aufnr, prctr, sobkz,
+              (tenant, movid, bwart, lifnr, kunnr, kostl, aufnr, prctr, sobkz,
                werks, lgort, matnr, charg, menge,
                werks_to, lgort_to, matnr_to, charg_to, menge_to,
                meins, wmsst, datum, uzeit, uname)
             VALUES
-              (?::uuid, ?, ?, ?, ?, ?, ?, ?,
+              ('tenant', ?, ?, ?, ?, ?, ?, ?, ?,
                ?, ?, ?, ?, ?,
                ?, ?, ?, ?, ?,
                ?, NULL, CURRENT_DATE, CURRENT_TIME, ?)
-            ON CONFLICT (movid) DO UPDATE SET
+            ON CONFLICT (tenant, movid) DO UPDATE SET
+               tenant   = 'tenant',
                bwart    = EXCLUDED.bwart,
                lifnr    = EXCLUDED.lifnr,
                kunnr    = EXCLUDED.kunnr,
@@ -105,7 +109,9 @@ public class MovSapRepository {
             ps.executeUpdate();
 
         } catch (SQLException e) {
-            throw new RepositoryException("upsertMovsap fallito per movid=" + r.movid, e);
+            throw new RepositoryException("upsertMovsap fallito per movid=" + r.movid
+                    + " | SQLState=" + e.getSQLState()
+                    + " | " + e.getMessage(), e);
         }
     }
 
@@ -124,7 +130,7 @@ public class MovSapRepository {
                    werks_to, lgort_to, matnr_to, charg_to, menge_to,
                    meins, wmsst, datum, uzeit, uname
             FROM tabfcsmovsap
-            WHERE movid = ?::uuid
+            WHERE movid = ?
             """;
 
         try (Connection c = getConnection();
@@ -137,7 +143,9 @@ public class MovSapRepository {
             return null;
 
         } catch (SQLException e) {
-            throw new RepositoryException("loadByMovid fallito per movid=" + movid, e);
+            throw new RepositoryException("loadByMovid fallito per movid=" + movid
+                    + " | SQLState=" + e.getSQLState()
+                    + " | " + e.getMessage(), e);
         }
     }
 
@@ -160,14 +168,16 @@ public class MovSapRepository {
     }
 
     private void setWmsst(String movid, String stato) {
-        String sql = "UPDATE tabfcsmovsap SET wmsst = ? WHERE movid = ?::uuid";
+        String sql = "UPDATE tabfcsmovsap SET wmsst = ? WHERE movid = ?";
         try (Connection c = getConnection();
              PreparedStatement ps = c.prepareStatement(sql)) {
             ps.setString(1, stato);
             ps.setString(2, movid);
             ps.executeUpdate();
         } catch (SQLException e) {
-            throw new RepositoryException("setWmsst(" + stato + ") fallito per movid=" + movid, e);
+            throw new RepositoryException("setWmsst(" + stato + ") fallito per movid=" + movid
+                    + " | SQLState=" + e.getSQLState()
+                    + " | " + e.getMessage(), e);
         }
     }
 
@@ -184,26 +194,26 @@ public class MovSapRepository {
     public void archiviaDopoMovimento(String movid, String mblnr, String mjahr) {
         String sqlHst = """
             INSERT INTO tabfcsmovsaphst
-              (movid, bwart, lifnr, kunnr, kostl, aufnr, prctr, sobkz,
+              (tenant, movid, bwart, lifnr, kunnr, kostl, aufnr, prctr, sobkz,
                werks, lgort, matnr, charg, menge,
                werks_to, lgort_to, matnr_to, charg_to, menge_to,
                meins, wmsst, datum, uzeit, uname,
                mblnr, mjahr)
             SELECT
-               movid, bwart, lifnr, kunnr, kostl, aufnr, prctr, sobkz,
+               'tenant', movid, bwart, lifnr, kunnr, kostl, aufnr, prctr, sobkz,
                werks, lgort, matnr, charg, menge,
                werks_to, lgort_to, matnr_to, charg_to, menge_to,
                meins, '2', datum, uzeit, uname,
                ?, ?
             FROM tabfcsmovsap
-            WHERE movid = ?::uuid
-            ON CONFLICT (movid) DO UPDATE SET
+            WHERE movid = ?
+            ON CONFLICT (tenant, movid) DO UPDATE SET
                mblnr = EXCLUDED.mblnr,
                mjahr = EXCLUDED.mjahr,
                wmsst = '2'
             """;
 
-        String sqlDel = "DELETE FROM tabfcsmovsap WHERE movid = ?::uuid";
+        String sqlDel = "DELETE FROM tabfcsmovsap WHERE movid = ?";
 
         try (Connection c = getConnection()) {
             c.setAutoCommit(false);
@@ -224,7 +234,9 @@ public class MovSapRepository {
                 throw e;
             }
         } catch (SQLException e) {
-            throw new RepositoryException("archiviaDopoMovimento fallito per movid=" + movid, e);
+            throw new RepositoryException("archiviaDopoMovimento fallito per movid=" + movid
+                    + " | SQLState=" + e.getSQLState()
+                    + " | " + e.getMessage(), e);
         }
     }
 

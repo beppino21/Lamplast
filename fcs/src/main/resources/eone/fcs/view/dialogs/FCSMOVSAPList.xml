@@ -5,28 +5,28 @@
 <t:row id="g_16" >
 <tdap:beangridwitheditor id="g_4" pagebeanbinding="#{d.FCSMOVSAPList.gridWithEditor}" >
 <tpbc:datagridview2column id="g_25" propertyName="movid" title="#{rr.fcs[&#39;PROP.FCSMOVSAP.movid&#39;]}" />
-<tpbc:datagridview2column id="g_2" propertyName="bwart" title="#{rr.fcs[&#39;PROP.FCSMOVSAP.bwart&#39;]}" />
-<tpbc:datagridview2column id="g_3" propertyName="lifnr" title="#{rr.fcs[&#39;PROP.FCSMOVSAP.lifnr&#39;]}" />
-<tpbc:datagridview2column id="g_26" propertyName="kunnr" title="#{rr.fcs[&#39;PROP.FCSMOVSAP.kunnr&#39;]}" />
-<tpbc:datagridview2column id="g_5" propertyName="kostl" title="#{rr.fcs[&#39;PROP.FCSMOVSAP.kostl&#39;]}" />
-<tpbc:datagridview2column id="g_6" propertyName="aufnr" title="#{rr.fcs[&#39;PROP.FCSMOVSAP.aufnr&#39;]}" />
-<tpbc:datagridview2column id="g_7" propertyName="prctr" title="#{rr.fcs[&#39;PROP.FCSMOVSAP.prctr&#39;]}" />
-<tpbc:datagridview2column id="g_8" propertyName="sobkz" title="#{rr.fcs[&#39;PROP.FCSMOVSAP.sobkz&#39;]}" />
-<tpbc:datagridview2column id="g_9" propertyName="werks" title="#{rr.fcs[&#39;PROP.FCSMOVSAP.werks&#39;]}" />
-<tpbc:datagridview2column id="g_10" propertyName="lgort" title="#{rr.fcs[&#39;PROP.FCSMOVSAP.lgort&#39;]}" />
-<tpbc:datagridview2column id="g_11" propertyName="matnr" title="#{rr.fcs[&#39;PROP.FCSMOVSAP.matnr&#39;]}" />
-<tpbc:datagridview2column id="g_12" propertyName="charg" title="#{rr.fcs[&#39;PROP.FCSMOVSAP.charg&#39;]}" />
-<tpbc:datagridview2column id="g_13" propertyName="menge" title="#{rr.fcs[&#39;PROP.FCSMOVSAP.menge&#39;]}" />
-<tpbc:datagridview2column id="g_14" propertyName="werks_to" title="#{rr.fcs[&#39;PROP.FCSMOVSAP.werks_to&#39;]}" />
-<tpbc:datagridview2column id="g_15" propertyName="lgort_to" title="#{rr.fcs[&#39;PROP.FCSMOVSAP.lgort_to&#39;]}" />
-<tpbc:datagridview2column id="g_27" propertyName="matnr_to" title="#{rr.fcs[&#39;PROP.FCSMOVSAP.matnr_to&#39;]}" />
-<tpbc:datagridview2column id="g_17" propertyName="charg_to" title="#{rr.fcs[&#39;PROP.FCSMOVSAP.charg_to&#39;]}" />
-<tpbc:datagridview2column id="g_18" propertyName="menge_to" title="#{rr.fcs[&#39;PROP.FCSMOVSAP.menge_to&#39;]}" />
-<tpbc:datagridview2column id="g_19" propertyName="meins" title="#{rr.fcs[&#39;PROP.FCSMOVSAP.meins&#39;]}" />
-<tpbc:datagridview2column id="g_20" propertyName="wmsst" title="#{rr.fcs[&#39;PROP.FCSMOVSAP.wmsst&#39;]}" />
-<tpbc:datagridview2column id="g_21" propertyName="datum" title="#{rr.fcs[&#39;PROP.FCSMOVSAP.datum&#39;]}" />
-<tpbc:datagridview2column id="g_22" propertyName="uzeit" title="#{rr.fcs[&#39;PROP.FCSMOVSAP.uzeit&#39;]}" />
-<tpbc:datagridview2column id="g_23" propertyName="uname" title="#{rr.fcs[&#39;PROP.FCSMOVSAP.uname&#39;]}" />
+<tpbc:datagridview2column id="g_2" propertyName="aufnr" title="#{rr.fcs[&#39;PROP.FCSMOVSAP.aufnr&#39;]}" />
+<tpbc:datagridview2column id="g_3" propertyName="bwart" title="#{rr.fcs[&#39;PROP.FCSMOVSAP.bwart&#39;]}" />
+<tpbc:datagridview2column id="g_26" propertyName="charg" title="#{rr.fcs[&#39;PROP.FCSMOVSAP.charg&#39;]}" />
+<tpbc:datagridview2column id="g_5" propertyName="charg_to" title="#{rr.fcs[&#39;PROP.FCSMOVSAP.charg_to&#39;]}" />
+<tpbc:datagridview2column id="g_6" propertyName="datum" title="#{rr.fcs[&#39;PROP.FCSMOVSAP.datum&#39;]}" />
+<tpbc:datagridview2column id="g_7" propertyName="kostl" title="#{rr.fcs[&#39;PROP.FCSMOVSAP.kostl&#39;]}" />
+<tpbc:datagridview2column id="g_8" propertyName="kunnr" title="#{rr.fcs[&#39;PROP.FCSMOVSAP.kunnr&#39;]}" />
+<tpbc:datagridview2column id="g_9" propertyName="lgort" title="#{rr.fcs[&#39;PROP.FCSMOVSAP.lgort&#39;]}" />
+<tpbc:datagridview2column id="g_10" propertyName="lgort_to" title="#{rr.fcs[&#39;PROP.FCSMOVSAP.lgort_to&#39;]}" />
+<tpbc:datagridview2column id="g_11" propertyName="lifnr" title="#{rr.fcs[&#39;PROP.FCSMOVSAP.lifnr&#39;]}" />
+<tpbc:datagridview2column id="g_12" propertyName="matnr" title="#{rr.fcs[&#39;PROP.FCSMOVSAP.matnr&#39;]}" />
+<tpbc:datagridview2column id="g_13" propertyName="matnr_to" title="#{rr.fcs[&#39;PROP.FCSMOVSAP.matnr_to&#39;]}" />
+<tpbc:datagridview2column id="g_14" propertyName="meins" title="#{rr.fcs[&#39;PROP.FCSMOVSAP.meins&#39;]}" />
+<tpbc:datagridview2column id="g_15" propertyName="menge" title="#{rr.fcs[&#39;PROP.FCSMOVSAP.menge&#39;]}" />
+<tpbc:datagridview2column id="g_27" propertyName="menge_to" title="#{rr.fcs[&#39;PROP.FCSMOVSAP.menge_to&#39;]}" />
+<tpbc:datagridview2column id="g_17" propertyName="prctr" title="#{rr.fcs[&#39;PROP.FCSMOVSAP.prctr&#39;]}" />
+<tpbc:datagridview2column id="g_18" propertyName="sobkz" title="#{rr.fcs[&#39;PROP.FCSMOVSAP.sobkz&#39;]}" />
+<tpbc:datagridview2column id="g_19" propertyName="uname" title="#{rr.fcs[&#39;PROP.FCSMOVSAP.uname&#39;]}" />
+<tpbc:datagridview2column id="g_20" propertyName="uzeit" title="#{rr.fcs[&#39;PROP.FCSMOVSAP.uzeit&#39;]}" />
+<tpbc:datagridview2column id="g_21" propertyName="werks" title="#{rr.fcs[&#39;PROP.FCSMOVSAP.werks&#39;]}" />
+<tpbc:datagridview2column id="g_22" propertyName="werks_to" title="#{rr.fcs[&#39;PROP.FCSMOVSAP.werks_to&#39;]}" />
+<tpbc:datagridview2column id="g_23" propertyName="wmsst" title="#{rr.fcs[&#39;PROP.FCSMOVSAP.wmsst&#39;]}" />
 </tdap:beangridwitheditor>
 </t:row>
 

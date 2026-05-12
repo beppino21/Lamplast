@@ -6,7 +6,6 @@ import java.io.*;
 import java.net.*;
 import java.net.http.*;
 import java.time.*;
-import java.time.format.DateTimeFormatter;
 import java.util.*;
 
 /**
@@ -81,10 +80,10 @@ public class MovementClient {
             throw new MovementException("Campi obbligatori mancanti per movimento diretto (werks/lgort/matnr)");
         }
 
-        String now = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss"));
-        String headerText = "FCS:" + (r.datum != null ? r.datum.toString() : now) +
-                            "/" + (r.uzeit != null ? r.uzeit.toString() : "");
-        String refDoc = "ID:" + (r.movid != null ? r.movid.substring(0, 10) : "");
+        long nowMillis = java.time.Instant.now().toEpochMilli();
+        String odataDate = "/Date(" + nowMillis + ")/";
+        String headerText = "";
+        String refDoc     = "ID:" + (r.movid != null ? r.movid.substring(0, 10) : "");
 
         // Determina i campi destinazione secondo la logica ABAP
         // bwart 309: werks_to/lgort_to = werks/lgort (stesso impianto/magazzino, cambia solo matnr)
@@ -95,11 +94,10 @@ public class MovementClient {
         String moveBatch = isEmpty(r.charg_to) ? r.charg : r.charg_to;
 
         String quantityStr = formatQuantity(r.menge);
-
-        String itemText = "ID FCS:" + (r.movid != null ? r.movid : "");
+        String itemText    = "ID FCS:" + (r.movid != null ? r.movid : "");
 
         String payload = buildPayload(
-                now, now, headerText, refDoc,
+                odataDate, odataDate, headerText, refDoc,
                 r.bwart, r.werks, r.lgort, r.matnr, r.charg,
                 quantityStr, r.meins, itemText,
                 movePlant, moveSloc, moveMat, moveBatch
@@ -135,16 +133,16 @@ public class MovementClient {
             delta = r.menge_to - r.menge;
         }
 
-        String now = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss"));
-        String headerText = "FCS:" + (r.datum != null ? r.datum.toString() : now) +
-                            "/" + (r.uzeit != null ? r.uzeit.toString() : "");
-        String refDoc    = "ID:" + (r.movid != null ? r.movid.substring(0, 10) : "");
-        String itemText  = "ID FCS:" + (r.movid != null ? r.movid : "");
+        long nowMillis    = java.time.Instant.now().toEpochMilli();
+        String odataDate  = "/Date(" + nowMillis + ")/";
+        String headerText = "";
+        String refDoc     = "ID:" + (r.movid != null ? r.movid.substring(0, 10) : "");
+        String itemText   = "ID FCS:" + (r.movid != null ? r.movid : "");
         String quantityStr = formatQuantity(delta);
 
         // Rettifica: nessun campo _to (nessun trasferimento di magazzino/materiale)
         String payload = buildPayload(
-                now, now, headerText, refDoc,
+                odataDate, odataDate, headerText, refDoc,
                 bwartEffettivo, r.werks, r.lgort, r.matnr, r.charg,
                 quantityStr, r.meins, itemText,
                 null, null, null, null
@@ -225,7 +223,7 @@ public class MovementClient {
 
         StringBuilder item = new StringBuilder();
         item.append("{");
-        item.append("\"MovementType\":\"").append(nvl(moveType)).append("\",");
+        item.append("\"GoodsMovementType\":\"").append(nvl(moveType)).append("\",");
         item.append("\"Plant\":\"").append(nvl(plant)).append("\",");
         item.append("\"StorageLocation\":\"").append(nvl(stgeLoc)).append("\",");
         item.append("\"Material\":\"").append(nvl(material)).append("\",");
@@ -233,7 +231,7 @@ public class MovementClient {
         item.append("\"QuantityInEntryUnit\":\"").append(nvl(quantity)).append("\",");
         item.append("\"EntryUnit\":\"").append(nvl(entryUom)).append("\",");
         item.append("\"GoodsMovementRefDocType\":\" \",");
-        item.append("\"ItemText\":\"").append(escapeJson(itemText)).append("\"");
+        item.append("\"MaterialDocumentItemText\":\"").append(escapeJson(itemText)).append("\"");
 
         if (!isEmpty(movePlant)) {
             item.append(",\"IssuingOrReceivingPlant\":\"").append(nvl(movePlant)).append("\"");
@@ -242,10 +240,10 @@ public class MovementClient {
             item.append(",\"IssuingOrReceivingStorageLoc\":\"").append(nvl(moveSloc)).append("\"");
         }
         if (!isEmpty(moveMat)) {
-            item.append(",\"MaterialDocItmMvtTransferMaterial\":\"").append(nvl(moveMat)).append("\"");
+            item.append(",\"IssgOrRcvgMaterial\":\"").append(nvl(moveMat)).append("\"");
         }
         if (!isEmpty(moveBatch)) {
-            item.append(",\"MaterialDocItmTransferBatch\":\"").append(nvl(moveBatch)).append("\"");
+            item.append(",\"IssgOrRcvgBatch\":\"").append(nvl(moveBatch)).append("\"");
         }
 
         item.append("}");
@@ -253,7 +251,7 @@ public class MovementClient {
         return "{"
                 + "\"DocumentDate\":\"" + documentDate + "\","
                 + "\"PostingDate\":\"" + postingDate + "\","
-                + "\"HeaderText\":\"" + escapeJson(headerText) + "\","
+                + "\"GoodsMovementCode\":\"06\","
                 + "\"ReferenceDocument\":\"" + escapeJson(refDocNo) + "\","
                 + "\"to_MaterialDocumentItem\":[" + item + "]"
                 + "}";
@@ -268,12 +266,12 @@ public class MovementClient {
      * dalla risposta JSON di S/4HC.
      */
     private MovementResult parseMovementResult(String json) {
-        String mblnr = extractJsonField(json, "MaterialDocumentHeader");
+        String mblnr = extractJsonField(json, "MaterialDocument");
         String mjahr  = extractJsonField(json, "MaterialDocumentYear");
 
         if (mblnr == null || mblnr.isBlank()) {
             throw new MovementException(
-                    "S/4HC non ha restituito MaterialDocumentHeader. Body: " + json);
+                    "S/4HC non ha restituito MaterialDocument. Body: " + json);
         }
         return new MovementResult(mblnr, mjahr != null ? mjahr : "");
     }
