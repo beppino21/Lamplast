@@ -1,0 +1,70 @@
+# the meta data id of this application
+dataapp_metadataid=fcs
+
+# simple configuration parameters for direct DB definition
+#
+# pleease check documentation https://www.captaincasa.com/docu/eclnt_ccee/ for
+# more sophisticated possibilities to define the DB connection
+
+# Example for configuration of postrgesql database
+db_url=jdbc:postgresql://localhost/fcs
+db_driver=org.postgresql.Driver
+db_username=postgres
+db_password=postgres
+db_sqldialect=postgres
+
+# DEVELOPMENT CONFIGURATION: usage of in-process-HSQLDB
+# Only to be used for development purposes!
+#db_url=jdbc:hsqldb:file:./data/${webappName}
+#db_driver=org.hsqldb.jdbc.JDBCDriver
+#db_username=SA
+#db_password=
+#db_sqldialect=hsqldb
+#db_autotrim=true
+#db_withpooling=true
+
+# Configuration if SQL statements are logged with values or without values
+#db_valueloggingactive=true
+
+#db_schema=
+
+#activemq setup for cross cluster node DialogMessageBus communication
+#activemq_brokerurl=tcp://localhost:61616
+#activemq_username=admin
+#activemq_password=admin
+
+# ---------- RapidApp: specific configurations --------------------------------
+db_dbstatusproviderclassname=org.eclnt.ccda_base.logic.db.DBStatusByDBStore
+dataapp_numberrangeclassname=org.eclnt.ccda_base.logic.logic.NumberRangeImpl
+dataapp_changelogwriterclassname=org.eclnt.ccda_clog.logic.ChangeLogger
+# dataapp_authorizationmanagerclassname=org.eclnt.ccda_base.logic.authorization.CCDAAuthorizationManager
+
+# =============================================================================
+# FCS WMS Bridge - Configurazione
+# =============================================================================
+
+# --- Connessione S/4HANA Cloud Public Edition ---
+# URL base del tenant API (senza slash finale)
+s4.base.url=https://my434879.s4hana.cloud.sap
+
+# Credenziali Communication User (Basic Auth)
+s4.username=JAVA_APP_USER
+s4.password=JavaAppUser_23051995
+
+# Codice società (BUKRS)
+s4.company.code=S001
+
+# Lingua per le descrizioni (codice SAP: IT, EN, DE, ...)
+s4.language=IT
+
+# Plant principale (usato come filtro opzionale)
+s4.plant=PL01
+
+# Numero massimo record per pagina OData
+s4.page.size=500
+
+# Timeout connessione HTTP (secondi)
+s4.http.timeout.connect=30
+
+# Timeout lettura risposta HTTP (secondi)
+s4.http.timeout.read=120

@@ -4,29 +4,33 @@ import java.time.LocalDate;
 import java.time.LocalTime;
 
 /**
- * Rappresenta una riga di schedulazione OdA (EKET).
+ * Rappresenta una riga di schedulazione OdA (EKET) o OdV di reso (VBEP).
  * Corrisponde a tabfcseket nel DB PostgreSQL.
  *
  * I campi sono divisi in tre gruppi:
- *   - Gruppo 1: da S/4HC via API (popolati da PurchaseOrderClient)
+ *   - Gruppo 1: da S/4HC via API (popolati da PurchaseOrderClient / SalesReturnClient)
  *   - Gruppo 2: calcolati dal middleware (logica pallet)
  *   - Gruppo 3: comunicati dal WMS RFID (prefisso in_) - NON toccati da questo extractor
+ *
+ * kappl discrimina il tipo di riga:
+ *   'M' o 'ME' → OdA (acquisto) — popolato da PurchaseOrderClient
+ *   'V'        → OdV di reso    — popolato da SalesReturnClient
  */
 public record EketLine(
 
         // --- Chiave ---
         String    tenant,
-        String    ebeln,        // numero OdA
-        String    ebelp,        // posizione OdA
+        String    ebeln,        // numero OdA / numero OdV di reso
+        String    ebelp,        // posizione OdA / posizione OdV
         String    etenr,        // numero schedulazione
 
         // --- Gruppo 1: da S/4HC ---
-        String    kappl,        // applicazione (ME)
+        String    kappl,        // applicazione: 'ME'=acquisti, 'V'=resi da cliente
         String    idEket,       // ID univoco eket (ebeln+ebelp+etenr)
         Boolean   xchpf,        // gestione lotti
         LocalDate eindt,        // data consegna schedulata
-        String    lifnr,        // codice fornitore
-        String    name1,        // nome fornitore
+        String    lifnr,        // codice fornitore (OdA) / codice cliente (OdV reso)
+        String    name1,        // nome fornitore / nome cliente
         String    mtart,        // tipo materiale
         String    matnr,        // codice materiale
         String    maktx,        // descrizione materiale
@@ -36,7 +40,7 @@ public record EketLine(
         Double    wemng,        // quantità già consegnata
         Double    mengeOpen,    // quantità aperta (menge - wemng)
         String    meins,        // unità di misura base
-        String    bstme,        // unità di misura OdA
+        String    bstme,        // unità di misura OdA / OdV
 
         // --- Gruppo 2: calcolati (inizialmente null, calcolati dopo) ---
         Double    mengexbstme,  // conversione quantità in bstme
@@ -70,7 +74,7 @@ public record EketLine(
         private String    ebeln;
         private String    ebelp;
         private String    etenr;
-        private String    kappl     = "ME";
+        private String    kappl     = "ME";  // default acquisti; usare 'V' per resi
         private Boolean   xchpf;
         private LocalDate eindt;
         private String    lifnr;
@@ -86,8 +90,8 @@ public record EketLine(
         private String    meins;
         private String    bstme;
         private String    wmsst     = " ";  // default: in attesa
-        
-// Campi Calcolati/Derivati        
+
+        // Campi Calcolati/Derivati
         private Double   mengexbstme;
         private Double   qtaxtag;
         private Integer  bstmexpallet;
@@ -97,12 +101,13 @@ public record EketLine(
         private Integer  nrbag;
         private Double   brgewRow;
         private Double   ntgewRow;
-        private String   gewei;        
+        private String   gewei;
 
         public Builder tenant(String v)    { this.tenant = v;    return this; }
         public Builder ebeln(String v)     { this.ebeln = v;     return this; }
         public Builder ebelp(String v)     { this.ebelp = v;     return this; }
         public Builder etenr(String v)     { this.etenr = v;     return this; }
+        public Builder kappl(String v)     { this.kappl = v;     return this; }  // ← AGGIUNTO
         public Builder xchpf(Boolean v)    { this.xchpf = v;     return this; }
         public Builder eindt(LocalDate v)  { this.eindt = v;     return this; }
         public Builder lifnr(String v)     { this.lifnr = v;     return this; }
@@ -119,7 +124,7 @@ public record EketLine(
         public Builder bstme(String v)     { this.bstme = v;     return this; }
         public Builder wmsst(String v)     { this.wmsst = v;     return this; }
 
-// Campi Calcolati/Derivati        
+        // Campi Calcolati/Derivati
         public Builder mengexbstme(Double v)  { this.mengexbstme = v;  return this; }
         public Builder qtaxtag(Double v)       { this.qtaxtag = v;      return this; }
         public Builder bstmexpallet(Integer v) { this.bstmexpallet = v; return this; }
@@ -130,13 +135,13 @@ public record EketLine(
         public Builder brgewRow(Double v)      { this.brgewRow = v;     return this; }
         public Builder ntgewRow(Double v)      { this.ntgewRow = v;     return this; }
         public Builder gewei(String v)         { this.gewei = v;        return this; }
-        
+
         public EketLine build() {
-        	String id = String.format("%10s%5s%4s",
-        	        ebeln != null ? ebeln : "",
-        	        ebelp != null ? ebelp : "",
-        	        etenr != null ? etenr : "")
-        	        .replace(' ', '0');
+            String id = String.format("%10s%5s%4s",
+                    ebeln != null ? ebeln : "",
+                    ebelp != null ? ebelp : "",
+                    etenr != null ? etenr : "")
+                    .replace(' ', '0');
             return new EketLine(
                     tenant, ebeln, ebelp, etenr,
                     kappl, id, xchpf, eindt,
@@ -147,8 +152,7 @@ public record EketLine(
                     LocalDate.now(), LocalTime.now(), "S4HC_SYNC", wmsst
             );
         }
-        
-// --- (b) Costruttore di copia (metodo statico da aggiungere al Builder) ---
+
         /**
          * Crea un Builder precompilato con tutti i valori di una EketLine esistente.
          * Usato da EketEnricher per produrre una copia arricchita del record.
@@ -176,7 +180,7 @@ public record EketLine(
             b.mengeOpen    = e.mengeOpen();
             b.meins        = e.meins();
             b.bstme        = e.bstme();
-            // Gruppo 2 (potrebbero già essere valorizzati)
+            // Gruppo 2
             b.mengexbstme  = e.mengexbstme();
             b.qtaxtag      = e.qtaxtag();
             b.bstmexpallet = e.bstmexpallet();
@@ -190,6 +194,6 @@ public record EketLine(
             // Gestione
             b.wmsst        = e.wmsst();
             return b;
-        }        
+        }
     }
 }

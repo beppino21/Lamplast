@@ -4,13 +4,13 @@
 
 # --- Connessione S/4HANA Cloud Public Edition ---
 # URL base del tenant API (senza slash finale)
-s4.base.url=https://my434383-api.s4hana.cloud.sap
+s4.base.url=https://my434879.s4hana.cloud.sap
 
 # Credenziali Communication User (Basic Auth)
-s4.username=COMM_USER_F46100
-s4.password=Eone_Group_Febbraio2026
+s4.username=JAVA_APP_USER
+s4.password=JavaAppUser_23051995
 
-# Codice societ‡† (BUKRS)
+# Codice societ√† (BUKRS)
 s4.company.code=S001
 
 # Lingua per le descrizioni (codice SAP: IT, EN, DE, ...)

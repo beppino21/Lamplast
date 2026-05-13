@@ -2,7 +2,7 @@ CREATE TABLE IF NOT EXISTS TABFCSMSEG
 (
     tenant varchar(10),
     ebeln varchar(10),
-    ebelp varchar(5),
+    ebelp varchar(6),
     etenr varchar(4),
     in_charg varchar(10),
     in_xblnr varchar(16),
@@ -16,8 +16,8 @@ ALTER TABLE TABFCSMSEG ADD COLUMN datum date;
 ALTER TABLE TABFCSMSEG ALTER COLUMN datum TYPE date;
 ALTER TABLE TABFCSMSEG ADD COLUMN ernam varchar(12);
 ALTER TABLE TABFCSMSEG ALTER COLUMN ernam TYPE varchar(12);
-ALTER TABLE TABFCSMSEG ADD COLUMN id_eket varchar(19);
-ALTER TABLE TABFCSMSEG ALTER COLUMN id_eket TYPE varchar(19);
+ALTER TABLE TABFCSMSEG ADD COLUMN id_eket varchar(24);
+ALTER TABLE TABFCSMSEG ALTER COLUMN id_eket TYPE varchar(24);
 ALTER TABLE TABFCSMSEG ADD COLUMN in_lgort varchar(4);
 ALTER TABLE TABFCSMSEG ALTER COLUMN in_lgort TYPE varchar(4);
 ALTER TABLE TABFCSMSEG ADD COLUMN in_menge numeric(13,3);

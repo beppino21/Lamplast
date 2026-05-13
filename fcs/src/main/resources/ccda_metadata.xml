@@ -8,13 +8,13 @@
     <dataType charMaxLength="10" className="String" id="CHARG_D" isPublic="false" text="Numero partita"/>
     <dataType className="LocalDate" id="DATUM" isPublic="false" text="Data"/>
     <dataType charMaxLength="10" className="String" id="EBELN" isPublic="false" text="Numero Ordine d'acquisto"/>
-    <dataType charMaxLength="5" className="String" id="EBELP" isPublic="false" text="Numero Posizione Ordine d'acquisto"/>
+    <dataType charMaxLength="6" className="String" id="EBELP" isPublic="false" text="Numero Posizione Ordine d'acquisto"/>
     <dataType className="LocalDate" id="EINDT" isPublic="false" text="Data di consegna della posizione"/>
     <dataType charMaxLength="12" className="String" id="ERNAM" isPublic="false" text="Creato da"/>
     <dataType charMaxLength="4" className="String" id="ETENR" isPublic="false" text="Numero schedulazione"/>
     <dataType className="Float" id="ETMEN" isPublic="false" numericPrecision="13" numericScale="3" text="Quantità schedulata"/>
     <dataType charMaxLength="3" className="String" id="GEWEI" isPublic="false" text="Unità di peso"/>
-    <dataType charMaxLength="19" className="String" id="ID_EKET" isPublic="false" text="Stringa unificata chiave EKET"/>
+    <dataType charMaxLength="24" className="String" id="ID_EKET" isPublic="false" text="Stringa Unificata chiave EKET"/>
     <dataType charMaxLength="2" className="String" id="KAPPL" isPublic="false" text="Applicazione"/>
     <dataType charMaxLength="10" className="String" id="KOSTL" isPublic="false" text="Centro di Costo"/>
     <dataType charMaxLength="10" className="String" id="KUNNR" isPublic="false" text="Codice Cliente"/>
@@ -61,10 +61,11 @@
     <dataType className="Float" id="ZFCS_QTAXTAG" isPublic="false" numericPrecision="13" numericScale="3" text="Quantità teorica per TAG"/>
     <dataType className="Float" id="ZNTGEW_EXANTE" isPublic="false" numericPrecision="13" numericScale="3" text="Peso netto &quot;Ex ante&quot;"/>
     <dataType className="Float" id="ZNTGEW_EXPOST" isPublic="false" numericPrecision="13" numericScale="3" text="Peso netto &quot;Ex post&quot;"/>
-    <entity id="FCSEKET" isPublic="true" text="Scehdulazioni attese">
+    <entity id="FCSEKET" isPublic="true" text="Scehdulazioni EM attese">
         <property dataType="EBELN" id="ebeln" key="true" mandatory="false" sequence="1" text="Numero del documento d'acquisto"/>
         <property dataType="EBELP" id="ebelp" key="true" mandatory="false" sequence="2" text="Posizione del documento"/>
         <property dataType="ETENR" id="etenr" key="true" mandatory="false" sequence="3" text="Numero schedulazione"/>
+        <property dataType="KAPPL" id="kappl" key="true" mandatory="false" sequence="4" text="Applicazione"/>
         <property dataType="VOMNG" id="ameng" mandatory="false" sequence="18" text="Quantità precedente per schedulazione"/>
         <property dataType="ccda_base.idString50" id="bemid" mandatory="false" sequence="36" text="BEM ID"/>
         <property dataType="ZBRGEW_EXANTE" id="brgew_row" mandatory="false" sequence="31" text="Peso lordo &quot;Ex ante&quot;"/>
@@ -91,9 +92,8 @@
         <property dataType="TRAID" id="in_traid" mandatory="false" sequence="41" text="Identificazione trasporto"/>
         <property dataType="WERKS_D" id="in_werks" mandatory="false" sequence="47" text="Divisione"/>
         <property dataType="XBLNR" id="in_xblnr" mandatory="false" sequence="39" text="Num. Doc. di riferimento"/>
-        <property dataType="KAPPL" id="kappl" mandatory="false" sequence="4" text="Applicazione"/>
         <property dataType="LGORT_D" id="lgort" mandatory="false" sequence="16" text="Magazzino"/>
-        <property dataType="LIFNR" id="lifnr" mandatory="false" sequence="9" text="Fornitore"/>
+        <property dataType="LIFNR" id="lifnr" mandatory="false" sequence="9" text="For,/Cli."/>
         <property dataType="MAKTX" id="maktx" mandatory="false" sequence="14" text="Testo breve materiale"/>
         <property dataType="MATNR" id="matnr" mandatory="false" sequence="12" text="Codice materiale"/>
         <property dataType="MEINS" id="meins" mandatory="false" sequence="22" text="Unità di misura di base"/>
@@ -143,7 +143,7 @@
         <property dataType="XBLNR" id="in_xblnr" mandatory="false" sequence="40" text="Numero del documento di riferimento"/>
         <property dataType="KAPPL" id="kappl" mandatory="false" sequence="6" text="Applicazione"/>
         <property dataType="LGORT_D" id="lgort" mandatory="false" sequence="17" text="Magazzino"/>
-        <property dataType="LIFNR" id="lifnr" mandatory="false" sequence="11" text="Codice fornitore"/>
+        <property dataType="LIFNR" id="lifnr" mandatory="false" sequence="11" text="For./Cli."/>
         <property dataType="MAKTX" id="maktx" mandatory="false" sequence="15" text="Testo breve materiale"/>
         <property dataType="MEINS" id="meins" mandatory="false" sequence="23" text="UM di misura di base"/>
         <property dataType="MENGE_D" id="menge" mandatory="false" sequence="18" text="Quantità schedulata"/>

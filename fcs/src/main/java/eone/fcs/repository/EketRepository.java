@@ -24,6 +24,12 @@ import java.util.Properties;
  *   U - updateRiga
  *   I - setWmsst
  *   F - loadRigheByBemid, upsertMseg, archiviaDopoGr, setWmsstErrore
+ *
+ * Metodi aggiunti per il supporto Resi da cliente (kappl='V'):
+ *   hasResiMisti    - verifica che un bemid non mescoli OdA e OdV di reso
+ *   isReso          - true se tutte le righe del bemid hanno kappl='V'
+ *   getEbelnsPerKappl - restituisce gli ebeln distinti filtrati per kappl,
+ *                       usato da EketResource per il refresh bridge post-GR
  */
 public class EketRepository {
 
@@ -76,6 +82,8 @@ public class EketRepository {
     /**
      * Associa il bemid (UUID) alla riga identificata da id_eket.
      * Solo se la riga è in stato 0 o ' ' (libera).
+     * id_eket è univoco per costruzione (ebeln+ebelp+etenr) — non serve
+     * filtrare per kappl qui.
      *
      * @return numero di righe aggiornate (0 = riga non trovata o già in uso)
      */
@@ -338,6 +346,109 @@ public class EketRepository {
     }
 
     // =========================================================================
+    // F - Verifica mix acquisti/resi (NUOVO)
+    // =========================================================================
+
+    /**
+     * Verifica se un bemid contiene un mix di righe con kappl diversi
+     * (es. alcune 'V' reso da cliente e alcune 'M' acquisto).
+     *
+     * Un bemid misto è inaccettabile: OdA e OdV di reso devono essere
+     * scaricati in fasi separate. Se questo metodo restituisce true,
+     * la action F deve essere rifiutata con HTTP 400.
+     *
+     * @return true se il bemid contiene kappl misti (= scarico non valido)
+     */
+    public boolean hasResiMisti(String uuid) {
+        String sql = """
+                SELECT COUNT(DISTINCT kappl) FROM public.tabfcseket
+                WHERE bemid = ?
+                """;
+        try (Connection conn = getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, uuid);
+            ResultSet rs = ps.executeQuery();
+            if (rs.next()) {
+                int distinctKappl = rs.getInt(1);
+                boolean misto = distinctKappl > 1;
+                log.debug("hasResiMisti uuid={} distinctKappl={} misto={}", uuid, distinctKappl, misto);
+                return misto;
+            }
+            return false;
+        } catch (SQLException e) {
+            throw new RepositoryException("Errore hasResiMisti: " + e.getMessage(), e);
+        }
+    }
+
+    /**
+     * Restituisce true se tutte le righe del bemid sono resi da cliente
+     * (kappl = 'V').
+     *
+     * Usato da EketResource.handleF per decidere quale client invocare:
+     *   false → GoodsReceiptClient  (OdA, movimento 101)
+     *   true  → ReturnDeliveryClient (OdV reso, consegna + PGI)
+     *
+     * Chiamare questo metodo SOLO dopo aver verificato che hasResiMisti
+     * restituisce false — in caso contrario il risultato non è significativo.
+     *
+     * @return true se kappl = 'V' su tutte le righe del bemid
+     */
+    public boolean isReso(String uuid) {
+        String sql = """
+                SELECT COUNT(*) FROM public.tabfcseket
+                WHERE bemid = ?
+                AND kappl <> 'V'
+                """;
+        try (Connection conn = getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, uuid);
+            ResultSet rs = ps.executeQuery();
+            if (rs.next()) {
+                boolean reso = rs.getInt(1) == 0; // nessuna riga non-V = tutto reso
+                log.debug("isReso uuid={} reso={}", uuid, reso);
+                return reso;
+            }
+            return false;
+        } catch (SQLException e) {
+            throw new RepositoryException("Errore isReso: " + e.getMessage(), e);
+        }
+    }
+
+    /**
+     * Restituisce gli ebeln distinti del bemid filtrati per kappl.
+     *
+     * Usato da EketResource.handleF per il refresh bridge post-GR:
+     *   kappl='M' (o diverso da 'V') → bridge mode "eket <ebeln>"
+     *   kappl='V'                    → bridge mode "vbep <vbeln>"
+     *                                  (ebeln per i resi = numero OdV)
+     *
+     * @param uuid  bemid dello scarico
+     * @param kappl applicazione da filtrare ('V' per resi, 'M' per acquisti)
+     * @return lista di ebeln distinti per il kappl richiesto
+     */
+    public List<String> getEbelnsPerKappl(String uuid, String kappl) {
+        String sql = """
+                SELECT DISTINCT ebeln FROM public.tabfcseket
+                WHERE bemid = ? AND kappl = ?
+                ORDER BY ebeln
+                """;
+        List<String> result = new ArrayList<>();
+        try (Connection conn = getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, uuid);
+            ps.setString(2, kappl);
+            ResultSet rs = ps.executeQuery();
+            while (rs.next()) {
+                result.add(rs.getString("ebeln"));
+            }
+            log.debug("getEbelnsPerKappl uuid={} kappl={} count={}", uuid, kappl, result.size());
+            return result;
+        } catch (SQLException e) {
+            throw new RepositoryException("Errore getEbelnsPerKappl: " + e.getMessage(), e);
+        }
+    }
+
+    // =========================================================================
     // F - Carica le righe EKET per bemid (input per GR e per MSEG)
     // =========================================================================
 
@@ -345,6 +456,8 @@ public class EketRepository {
      * Legge tutte le righe di tabfcseket per il bemid dato.
      * Restituisce una lista di record con tutti i campi necessari
      * sia per popolare tabfcsmseg sia per costruire il payload GR verso S/4HC.
+     * Il campo kappl è incluso e usato da EketResource per il fork
+     * GoodsReceiptClient / ReturnDeliveryClient.
      */
     public List<EketRiga> loadRigheByBemid(String uuid) {
         String sql = """
@@ -416,12 +529,8 @@ public class EketRepository {
     /**
      * Inserisce (o aggiorna) le righe in tabfcsmseg a partire dalle righe EKET.
      * La chiave è (tenant, ebeln, ebelp, etenr, in_xblnr, in_charg).
-     * In caso di conflitto aggiorna i dati di scarico (quantità, plant, magazzino).
-     *
-     * Nota: in_xblnr e in_charg possono essere NULL — PostgreSQL tratta NULL
-     * come non uguale a NULL nelle chiavi, quindi usiamo COALESCE('') nella
-     * constraint. Verificare che la PK sulla tabella sia definita di conseguenza
-     * (es. using COALESCE o con colonne NOT NULL con default '').
+     * Funziona in modo identico per OdA (kappl='M') e resi (kappl='V') —
+     * il campo kappl viene propagato in tabfcsmseg per la tracciabilità.
      */
     public int upsertMseg(List<EketRiga> righe) {
         String sql = """
@@ -434,6 +543,7 @@ public class EketRepository {
                 ON CONFLICT (tenant, ebeln, ebelp, etenr, in_xblnr, in_charg) DO UPDATE SET
                     id_eket  = EXCLUDED.id_eket,
                     bemid    = EXCLUDED.bemid,
+                    kappl    = EXCLUDED.kappl,
                     xchpf    = EXCLUDED.xchpf,
                     mtart    = EXCLUDED.mtart,
                     charg    = EXCLUDED.charg,
@@ -465,8 +575,8 @@ public class EketRepository {
                 ps.setString(13, r.maktx);
                 ps.setString(14, r.meins);
                 ps.setObject(15, r.inMenge);
-                ps.setString(16, r.inWerks != null ? r.inWerks : r.werks); // fallback su werks OdA
-                ps.setString(17, r.inLgort != null ? r.inLgort : r.lgort); // fallback su lgort OdA
+                ps.setString(16, r.inWerks != null ? r.inWerks : r.werks); // fallback su werks OdA/OdV
+                ps.setString(17, r.inLgort != null ? r.inLgort : r.lgort); // fallback su lgort OdA/OdV
                 ps.setString(18, r.ernam);
                 ps.addBatch();
                 count++;
@@ -485,7 +595,7 @@ public class EketRepository {
 
     /**
      * Esegue in un'unica transazione PostgreSQL le operazioni di archiviazione
-     * post-registrazione EM:
+     * post-registrazione EM (valida sia per OdA che per resi da cliente):
      *   1. Copia tabfcseket  → tabfcsekethst  (aggiunge mblnr, mjahr)
      *   2. Copia tabfcsmseg  → tabfcsmseghst  (aggiunge mblnr, mjahr)
      *   3. Cancella da tabfcsmseg  le righe del bemid
@@ -626,8 +736,8 @@ public class EketRepository {
     /**
      * Struttura dati che rappresenta una riga di tabfcseket letta per l'evento F.
      * Usata internamente tra repository e resource/client GR.
-     * Classe pubblica statica per permettere l'accesso da EketResource e
-     * da GoodsReceiptClient senza dipendenze circolari.
+     * Classe pubblica statica per permettere l'accesso da EketResource,
+     * GoodsReceiptClient e ReturnDeliveryClient senza dipendenze circolari.
      */
     public static class EketRiga {
         public String tenant;
@@ -668,43 +778,26 @@ public class EketRepository {
     // Utility
     // =========================================================================
 
-    /**
-     * Legge un campo NUMERIC/FLOAT dal ResultSet come Float, gestendo il NULL.
-     * Necessario perché getObject(col, Float.class) non è supportato da tutti
-     * i driver PostgreSQL per il tipo NUMERIC/DECIMAL.
-     */
     private Float toFloat(ResultSet rs, String col) throws SQLException {
         float val = rs.getFloat(col);
         return rs.wasNull() ? null : val;
     }
 
-    /**
-     * Legge un campo INTEGER dal ResultSet come Integer, gestendo il NULL.
-     */
     private Integer toInteger(ResultSet rs, String col) throws SQLException {
         int val = rs.getInt(col);
         return rs.wasNull() ? null : val;
     }
 
-    /**
-     * Legge un campo BOOLEAN dal ResultSet come Boolean, gestendo il NULL.
-     */
     private Boolean toBoolean(ResultSet rs, String col) throws SQLException {
         boolean val = rs.getBoolean(col);
         return rs.wasNull() ? null : val;
     }
 
-    /**
-     * Legge un campo DATE dal ResultSet come LocalDate, gestendo il NULL.
-     */
     private java.time.LocalDate toLocalDate(ResultSet rs, String col) throws SQLException {
         java.sql.Date val = rs.getDate(col);
         return val == null ? null : val.toLocalDate();
     }
 
-    /**
-     * Converte data da formato ABAP YYYYMMDD a ISO YYYY-MM-DD.
-     */
     private String toIsoDate(String abapDate) {
         if (abapDate == null || abapDate.trim().isEmpty()) return null;
         abapDate = abapDate.trim();

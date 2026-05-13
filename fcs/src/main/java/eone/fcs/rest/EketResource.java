@@ -1,16 +1,17 @@
 package eone.fcs.rest;
 
+import eone.fcs.client.GoodsReceiptClient;
+import eone.fcs.client.GoodsReceiptException;
+import eone.fcs.client.ReturnDeliveryClient;
+import eone.fcs.client.ReturnDeliveryException;
 import eone.fcs.repository.EketRepository;
 import eone.fcs.repository.EketRepository.EketRiga;
 import eone.fcs.repository.RepositoryException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import eone.fcs.client.GoodsReceiptClient;
-import eone.fcs.client.GoodsReceiptException;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
@@ -34,14 +35,17 @@ import java.util.stream.Collectors;
  *   U - Aggiorna dati di riga (DDT, pesi, colli, menge, lotto...)
  *   I - Inizio scarico fisico: wmsst=2
  *   F - Fine scarico: popola MSEG, registra EM su S/4HC, archivia, aggiorna EKET
+ *       Per OdA (kappl != 'V') → GoodsReceiptClient  (movimento 101)
+ *       Per resi (kappl  = 'V') → ReturnDeliveryClient (consegna reso + PGI)
+ *       Scarichi misti (OdA + resi nello stesso UUID) → rifiutati con HTTP 400
  *
  * Convenzione parametri:
  *   - Valore '-' su un campo opzionale significa "cancella il dato"
  *   - Valori numerici accettano sia '.' che ',' come separatore decimale
  *
  * Configurazione (da ccee_config.properties o variabile d'ambiente):
- *   bridge.jar.path    = percorso assoluto del JAR fcs-wms-bridge (es: /opt/fcs/fcs-wms-bridge-1.0.0.jar)
- *   bridge.config.path = percorso assoluto del config.properties del bridge (es: /opt/fcs/config.properties)
+ *   bridge.jar.path    = percorso assoluto del JAR fcs-wms-bridge
+ *   bridge.config.path = percorso assoluto del config.properties del bridge
  */
 @Path("/inbound")
 public class EketResource {
@@ -49,7 +53,6 @@ public class EketResource {
     private static final Logger log = LoggerFactory.getLogger(EketResource.class);
 
     // Percorsi del bridge JAR — letti da sistema, con fallback su valori di default.
-    // In produzione impostare come variabili d'ambiente o proprietà di sistema.
     private static final String BRIDGE_JAR_PATH =
             System.getProperty("bridge.jar.path",
             System.getenv("BRIDGE_JAR_PATH") != null
@@ -62,8 +65,9 @@ public class EketResource {
                 ? System.getenv("BRIDGE_CONFIG_PATH")
                 : "/opt/fcs/config.properties");
 
-//    @Inject
-//    private EketRepository repo;
+    // Valore kappl per i resi da cliente (OdV di reso)
+    private static final String KAPPL_RESO = "V";
+
     private final EketRepository repo = new EketRepository();
 
     // -------------------------------------------------------------------------
@@ -102,7 +106,6 @@ public class EketResource {
         pesoNettoRow = normDecimal(pesoNettoRow);
         qtaxtag      = normDecimal(qtaxtag);
 
-        // Validazione ACTION
         if (isEmpty(action)) {
             return error("Parametri non compilati: ACTION");
         }
@@ -244,77 +247,92 @@ public class EketResource {
             return error("UUID con stato 2 non presente su EKET");
         }
 
-        // 2. Carica le righe dello scarico
+        // 2. Controllo anti-mix: resi e acquisti non possono stare nello stesso scarico
+        if (repo.hasResiMisti(uuid)) {
+            log.warn("handleF: uuid={} contiene mix di kappl (OdA + resi) — scarico rifiutato", uuid);
+            return error("Scarico non valido: OdA e Resi da cliente non possono " +
+                         "essere scaricati insieme. Procedere in due fasi separate.");
+        }
+
+        // 3. Carica le righe dello scarico e determina il tipo
         List<EketRiga> righe = repo.loadRigheByBemid(uuid);
         if (righe.isEmpty()) {
             return error("Nessuna riga trovata per UUID: " + uuid);
         }
         log.info("handleF: {} righe caricate per uuid={}", righe.size(), uuid);
 
-        // 3. Popola tabfcsmseg (staging per la GR)
+        boolean isReso = repo.isReso(uuid);
+        log.info("handleF: uuid={} tipo={}", uuid, isReso ? "RESO DA CLIENTE (kappl=V)" : "OdA");
+
+        // 4. Popola tabfcsmseg (staging per la GR / reso)
         //    In caso di fallimento successivo le righe restano in MSEG per analisi.
         repo.upsertMseg(righe);
         log.info("handleF: tabfcsmseg popolata per uuid={}", uuid);
 
-        // 4. Registra Goods Receipt su S/4HC
+        // 5. Registra il movimento su S/4HC (fork OdA / Reso)
         String mblnr;
         try {
-            mblnr = createGoodsReceipt(uuid, righe);
+            if (isReso) {
+                mblnr = createReturnDelivery(uuid, righe);
+            } else {
+                mblnr = createGoodsReceipt(uuid, righe);
+            }
         } catch (GoodsReceiptException e) {
-            // errore GR atteso → fallback controllato
             log.error("handleF: GR fallita per uuid={} — {}", uuid, e.getMessage(), e);
             repo.setWmsstErrore(uuid);
             return error("Errore registrazione EM su SAP: " + e.getMessage());
+        } catch (ReturnDeliveryException e) {
+            log.error("handleF: Consegna reso fallita per uuid={} — {}", uuid, e.getMessage(), e);
+            repo.setWmsstErrore(uuid);
+            return error("Errore registrazione reso su SAP: " + e.getMessage());
         } catch (Exception e) {
-            // errore inatteso → non marchiamo 'E', rilanciamo al handler globale
+            // Errore inatteso → non marchiamo 'E', rilanciamo al handler globale
             log.error("handleF: errore inatteso per uuid={}", uuid, e);
             throw e;
         }
 
-        // 5. GR riuscita: archiviazione atomica
+        // 6. Archiviazione atomica post-registrazione
         //    EKET → EKETHST, MSEG → MSEGHST, poi DELETE da MSEG e EKET.
-        //    Se questa operazione fallisce il mblnr è già registrato in SAP
-        //    ma i dati locali restano "live" — situazione da gestire manualmente.
-        //    Per questo il metodo logga in modo prominente e rilancia.
         try {
             repo.archiviaDopoGr(uuid, mblnr);
             log.info("handleF: archiviazione completata per uuid={} mblnr={}", uuid, mblnr);
         } catch (RepositoryException e) {
-            // Caso critico: GR ok su SAP ma archiviazione locale fallita.
-            // Logghiamo a ERROR con tutti i dettagli — non tentiamo retry automatico.
-            log.error("handleF: ATTENZIONE — GR registrata su SAP (mblnr={}) " +
+            log.error("handleF: ATTENZIONE — documento SAP registrato (mblnr={}) " +
                       "ma archiviazione locale fallita per uuid={}: {}",
                       mblnr, uuid, e.getMessage(), e);
-            // Segnaliamo comunque il mblnr nella risposta per permettere
-            // la riconciliazione manuale.
-            return error("EM registrata su SAP (mblnr=" + mblnr +
+            return error("Documento SAP registrato (mblnr=" + mblnr +
                          ") ma archiviazione locale fallita: " + e.getMessage());
         }
 
-        // 6. Refresh EKET per ogni OdA distinto coinvolto (sincrono, best-effort)
-        //    Eseguito DOPO l'archiviazione — il bridge legge gli OdA aggiornati da S/4HC.
-        Set<String> ebelns = righe.stream()
-                .map(r -> r.ebeln)
-                .filter(e -> e != null && !e.isBlank())
-                .collect(Collectors.toSet());
-
-        for (String ebeln : ebelns) {
-            refreshEket(ebeln);
+        // 7. Refresh EKET/VBEP tramite bridge (sincrono, best-effort)
+        //    OdA  → bridge mode "eket <ebeln>"
+        //    Reso → bridge mode "vbep <vbeln>"  (ebeln per i resi = numero OdV)
+        if (isReso) {
+            List<String> vbelns = repo.getEbelnsPerKappl(uuid, KAPPL_RESO);
+            for (String vbeln : vbelns) {
+                refreshVbep(vbeln);
+            }
+        } else {
+            Set<String> ebelns = righe.stream()
+                    .map(r -> r.ebeln)
+                    .filter(e -> e != null && !e.isBlank())
+                    .collect(Collectors.toSet());
+            for (String ebeln : ebelns) {
+                refreshEket(ebeln);
+            }
         }
 
         return ok("Documento SAP registrato: " + mblnr);
     }
 
     // -------------------------------------------------------------------------
-    // Goods Receipt — chiamata reale a S/4HC tramite GoodsReceiptClient
+    // Goods Receipt — OdA (kappl != 'V')
     // -------------------------------------------------------------------------
 
     /**
      * Registra il Goods Receipt su S/4HC tramite API_MATERIAL_DOCUMENT_SRV (OData V2).
-     * Communication Scenario richiesto sul tenant: SAP_COM_0108.
-     *
-     * Lancia GoodsReceiptException (RuntimeException) in caso di errore —
-     * intercettata da handleF che provvede al fallback (setWmsstErrore).
+     * Communication Scenario richiesto: SAP_COM_0108.
+     * Movimento 101 — Entrata merci da OdA.
      */
     private String createGoodsReceipt(String uuid, List<EketRiga> righe) {
         GoodsReceiptClient client = new GoodsReceiptClient();
@@ -322,50 +340,83 @@ public class EketResource {
     }
 
     // -------------------------------------------------------------------------
-    // Refresh EKET tramite bridge JAR (sincrono, best-effort)
+    // Return Delivery — Reso da cliente (kappl = 'V')
+    // -------------------------------------------------------------------------
+
+    /**
+     * Crea la consegna reso su S/4HC e ne esegue il PGI tramite
+     * API_OUTBOUND_DELIVERY_SRV (OData V2).
+     * Communication Scenario richiesto: SAP_COM_0106.
+     *
+     * Restituisce il numero documento materiale (mblnr) generato dal PGI,
+     * usato per l'archiviazione in tabfcsekethst / tabfcsmseghst.
+     */
+    private String createReturnDelivery(String uuid, List<EketRiga> righe) {
+        ReturnDeliveryClient client = new ReturnDeliveryClient();
+        return client.postReturnDelivery(uuid, righe);
+    }
+
+    // -------------------------------------------------------------------------
+    // Refresh EKET tramite bridge JAR — OdA (sincrono, best-effort)
     // -------------------------------------------------------------------------
 
     /**
      * Esegue il JAR fcs-wms-bridge in modalità "eket <EBELN>" per riallineare
      * le schedulazioni dell'OdA appena ricevuto con i dati aggiornati da S/4HC.
-     *
-     * L'operazione è sincrona (attende il completamento del processo) ma
-     * best-effort: un eventuale fallimento viene loggato come WARNING senza
-     * bloccare o annullare la registrazione EM già completata.
-     *
-     * Prerequisiti (configurare prima del go-live):
-     *   - BRIDGE_JAR_PATH    → percorso del JAR (proprietà sistema o variabile env)
-     *   - BRIDGE_CONFIG_PATH → percorso del config.properties del bridge
      */
     private void refreshEket(String ebeln) {
         log.info("refreshEket: avvio bridge per OdA={}", ebeln);
+        runBridge("eket", ebeln);
+    }
+
+    // -------------------------------------------------------------------------
+    // Refresh VBEP tramite bridge JAR — Reso da cliente (sincrono, best-effort)
+    // -------------------------------------------------------------------------
+
+    /**
+     * Esegue il JAR fcs-wms-bridge in modalità "vbep <VBELN>" per riallineare
+     * le schedulazioni dell'OdV di reso appena ricevuto con i dati aggiornati
+     * da S/4HC.
+     * Il parametro vbeln corrisponde al campo ebeln di tabfcseket per i resi
+     * (kappl='V'): l'extractor tratta i record VBEP come EKET usando lo stesso
+     * campo ebeln per il numero ordine di vendita.
+     */
+    private void refreshVbep(String vbeln) {
+        log.info("refreshVbep: avvio bridge per OdV reso={}", vbeln);
+        runBridge("vbep", vbeln);
+    }
+
+    // -------------------------------------------------------------------------
+    // Esecuzione bridge JAR (logica comune a refreshEket e refreshVbep)
+    // -------------------------------------------------------------------------
+
+    private void runBridge(String mode, String param) {
         try {
             ProcessBuilder pb = new ProcessBuilder(
                     "java", "-jar", BRIDGE_JAR_PATH,
                     BRIDGE_CONFIG_PATH,
-                    "eket",
-                    ebeln
+                    mode,
+                    param
             );
-            pb.redirectErrorStream(true); // stderr confluisce in stdout
+            pb.redirectErrorStream(true);
 
             Process proc = pb.start();
 
-            // Consuma l'output per evitare che il buffer si blocchi
             try (BufferedReader reader = new BufferedReader(
                     new InputStreamReader(proc.getInputStream()))) {
                 reader.lines().forEach(line ->
-                    log.debug("[bridge-eket|{}] {}", ebeln, line));
+                    log.debug("[bridge-{}|{}] {}", mode, param, line));
             }
 
             int exitCode = proc.waitFor();
             if (exitCode == 0) {
-                log.info("refreshEket: OdA={} aggiornato con successo", ebeln);
+                log.info("runBridge: mode={} param={} completato con successo", mode, param);
             } else {
-                log.warn("refreshEket: bridge terminato con exit code {} per OdA={}",
-                         exitCode, ebeln);
+                log.warn("runBridge: bridge terminato con exit code {} per mode={} param={}",
+                         exitCode, mode, param);
             }
         } catch (Exception e) {
-            log.warn("refreshEket: errore avvio bridge per OdA={}: {}", ebeln, e.getMessage());
+            log.warn("runBridge: errore avvio bridge mode={} param={}: {}", mode, param, e.getMessage());
         }
     }
 

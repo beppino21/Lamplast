@@ -2,7 +2,7 @@ CREATE TABLE IF NOT EXISTS TABFCSEKETHST
 (
     tenant varchar(10),
     ebeln varchar(10),
-    ebelp varchar(5),
+    ebelp varchar(6),
     etenr varchar(4),
     mblnr varchar(10),
     mjahr varchar(4),
@@ -28,8 +28,8 @@ ALTER TABLE TABFCSEKETHST ADD COLUMN ernam varchar(12);
 ALTER TABLE TABFCSEKETHST ALTER COLUMN ernam TYPE varchar(12);
 ALTER TABLE TABFCSEKETHST ADD COLUMN gewei varchar(3);
 ALTER TABLE TABFCSEKETHST ALTER COLUMN gewei TYPE varchar(3);
-ALTER TABLE TABFCSEKETHST ADD COLUMN id_eket varchar(19);
-ALTER TABLE TABFCSEKETHST ALTER COLUMN id_eket TYPE varchar(19);
+ALTER TABLE TABFCSEKETHST ADD COLUMN id_eket varchar(24);
+ALTER TABLE TABFCSEKETHST ALTER COLUMN id_eket TYPE varchar(24);
 ALTER TABLE TABFCSEKETHST ADD COLUMN in_bldat date;
 ALTER TABLE TABFCSEKETHST ALTER COLUMN in_bldat TYPE date;
 ALTER TABLE TABFCSEKETHST ADD COLUMN in_brgew_tot numeric(13,3);

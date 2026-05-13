@@ -8,7 +8,11 @@ import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.Properties;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * Carica e valida la configurazione da file .properties.
@@ -35,12 +39,34 @@ public class AppConfig {
     public final String dbUrl;
     public final String dbUsername;
     public final String dbPassword;
-    public final String dbTenant;       // valore del campo "tenant" nelle tabelle FCS
+    public final String dbTenant;
 
     // --- Parametri estrazione S/4 ---
-    public final String s4CompanyCode;  // BUKRS (es: L001)
-    public final String s4Language;     // lingua descrizioni (es: IT)
-    public final String s4Plant;        // WERKS (es: PL01) - usato come filtro opzionale
+    public final String s4CompanyCode;
+    public final String s4Language;
+    public final String s4Plant;
+
+    // --- Parametri resi da cliente ---
+    /**
+     * Valore kappl per le schedulazioni OdV di reso in tabfcseket.
+     * config.properties: reso.kappl = V
+     */
+    public final String kapplReso;
+
+    /**
+     * Tipo consegna reso usato in ReturnDeliveryClient.
+     * config.properties: reso.delivery.type = LR
+     * TODO: aggiornare con il tipo Z confermato dal cliente.
+     */
+    public final String deliveryTypeReso;
+
+    /**
+     * Tipi OdV considerati "resi da cliente" — lista separata da virgola.
+     * config.properties: reso.sales.order.types = RE,ZRE
+     * Usato da SalesReturnClient per filtrare solo gli OdV di reso.
+     * Default: RE (tipo reso standard SAP).
+     */
+    public final Set<String> salesOrderTypesReso;
 
     // --- Logging ---
     public final String logDirectory;
@@ -65,6 +91,11 @@ public class AppConfig {
         this.s4Language    = get(p, "s4.language", "IT").toUpperCase();
         this.s4Plant       = get(p, "s4.plant", "");
 
+        // Parametri resi
+        this.kapplReso        = get(p, "reso.kappl",         "V");
+        this.deliveryTypeReso = get(p, "reso.delivery.type", "LR");
+        this.salesOrderTypesReso = parseSet(p, "reso.sales.order.types", "RE");
+
         // Logging
         this.logDirectory = get(p, "log.directory", "");
     }
@@ -82,11 +113,13 @@ public class AppConfig {
             try (InputStream is = Files.newInputStream(configPath)) {
                 props.load(is);
             } catch (IOException e) {
-                throw new ConfigException("Impossibile leggere il file di configurazione: " + configPath, e);
+                throw new ConfigException(
+                    "Impossibile leggere il file di configurazione: " + configPath, e);
             }
         } else {
             log.info("config.properties non trovato su filesystem, ricerca nel classpath...");
-            try (InputStream is = AppConfig.class.getClassLoader().getResourceAsStream("config.properties")) {
+            try (InputStream is = AppConfig.class.getClassLoader()
+                    .getResourceAsStream("config.properties")) {
                 if (is == null) {
                     throw new ConfigException(
                         "File di configurazione non trovato. " +
@@ -137,10 +170,25 @@ public class AppConfig {
         }
     }
 
+    /**
+     * Legge una proprietà come lista separata da virgola e la converte in Set<String>.
+     * Es. "RE,ZRE,ZRC" → {"RE", "ZRE", "ZRC"}
+     */
+    private static Set<String> parseSet(Properties p, String key, String def) {
+        String val = get(p, key, def);
+        Set<String> result = Arrays.stream(val.split(","))
+                .map(String::trim)
+                .filter(s -> !s.isBlank())
+                .collect(Collectors.toSet());
+        return Collections.unmodifiableSet(result);
+    }
+
     @Override
     public String toString() {
         return "AppConfig{s4BaseUrl='" + s4BaseUrl + "', s4Username='" + s4Username +
                "', dbUrl='" + dbUrl + "', dbTenant='" + dbTenant +
-               "', s4CompanyCode='" + s4CompanyCode + "', s4Language='" + s4Language + "'}";
+               "', s4CompanyCode='" + s4CompanyCode + "', s4Language='" + s4Language +
+               "', kapplReso='" + kapplReso + "', deliveryTypeReso='" + deliveryTypeReso +
+               "', salesOrderTypesReso=" + salesOrderTypesReso + "'}";
     }
 }

@@ -30,7 +30,7 @@ public class DOFCSEKET
     public static final String P_ebelp = "ebelp";
     String m_ebelp;
     @doproperty(key=true,sequence=2)
-    @dovalidationinfo(charMaxLength=5)
+    @dovalidationinfo(charMaxLength=6)
     @XmlAttribute()
     public String getEbelp() { return m_ebelp; }
     public void setEbelp(String value) { m_ebelp = value; }
@@ -42,6 +42,14 @@ public class DOFCSEKET
     @XmlAttribute()
     public String getEtenr() { return m_etenr; }
     public void setEtenr(String value) { m_etenr = value; }
+
+    public static final String P_kappl = "kappl";
+    String m_kappl;
+    @doproperty(key=true,sequence=4)
+    @dovalidationinfo(charMaxLength=2)
+    @XmlAttribute()
+    public String getKappl() { return m_kappl; }
+    public void setKappl(String value) { m_kappl = value; }
 
     public static final String P_ameng = "ameng";
     Float m_ameng;
@@ -126,7 +134,7 @@ public class DOFCSEKET
     public static final String P_id_eket = "id_eket";
     String m_id_eket;
     @doproperty(sequence=5)
-    @dovalidationinfo(charMaxLength=19)
+    @dovalidationinfo(charMaxLength=24)
     @XmlAttribute()
     public String getId_eket() { return m_id_eket; }
     public void setId_eket(String value) { m_id_eket = value; }
@@ -250,14 +258,6 @@ public class DOFCSEKET
     @XmlAttribute()
     public String getIn_xblnr() { return m_in_xblnr; }
     public void setIn_xblnr(String value) { m_in_xblnr = value; }
-
-    public static final String P_kappl = "kappl";
-    String m_kappl;
-    @doproperty(sequence=4)
-    @dovalidationinfo(charMaxLength=2)
-    @XmlAttribute()
-    public String getKappl() { return m_kappl; }
-    public void setKappl(String value) { m_kappl = value; }
 
     public static final String P_lgort = "lgort";
     String m_lgort;

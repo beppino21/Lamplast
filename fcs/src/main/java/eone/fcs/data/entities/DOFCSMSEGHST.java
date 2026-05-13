@@ -30,7 +30,7 @@ public class DOFCSMSEGHST
     public static final String P_ebelp = "ebelp";
     String m_ebelp;
     @doproperty(key=true,sequence=2)
-    @dovalidationinfo(charMaxLength=5)
+    @dovalidationinfo(charMaxLength=6)
     @XmlAttribute()
     public String getEbelp() { return m_ebelp; }
     public void setEbelp(String value) { m_ebelp = value; }
@@ -110,7 +110,7 @@ public class DOFCSMSEGHST
     public static final String P_id_eket = "id_eket";
     String m_id_eket;
     @doproperty(sequence=9)
-    @dovalidationinfo(charMaxLength=19)
+    @dovalidationinfo(charMaxLength=24)
     @XmlAttribute()
     public String getId_eket() { return m_id_eket; }
     public void setId_eket(String value) { m_id_eket = value; }

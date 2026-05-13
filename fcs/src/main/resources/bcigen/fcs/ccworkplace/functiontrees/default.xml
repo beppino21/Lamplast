@@ -55,6 +55,42 @@
                     <sortIndex>-1</sortIndex>
                 </workpageStartInfo>
             </subNodes>
+            <subNodes>
+                <text>Conversioni UM/UDM Cli./For.</text>
+                <folderOpened>false</folderOpened>
+                <subNodes>
+                    <text>UDM default Fornitori</text>
+                    <folderOpened>false</folderOpened>
+                    <workpageStartInfo>
+                        <pageBeanName>eone.fcs.view.dialogs.UMFORList</pageBeanName>
+                        <id>eone.fcs.view.dialogs.UMFORList</id>
+                        <openMultipleInstances>false</openMultipleInstances>
+                        <decorated>true</decorated>
+                        <popupSupported>false</popupSupported>
+                        <closeSupported>true</closeSupported>
+                        <openAsPopupByDefault>false</openAsPopupByDefault>
+                        <excludeFromSavePerspective>false</excludeFromSavePerspective>
+                        <paramMap/>
+                        <sortIndex>-1</sortIndex>
+                    </workpageStartInfo>
+                </subNodes>
+                <subNodes>
+                    <text>UDM default Clienti</text>
+                    <folderOpened>false</folderOpened>
+                    <workpageStartInfo>
+                        <pageBeanName>eone.fcs.view.dialogs.UMCLIList</pageBeanName>
+                        <id>eone.fcs.view.dialogs.UMCLIList</id>
+                        <openMultipleInstances>false</openMultipleInstances>
+                        <decorated>true</decorated>
+                        <popupSupported>false</popupSupported>
+                        <closeSupported>true</closeSupported>
+                        <openAsPopupByDefault>false</openAsPopupByDefault>
+                        <excludeFromSavePerspective>false</excludeFromSavePerspective>
+                        <paramMap/>
+                        <sortIndex>-1</sortIndex>
+                    </workpageStartInfo>
+                </subNodes>
+            </subNodes>
         </subNodes>
         <subNodes>
             <text>Staging tables</text>

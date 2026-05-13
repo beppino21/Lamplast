@@ -564,11 +564,168 @@ public class FcsRepository implements AutoCloseable {
         conn.commit();
     }
     
+    // -------------------------------------------------------------------------
+    // UMCLI → tabumcli  (parametrizzazioni Materiale/Cliente per resi)
+    // -------------------------------------------------------------------------
 
+    /**
+     * Carica da tabumcli i fattori di conversione validi alla data odierna
+     * per i soli matnr presenti nelle righe di reso da sincronizzare.
+     *
+     * Speculare a loadUmfor ma usa kunnr (cliente) invece di lifnr (fornitore).
+     * Usato da EketEnricher per le righe con kappl='V'.
+     *
+     * @param matnrs insieme dei codici materiale di interesse
+     * @return mappa fattori di conversione indicizzata per "matnr|kunnr"
+     */
+    public Map<String, com.eone.fcs.model.Umcli> loadUmcli(
+            java.util.Set<String> matnrs) throws SQLException {
+
+        if (matnrs.isEmpty()) return java.util.Map.of();
+
+        String placeholders = matnrs.stream()
+                .map(m -> "?")
+                .collect(java.util.stream.Collectors.joining(","));
+
+        String sql = """
+                SELECT DISTINCT ON (matnr, kunnr)
+                       matnr, kunnr, bstme, datab, meins,
+                       mengexbstme, bstmexpallet
+                  FROM public.tabumcli
+                 WHERE matnr IN (""" + placeholders + """
+                )
+                   AND datab <= CURRENT_DATE
+                 ORDER BY matnr, kunnr, datab DESC
+                """;
+
+        Map<String, com.eone.fcs.model.Umcli> result = new java.util.HashMap<>();
+
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            int i = 1;
+            for (String matnr : matnrs) {
+                ps.setString(i++, matnr);
+            }
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    com.eone.fcs.model.Umcli u = new com.eone.fcs.model.Umcli(
+                            rs.getString("matnr"),
+                            rs.getString("kunnr"),
+                            rs.getString("bstme"),
+                            rs.getDate("datab") != null
+                                    ? rs.getDate("datab").toLocalDate() : null,
+                            rs.getString("meins"),
+                            rs.getObject("mengexbstme")  != null ? rs.getDouble("mengexbstme")  : null,
+                            rs.getObject("bstmexpallet") != null ? rs.getInt("bstmexpallet")    : null
+                    );
+                    result.put(u.key(), u);
+                }
+            }
+        }
+
+        log.info("Fattori UMCLI caricati: {} record per {} matnr distinti",
+                result.size(), matnrs.size());
+        return result;
+    }
+
+    // -------------------------------------------------------------------------
+    // Nomi fornitori → tabfcslfa1
+    // -------------------------------------------------------------------------
+
+    /**
+     * Carica il campo name1 da tabfcslfa1 per i lifnr forniti.
+     * Usato da EketEnricher per popolare il campo name1 nelle righe OdA.
+     *
+     * @param lifnrs insieme dei codici fornitore
+     * @return mappa lifnr → name1
+     */
+    public Map<String, String> loadNomiFornitori(
+            java.util.Set<String> lifnrs) throws SQLException {
+
+        if (lifnrs.isEmpty()) return java.util.Map.of();
+
+        String placeholders = lifnrs.stream()
+                .map(l -> "?")
+                .collect(java.util.stream.Collectors.joining(","));
+
+        String sql = """
+                SELECT lifnr, name1
+                  FROM public.tabfcslfa1
+                 WHERE tenant = ?
+                   AND lifnr IN (""" + placeholders + """
+                )
+                """;
+
+        Map<String, String> result = new java.util.HashMap<>();
+
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, tenant);
+            int i = 2;
+            for (String lifnr : lifnrs) {
+                ps.setString(i++, lifnr);
+            }
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    result.put(rs.getString("lifnr"), rs.getString("name1"));
+                }
+            }
+        }
+
+        log.info("Nomi fornitori caricati: {} record", result.size());
+        return result;
+    }
+
+    // -------------------------------------------------------------------------
+    // Nomi clienti → tabfcskna1
+    // -------------------------------------------------------------------------
+
+    /**
+     * Carica il campo name1 da tabfcskna1 per i kunnr forniti.
+     * Usato da EketEnricher per popolare il campo name1 nelle righe di reso.
+     * I kunnr sono in lifnr delle EketLine di tipo 'V' (cliente → lifnr per coerenza modello).
+     *
+     * @param kunnrs insieme dei codici cliente
+     * @return mappa kunnr → name1
+     */
+    public Map<String, String> loadNomiClienti(
+            java.util.Set<String> kunnrs) throws SQLException {
+
+        if (kunnrs.isEmpty()) return java.util.Map.of();
+
+        String placeholders = kunnrs.stream()
+                .map(k -> "?")
+                .collect(java.util.stream.Collectors.joining(","));
+
+        String sql = """
+                SELECT kunnr, name1
+                  FROM public.tabfcskna1
+                 WHERE tenant = ?
+                   AND kunnr IN (""" + placeholders + """
+                )
+                """;
+
+        Map<String, String> result = new java.util.HashMap<>();
+
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, tenant);
+            int i = 2;
+            for (String kunnr : kunnrs) {
+                ps.setString(i++, kunnr);
+            }
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    result.put(rs.getString("kunnr"), rs.getString("name1"));
+                }
+            }
+        }
+
+        log.info("Nomi clienti caricati: {} record", result.size());
+        return result;
+    }
+    
     // -------------------------------------------------------------------------
     // AutoCloseable
     // -------------------------------------------------------------------------
-
+    
     @Override
     public void close() {
         try {

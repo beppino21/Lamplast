@@ -2,9 +2,10 @@ CREATE TABLE IF NOT EXISTS TABFCSEKET
 (
     tenant varchar(10),
     ebeln varchar(10),
-    ebelp varchar(5),
+    ebelp varchar(6),
     etenr varchar(4),
-    PRIMARY KEY (tenant,ebeln,ebelp,etenr)
+    kappl varchar(2),
+    PRIMARY KEY (tenant,ebeln,ebelp,etenr,kappl)
 );
 ALTER TABLE TABFCSEKET ADD COLUMN ameng numeric(13,3);
 ALTER TABLE TABFCSEKET ALTER COLUMN ameng TYPE numeric(13,3);
@@ -26,8 +27,8 @@ ALTER TABLE TABFCSEKET ADD COLUMN ernam varchar(12);
 ALTER TABLE TABFCSEKET ALTER COLUMN ernam TYPE varchar(12);
 ALTER TABLE TABFCSEKET ADD COLUMN gewei varchar(3);
 ALTER TABLE TABFCSEKET ALTER COLUMN gewei TYPE varchar(3);
-ALTER TABLE TABFCSEKET ADD COLUMN id_eket varchar(19);
-ALTER TABLE TABFCSEKET ALTER COLUMN id_eket TYPE varchar(19);
+ALTER TABLE TABFCSEKET ADD COLUMN id_eket varchar(24);
+ALTER TABLE TABFCSEKET ALTER COLUMN id_eket TYPE varchar(24);
 ALTER TABLE TABFCSEKET ADD COLUMN in_bldat date;
 ALTER TABLE TABFCSEKET ALTER COLUMN in_bldat TYPE date;
 ALTER TABLE TABFCSEKET ADD COLUMN in_brgew_row numeric(13,3);
@@ -58,8 +59,6 @@ ALTER TABLE TABFCSEKET ADD COLUMN in_werks varchar(4);
 ALTER TABLE TABFCSEKET ALTER COLUMN in_werks TYPE varchar(4);
 ALTER TABLE TABFCSEKET ADD COLUMN in_xblnr varchar(16);
 ALTER TABLE TABFCSEKET ALTER COLUMN in_xblnr TYPE varchar(16);
-ALTER TABLE TABFCSEKET ADD COLUMN kappl varchar(2);
-ALTER TABLE TABFCSEKET ALTER COLUMN kappl TYPE varchar(2);
 ALTER TABLE TABFCSEKET ADD COLUMN lgort varchar(4);
 ALTER TABLE TABFCSEKET ALTER COLUMN lgort TYPE varchar(4);
 ALTER TABLE TABFCSEKET ADD COLUMN lifnr varchar(10);
@@ -110,7 +109,7 @@ CREATE TABLE IF NOT EXISTS TABFCSMSEG
 (
     tenant varchar(10),
     ebeln varchar(10),
-    ebelp varchar(5),
+    ebelp varchar(6),
     etenr varchar(4),
     in_charg varchar(10),
     in_xblnr varchar(16),
@@ -124,8 +123,8 @@ ALTER TABLE TABFCSMSEG ADD COLUMN datum date;
 ALTER TABLE TABFCSMSEG ALTER COLUMN datum TYPE date;
 ALTER TABLE TABFCSMSEG ADD COLUMN ernam varchar(12);
 ALTER TABLE TABFCSMSEG ALTER COLUMN ernam TYPE varchar(12);
-ALTER TABLE TABFCSMSEG ADD COLUMN id_eket varchar(19);
-ALTER TABLE TABFCSMSEG ALTER COLUMN id_eket TYPE varchar(19);
+ALTER TABLE TABFCSMSEG ADD COLUMN id_eket varchar(24);
+ALTER TABLE TABFCSMSEG ALTER COLUMN id_eket TYPE varchar(24);
 ALTER TABLE TABFCSMSEG ADD COLUMN in_lgort varchar(4);
 ALTER TABLE TABFCSMSEG ALTER COLUMN in_lgort TYPE varchar(4);
 ALTER TABLE TABFCSMSEG ADD COLUMN in_menge numeric(13,3);
@@ -163,7 +162,7 @@ CREATE TABLE IF NOT EXISTS TABFCSEKETHST
 (
     tenant varchar(10),
     ebeln varchar(10),
-    ebelp varchar(5),
+    ebelp varchar(6),
     etenr varchar(4),
     mblnr varchar(10),
     mjahr varchar(4),
@@ -189,8 +188,8 @@ ALTER TABLE TABFCSEKETHST ADD COLUMN ernam varchar(12);
 ALTER TABLE TABFCSEKETHST ALTER COLUMN ernam TYPE varchar(12);
 ALTER TABLE TABFCSEKETHST ADD COLUMN gewei varchar(3);
 ALTER TABLE TABFCSEKETHST ALTER COLUMN gewei TYPE varchar(3);
-ALTER TABLE TABFCSEKETHST ADD COLUMN id_eket varchar(19);
-ALTER TABLE TABFCSEKETHST ALTER COLUMN id_eket TYPE varchar(19);
+ALTER TABLE TABFCSEKETHST ADD COLUMN id_eket varchar(24);
+ALTER TABLE TABFCSEKETHST ALTER COLUMN id_eket TYPE varchar(24);
 ALTER TABLE TABFCSEKETHST ADD COLUMN in_bldat date;
 ALTER TABLE TABFCSEKETHST ALTER COLUMN in_bldat TYPE date;
 ALTER TABLE TABFCSEKETHST ADD COLUMN in_brgew_tot numeric(13,3);
@@ -290,7 +289,7 @@ CREATE TABLE IF NOT EXISTS TABFCSMSEGHST
 (
     tenant varchar(10),
     ebeln varchar(10),
-    ebelp varchar(5),
+    ebelp varchar(6),
     etenr varchar(4),
     in_charg varchar(10),
     in_xblnr varchar(16),
@@ -306,8 +305,8 @@ ALTER TABLE TABFCSMSEGHST ADD COLUMN datum date;
 ALTER TABLE TABFCSMSEGHST ALTER COLUMN datum TYPE date;
 ALTER TABLE TABFCSMSEGHST ADD COLUMN ernam varchar(12);
 ALTER TABLE TABFCSMSEGHST ALTER COLUMN ernam TYPE varchar(12);
-ALTER TABLE TABFCSMSEGHST ADD COLUMN id_eket varchar(19);
-ALTER TABLE TABFCSMSEGHST ALTER COLUMN id_eket TYPE varchar(19);
+ALTER TABLE TABFCSMSEGHST ADD COLUMN id_eket varchar(24);
+ALTER TABLE TABFCSMSEGHST ALTER COLUMN id_eket TYPE varchar(24);
 ALTER TABLE TABFCSMSEGHST ADD COLUMN in_lgort varchar(4);
 ALTER TABLE TABFCSMSEGHST ALTER COLUMN in_lgort TYPE varchar(4);
 ALTER TABLE TABFCSMSEGHST ADD COLUMN in_menge numeric(13,3);
