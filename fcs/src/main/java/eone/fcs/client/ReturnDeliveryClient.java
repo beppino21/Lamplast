@@ -191,7 +191,6 @@ public class ReturnDeliveryClient {
             EketRiga prima = righe.get(0);
 
             ObjectNode header = JSON.createObjectNode();
-            header.put("ShippingPoint", nvl(prima.inWerks, prima.werks));
 
             ArrayNode items = JSON.createArrayNode();
             for (EketRiga r : righe) {
@@ -206,6 +205,7 @@ public class ReturnDeliveryClient {
                               .toPlainString()
                         : "0.000";
                 item.put("ActualDeliveryQuantity", qty);
+                item.put("DeliveryQuantityUnit",   nvl(r.meins, ""));
 
                 log.debug("buildDeliveryPayload: OdV={} pos={} matnr={} qty={}",
                           r.ebeln, r.ebelp, r.matnr, qty);
