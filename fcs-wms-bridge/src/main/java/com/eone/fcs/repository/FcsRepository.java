@@ -196,12 +196,15 @@ public class FcsRepository implements AutoCloseable {
      * Per ogni ebeln presente nelle righe estratte:
      *   1. DELETE righe con wmsst = ' ' (in attesa) → possono essere sovrascritte
      *   2. INSERT le nuove righe estratte da S/4HC
+     *      con ON CONFLICT (tenant, ebeln, ebelp, etenr, kappl) DO NOTHING:
+     *      se una riga esiste già con wmsst != ' ' (in lavorazione, completata, errore),
+     *      viene silenziosamente ignorata senza errore e senza interrompere l'elaborazione.
      *
-     * Le righe con wmsst != ' ' (in scarico, completate, errore)
-     * NON vengono mai toccate — garantisce integrità durante gli scarichi.
+     * Le righe con wmsst != ' ' NON vengono mai sovrascritte.
+     * Il log riporta separatamente quante righe sono state inserite e quante saltate.
      *
      * @param lines righe estratte da S/4HC
-     * @return numero di righe inserite
+     * @return numero di righe effettivamente inserite
      */
     public int syncEketLines(List<EketLine> lines) throws SQLException {
         if (lines.isEmpty()) {
@@ -221,9 +224,9 @@ public class FcsRepository implements AutoCloseable {
         int deleted = deleteEketInAttesa(ebelns);
         log.info("Righe EKET in attesa cancellate: {}", deleted);
 
-        // 2. INSERT righe nuove
+        // 2. INSERT righe nuove (ON CONFLICT DO NOTHING per le righe in lavorazione)
         int inserted = insertEketLines(lines);
-        log.info("Righe EKET inserite: {}", inserted);
+        log.info("Righe EKET inserite: {} su {} estratte da S/4H", inserted, lines.size());
 
         conn.commit();
         return inserted;
@@ -240,9 +243,9 @@ public class FcsRepository implements AutoCloseable {
         int deleted = deleteEketInAttesaByEbeln(ebeln);
         log.info("Righe in attesa cancellate per OdA {}: {}", ebeln, deleted);
 
-        // INSERT righe nuove
+        // INSERT righe nuove (ON CONFLICT DO NOTHING per le righe in lavorazione)
         int inserted = lines.isEmpty() ? 0 : insertEketLines(lines);
-        log.info("Righe inserite per OdA {}: {}", ebeln, inserted);
+        log.info("Righe inserite per OdA {}: {} su {} estratte da S/4H", ebeln, inserted, lines.size());
 
         conn.commit();
         return inserted;
@@ -282,6 +285,18 @@ public class FcsRepository implements AutoCloseable {
     }
 
     private int insertEketLines(List<EketLine> lines) throws SQLException {
+        /*
+         * ON CONFLICT (tenant, ebeln, ebelp, etenr, kappl) DO NOTHING
+         *
+         * Se la riga esiste già con wmsst <> ' ' (in lavorazione / completata / errore)
+         * il record non viene toccato e l'inserimento viene silenziosamente ignorato.
+         * In questo modo non si genera mai un errore di chiave duplicata e
+         * l'elaborazione procede senza interruzioni.
+         *
+         * Le righe effettivamente inserite sono quelle per cui il DELETE precedente
+         * ha rimosso il record con wmsst = ' '; le righe "in lavorazione" rimangono
+         * intatte e vengono conteggiate separatamente come "saltate".
+         */
         String sql = """
                 INSERT INTO public.tabfcseket
                     (tenant, ebeln, ebelp, etenr,
@@ -299,9 +314,13 @@ public class FcsRepository implements AutoCloseable {
                      ?, ?, ?, ?, ?,
                      ?, ?, ?, ?, ?,
                      ?, ?, ?, ' ')
+                ON CONFLICT (tenant, ebeln, ebelp, etenr, kappl) DO NOTHING
                 """;
 
-        int count = 0;
+        int attempted = 0;
+        int[] batchResults;
+        int inserted = 0;
+
         try (PreparedStatement ps = conn.prepareStatement(sql)) {
             for (EketLine e : lines) {
                 ps.setString(1,  tenant);
@@ -341,12 +360,21 @@ public class FcsRepository implements AutoCloseable {
                 ps.setTime  (32, e.uzeit() != null ? Time.valueOf(e.uzeit()) : null);
                 ps.setString(33, e.ernam());
                 ps.addBatch();
-                count++;
-                if (count % 100 == 0) ps.executeBatch();
+                attempted++;
+                if (attempted % 100 == 0) {
+                    batchResults = ps.executeBatch();
+                    for (int r : batchResults) inserted += (r > 0 ? r : 0);
+                }
             }
-            ps.executeBatch();
+            batchResults = ps.executeBatch();
+            for (int r : batchResults) inserted += (r > 0 ? r : 0);
         }
-        return count;
+
+        int skipped = attempted - inserted;
+        if (skipped > 0) {
+            log.info("Righe EKET in lavorazione (wmsst <> ' ') non sovrascritte: {}", skipped);
+        }
+        return inserted;
     }
 
     // -------------------------------------------------------------------------

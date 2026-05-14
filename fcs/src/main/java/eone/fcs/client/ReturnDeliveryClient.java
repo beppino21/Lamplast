@@ -197,7 +197,6 @@ public class ReturnDeliveryClient {
             EketRiga prima = righe.get(0);
 
             ObjectNode header = JSON.createObjectNode();
-            header.put("DeliveryType",  deliveryTypeReso);   // da ccee_config.properties
             header.put("ShippingPoint", nvl(prima.inWerks, prima.werks));
             header.put("DeliveryDate",  today);
 
