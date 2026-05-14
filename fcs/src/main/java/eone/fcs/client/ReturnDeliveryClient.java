@@ -45,7 +45,7 @@ public class ReturnDeliveryClient {
 
     private static final Logger log = LoggerFactory.getLogger(ReturnDeliveryClient.class);
 
-    private static final String SERVICE_PATH  = "/sap/opu/odata/SAP/API_OUTBOUND_DELIVERY_SRV";
+    private static final String SERVICE_PATH  = "/sap/opu/odata/sap/API_OUTBOUND_DELIVERY_SRV;v=0002";
     private static final String ENTITY_HEADER = "A_OutbDeliveryHeader";
 
     private static final ObjectMapper JSON = new ObjectMapper();
@@ -191,6 +191,7 @@ public class ReturnDeliveryClient {
             EketRiga prima = righe.get(0);
 
             ObjectNode header = JSON.createObjectNode();
+            header.put("ShippingPoint", nvl(prima.inWerks, prima.werks));
 
             ArrayNode items = JSON.createArrayNode();
             for (EketRiga r : righe) {
