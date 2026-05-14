@@ -15,8 +15,6 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.Base64;
 import java.util.List;
 import java.util.Properties;
@@ -49,9 +47,6 @@ public class ReturnDeliveryClient {
 
     private static final String SERVICE_PATH  = "/sap/opu/odata/SAP/API_OUTBOUND_DELIVERY_SRV";
     private static final String ENTITY_HEADER = "A_OutbDeliveryHeader";
-
-    private static final DateTimeFormatter DATE_FMT =
-            DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss");
 
     private static final ObjectMapper JSON = new ObjectMapper();
 
@@ -193,26 +188,17 @@ public class ReturnDeliveryClient {
 
     private String buildDeliveryPayload(List<EketRiga> righe) {
         try {
-            String today  = LocalDateTime.now().format(DATE_FMT);
             EketRiga prima = righe.get(0);
 
             ObjectNode header = JSON.createObjectNode();
             header.put("ShippingPoint", nvl(prima.inWerks, prima.werks));
-            header.put("DeliveryDate",  today);
-
-            if (prima.ebeln != null && !prima.ebeln.isBlank()) {
-                header.put("ReferenceSDDocument", prima.ebeln.trim());
-            }
-            if (prima.inXblnr != null && !prima.inXblnr.isBlank()) {
-                header.put("ExternalDeliveryDocumentNumber", prima.inXblnr.trim());
-            }
 
             ArrayNode items = JSON.createArrayNode();
             for (EketRiga r : righe) {
                 ObjectNode item = JSON.createObjectNode();
 
-                item.put("SalesOrder",     nvl(r.ebeln, "").trim());
-                item.put("SalesOrderItem", padPosnr(r.ebelp));
+                item.put("ReferenceSDDocument",     nvl(r.ebeln, "").trim());
+                item.put("ReferenceSDDocumentItem", padPosnr(r.ebelp));
 
                 String qty = r.inMenge != null
                         ? new java.math.BigDecimal(r.inMenge)
@@ -220,19 +206,6 @@ public class ReturnDeliveryClient {
                               .toPlainString()
                         : "0.000";
                 item.put("ActualDeliveryQuantity", qty);
-                item.put("DeliveryQuantityUnit",   nvl(r.meins, ""));
-                item.put("StorageLocation",        nvl(r.inLgort, r.lgort));
-                item.put("Material",               nvl(r.matnr, ""));
-
-                if (Boolean.TRUE.equals(r.xchpf)) {
-                    if (r.inCharg != null && !r.inCharg.isBlank()) {
-                        item.put("Batch", r.inCharg.trim());
-                    } else {
-                        log.warn("buildDeliveryPayload: riga {}/{}/{} è a lotto " +
-                                 "ma in_charg è null — riga inviata senza batch",
-                                 r.ebeln, r.ebelp, r.etenr);
-                    }
-                }
 
                 log.debug("buildDeliveryPayload: OdV={} pos={} matnr={} qty={}",
                           r.ebeln, r.ebelp, r.matnr, qty);
