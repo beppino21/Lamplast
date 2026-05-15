@@ -53,6 +53,7 @@ public class ReturnDeliveryClient {
     private final String baseUrl;
     private final String authHeader;
     private final String deliveryTypeReso;
+    private final String shippingPoint;
     private final HttpClient http;
 
     // -------------------------------------------------------------------------
@@ -75,13 +76,14 @@ public class ReturnDeliveryClient {
         this.authHeader       = "Basic " + Base64.getEncoder().encodeToString(
                 (username + ":" + password).getBytes(StandardCharsets.UTF_8));
         this.deliveryTypeReso = props.getProperty("reso.delivery.type", "LR");
+        this.shippingPoint    = props.getProperty("reso.shipping.point", "");
         this.http             = HttpClient.newBuilder()
                 .cookieHandler(new java.net.CookieManager(
                         null, java.net.CookiePolicy.ACCEPT_ALL))
                 .build();
 
-        log.info("ReturnDeliveryClient inizializzato: baseUrl={} user={} deliveryType={}",
-                 url, username, deliveryTypeReso);
+        log.info("ReturnDeliveryClient inizializzato: baseUrl={} user={} deliveryType={} shippingPoint={}",
+                 url, username, deliveryTypeReso, shippingPoint);
     }
 
     // -------------------------------------------------------------------------
@@ -191,7 +193,7 @@ public class ReturnDeliveryClient {
             EketRiga prima = righe.get(0);
 
             ObjectNode header = JSON.createObjectNode();
-            header.put("ShippingPoint", nvl(prima.inWerks, prima.werks));
+            header.put("ShippingPoint", shippingPoint);
 
             ArrayNode items = JSON.createArrayNode();
             for (EketRiga r : righe) {

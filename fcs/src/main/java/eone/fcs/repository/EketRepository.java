@@ -564,8 +564,8 @@ public class EketRepository {
                 ps.setString(2,  r.ebeln);
                 ps.setString(3,  r.ebelp);
                 ps.setString(4,  r.etenr);
-                ps.setString(5,  r.inXblnr);   // può essere null
-                ps.setString(6,  r.inCharg);   // può essere null
+                ps.setString(5,  nvl(r.inXblnr));  // PK: null → stringa vuota
+                ps.setString(6,  nvl(r.inCharg));  // PK: null → stringa vuota
                 ps.setString(7,  r.idEket);
                 ps.setString(8,  r.kappl);
                 ps.setString(9,  r.bemid);
@@ -796,6 +796,14 @@ public class EketRepository {
     private java.time.LocalDate toLocalDate(ResultSet rs, String col) throws SQLException {
         java.sql.Date val = rs.getDate(col);
         return val == null ? null : val.toLocalDate();
+    }
+
+    /**
+     * Null-safe: restituisce stringa vuota invece di null.
+     * Usato per i campi in PK (in_xblnr, in_charg) che non possono essere null.
+     */
+    private String nvl(String s) {
+        return s != null ? s : "";
     }
 
     private String toIsoDate(String abapDate) {
