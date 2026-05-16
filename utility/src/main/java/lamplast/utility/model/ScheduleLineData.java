@@ -18,6 +18,9 @@ public class ScheduleLineData {
     // Esito elaborazione SAP
     private String processingResult;  // "OK", "KO", "PENDING", null
     private String errorMessage;
+
+    // Esito dry-run (verifica preventiva — separato dall'esito reale)
+    private String dryRunResult;
     
     public ScheduleLineData() {
     }
@@ -106,6 +109,9 @@ public class ScheduleLineData {
         this.errorMessage = errorMessage;
     }
     
+    public String getDryRunResult()            { return dryRunResult; }
+    public void   setDryRunResult(String v)      { this.dryRunResult = v; }
+
     /**
      * Verifica se questa schedulazione è un inserimento (negativo)
      */

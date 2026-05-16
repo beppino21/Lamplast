@@ -21,7 +21,13 @@ public class SapConfiguration {
     private final String urlVa03;
     private final String urlFiori;
 
-    // --- Nomi colonne Excel ---
+    // --- Log stampa ---
+    private final String logPrintFolder;
+
+    // --- Excel: foglio ---
+    private final String sheetName;
+
+    // --- Excel: nomi colonne ---
     private final String colOrdine;
     private final String colPosizione;
     private final String colSchedulazione;
@@ -46,6 +52,12 @@ public class SapConfiguration {
                             "/sap/bc/ui2/flp#SalesOrder-manage?SalesOrder=");
         this.urlFiori = props.getProperty("sap.url.fiori",
                             "/sap/bc/ui2/flp#SalesOrder-displayFactSheet?SalesOrder=");
+
+        // Cartella log stampa (default "logprint", relativa alla webapp root)
+        this.logPrintFolder = props.getProperty("log.printFolder", "logprint");
+
+        // Foglio Excel (default "Export")
+        this.sheetName = props.getProperty("excel.sheetName", "Export");
 
         // Colonne Excel (con valori di default nel caso mancassero)
         this.colOrdine        = props.getProperty("excel.col.ordine",        "Ordine");
@@ -127,25 +139,20 @@ public class SapConfiguration {
     // GETTER — URL ordini
     // -------------------------------------------------------
 
-    /**
-     * URL completo per app Fiori VA03 (Manage Sales Order).
-     * Aggiunge già baseUrl — basta appendere il numero ordine.
-     */
     public String getFullUrlVa03(String salesOrder) {
         return baseUrl + urlVa03 + salesOrder;
     }
 
-    /**
-     * URL completo per Fiori FactSheet (vista rapida read-only).
-     * Aggiunge già baseUrl — basta appendere il numero ordine.
-     */
     public String getFullUrlFiori(String salesOrder) {
         return baseUrl + urlFiori + salesOrder;
     }
 
     // -------------------------------------------------------
-    // GETTER — Colonne Excel
+    // GETTER — Excel: foglio e colonne
     // -------------------------------------------------------
+
+    public String getLogPrintFolder()   { return logPrintFolder; }
+    public String getSheetName()        { return sheetName; }
 
     public String getColOrdine()        { return colOrdine; }
     public String getColPosizione()     { return colPosizione; }
