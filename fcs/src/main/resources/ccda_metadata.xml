@@ -305,7 +305,7 @@
         <property dataType="WERKS_D" id="werks" key="true" mandatory="false" sequence="2" text="Divisione"/>
         <property dataType="ccda_base.Boolean" id="exp2fcs" mandatory="false" sequence="3" text="Esporta verso FCS"/>
     </entity>
-    <entity id="UMCLI" isPublic="true" isTransient="false" text="Unità di misura specifiche per Materiale / Cliente">
+    <entity id="UMCLI" isPublic="true" isTransient="false" text="Unità di misura specifiche per Materiale/Cliente">
         <property dataType="BSTME" id="bstme" key="true" mandatory="false" sequence="3" text="UM dell'ordine d'acquisto"/>
         <property dataType="ccda_base.localDate" id="datab" key="true" mandatory="false" sequence="4" text="Data inizio validità"/>
         <property dataType="KUNNR" id="kunnr" key="true" mandatory="false" sequence="2" text="Codice Cliente"/>
