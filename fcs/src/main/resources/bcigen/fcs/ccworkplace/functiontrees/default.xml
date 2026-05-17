@@ -179,6 +179,22 @@
                     <sortIndex>-1</sortIndex>
                 </workpageStartInfo>
             </subNodes>
+            <subNodes>
+                <text>Log WS REST</text>
+                <folderOpened>false</folderOpened>
+                <workpageStartInfo>
+                    <pageBeanName>eone.fcs.view.dialogs.FCSRESTLOGList</pageBeanName>
+                    <id>eone.fcs.view.dialogs.FCSRESTLOGList</id>
+                    <openMultipleInstances>false</openMultipleInstances>
+                    <decorated>true</decorated>
+                    <popupSupported>false</popupSupported>
+                    <closeSupported>true</closeSupported>
+                    <openAsPopupByDefault>false</openAsPopupByDefault>
+                    <excludeFromSavePerspective>false</excludeFromSavePerspective>
+                    <paramMap/>
+                    <sortIndex>-1</sortIndex>
+                </workpageStartInfo>
+            </subNodes>
         </subNodes>
     </subNodes>
 </workplaceFunctionTreeInfoNode>

@@ -7,9 +7,12 @@ import eone.fcs.client.ReturnDeliveryException;
 import eone.fcs.repository.EketRepository;
 import eone.fcs.repository.EketRepository.EketRiga;
 import eone.fcs.repository.RepositoryException;
+import eone.fcs.repository.RestLogRepository;
 import jakarta.ws.rs.*;
+import jakarta.ws.rs.core.Context;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
+import jakarta.ws.rs.core.UriInfo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -68,7 +71,11 @@ public class EketResource {
     // Valore kappl per i resi da cliente (OdV di reso)
     private static final String KAPPL_RESO = "V";
 
-    private final EketRepository repo = new EketRepository();
+    private final EketRepository    repo    = new EketRepository();
+    private final RestLogRepository restLog = new RestLogRepository();
+
+    @Context
+    UriInfo uriInfo;
 
     // -------------------------------------------------------------------------
     // Endpoint principale
@@ -242,34 +249,28 @@ public class EketResource {
     private Response handleF(String uuid) {
         if (isEmpty(uuid)) return error("Parametri non compilati: UUID");
 
-        // 1. Verifica che esistano righe in stato wmsst=2 (scarico avviato)
         if (!repo.existsBemidWithStatus(uuid, "2")) {
-            return error("UUID con stato 2 non presente su EKET");
+            return error("UUID con stato 2 non presente su EKET", uuid);
         }
 
-        // 2. Controllo anti-mix: resi e acquisti non possono stare nello stesso scarico
         if (repo.hasResiMisti(uuid)) {
             log.warn("handleF: uuid={} contiene mix di kappl (OdA + resi) — scarico rifiutato", uuid);
             return error("Scarico non valido: OdA e Resi da cliente non possono " +
-                         "essere scaricati insieme. Procedere in due fasi separate.");
+                         "essere scaricati insieme. Procedere in due fasi separate.", uuid);
         }
 
-        // 3. Carica le righe dello scarico e determina il tipo
         List<EketRiga> righe = repo.loadRigheByBemid(uuid);
         if (righe.isEmpty()) {
-            return error("Nessuna riga trovata per UUID: " + uuid);
+            return error("Nessuna riga trovata per UUID: " + uuid, uuid);
         }
         log.info("handleF: {} righe caricate per uuid={}", righe.size(), uuid);
 
         boolean isReso = repo.isReso(uuid);
         log.info("handleF: uuid={} tipo={}", uuid, isReso ? "RESO DA CLIENTE (kappl=V)" : "OdA");
 
-        // 4. Popola tabfcsmseg (staging per la GR / reso)
-        //    In caso di fallimento successivo le righe restano in MSEG per analisi.
         repo.upsertMseg(righe);
         log.info("handleF: tabfcsmseg popolata per uuid={}", uuid);
 
-        // 5. Registra il movimento su S/4HC (fork OdA / Reso)
         String mblnr;
         try {
             if (isReso) {
@@ -280,19 +281,16 @@ public class EketResource {
         } catch (GoodsReceiptException e) {
             log.error("handleF: GR fallita per uuid={} — {}", uuid, e.getMessage(), e);
             repo.setWmsstErrore(uuid);
-            return error("Errore registrazione EM su SAP: " + e.getMessage());
+            return error("Errore registrazione EM su SAP: " + e.getMessage(), uuid);
         } catch (ReturnDeliveryException e) {
             log.error("handleF: Consegna reso fallita per uuid={} — {}", uuid, e.getMessage(), e);
             repo.setWmsstErrore(uuid);
-            return error("Errore registrazione reso su SAP: " + e.getMessage());
+            return error("Errore registrazione reso su SAP: " + e.getMessage(), uuid);
         } catch (Exception e) {
-            // Errore inatteso → non marchiamo 'E', rilanciamo al handler globale
             log.error("handleF: errore inatteso per uuid={}", uuid, e);
             throw e;
         }
 
-        // 6. Archiviazione atomica post-registrazione
-        //    EKET → EKETHST, MSEG → MSEGHST, poi DELETE da MSEG e EKET.
         try {
             repo.archiviaDopoGr(uuid, mblnr);
             log.info("handleF: archiviazione completata per uuid={} mblnr={}", uuid, mblnr);
@@ -301,12 +299,9 @@ public class EketResource {
                       "ma archiviazione locale fallita per uuid={}: {}",
                       mblnr, uuid, e.getMessage(), e);
             return error("Documento SAP registrato (mblnr=" + mblnr +
-                         ") ma archiviazione locale fallita: " + e.getMessage());
+                         ") ma archiviazione locale fallita: " + e.getMessage(), uuid);
         }
 
-        // 7. Refresh EKET/VBEP tramite bridge (sincrono, best-effort)
-        //    OdA  → bridge mode "eket <ebeln>"
-        //    Reso → bridge mode "vbep <vbeln>"  (ebeln per i resi = numero OdV)
         if (isReso) {
             List<String> vbelns = repo.getEbelnsPerKappl(uuid, KAPPL_RESO);
             for (String vbeln : vbelns) {
@@ -322,7 +317,7 @@ public class EketResource {
             }
         }
 
-        return ok("Documento SAP registrato: " + mblnr);
+        return ok("Documento SAP registrato: " + mblnr, uuid);
     }
 
     // -------------------------------------------------------------------------
@@ -426,11 +421,31 @@ public class EketResource {
 
     private Response ok(String message) {
         log.info("INBOUND RESPONSE 200: {}", message);
+        String qs = uriInfo != null ? uriInfo.getRequestUri().getQuery() : "";
+        restLog.log("GET", qs, message);
+        return Response.ok(message).build();
+    }
+
+    private Response ok(String message, String uuid) {
+        log.info("INBOUND RESPONSE 200: {}", message);
+        String qs = uriInfo != null ? uriInfo.getRequestUri().getQuery() : "";
+        restLog.log("GET", qs, message, uuid, null);
         return Response.ok(message).build();
     }
 
     private Response error(String message) {
         log.warn("INBOUND RESPONSE 400: {}", message);
+        String qs = uriInfo != null ? uriInfo.getRequestUri().getQuery() : "";
+        restLog.log("GET", qs, message);
+        return Response.status(Response.Status.BAD_REQUEST)
+                .entity(message)
+                .build();
+    }
+
+    private Response error(String message, String uuid) {
+        log.warn("INBOUND RESPONSE 400: {}", message);
+        String qs = uriInfo != null ? uriInfo.getRequestUri().getQuery() : "";
+        restLog.log("GET", qs, message, uuid, null);
         return Response.status(Response.Status.BAD_REQUEST)
                 .entity(message)
                 .build();

@@ -207,10 +207,7 @@ public class MovSapRepository {
                ?, ?
             FROM tabfcsmovsap
             WHERE movid = ?
-            ON CONFLICT (tenant, movid) DO UPDATE SET
-               mblnr = EXCLUDED.mblnr,
-               mjahr = EXCLUDED.mjahr,
-               wmsst = '2'
+            ON CONFLICT (tenant, movid, mblnr, mjahr) DO NOTHING
             """;
 
         String sqlDel = "DELETE FROM tabfcsmovsap WHERE movid = ?";
@@ -296,7 +293,6 @@ public class MovSapRepository {
         r.menge_to = toFloat(rs, "menge_to");
         r.meins    = rs.getString("meins");
         r.wmsst    = rs.getString("wmsst");
-        r.kostl    = rs.getString("kostl");
         r.datum    = toLocalDate(rs, "datum");
         r.uzeit    = toLocalTime(rs, "uzeit");
         r.uname    = rs.getString("uname");

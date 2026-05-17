@@ -29,7 +29,7 @@ public class DOFCSMOVSAPHST
 
     public static final String P_aufnr = "aufnr";
     String m_aufnr;
-    @doproperty(sequence=6)
+    @doproperty(sequence=8)
     @dovalidationinfo(charMaxLength=12)
     @XmlAttribute()
     public String getAufnr() { return m_aufnr; }
@@ -37,7 +37,7 @@ public class DOFCSMOVSAPHST
 
     public static final String P_bwart = "bwart";
     String m_bwart;
-    @doproperty(sequence=2)
+    @doproperty(sequence=4)
     @dovalidationinfo(charMaxLength=3)
     @XmlAttribute()
     public String getBwart() { return m_bwart; }
@@ -45,7 +45,7 @@ public class DOFCSMOVSAPHST
 
     public static final String P_charg = "charg";
     String m_charg;
-    @doproperty(sequence=12)
+    @doproperty(sequence=14)
     @dovalidationinfo(charMaxLength=10)
     @XmlAttribute()
     public String getCharg() { return m_charg; }
@@ -53,7 +53,7 @@ public class DOFCSMOVSAPHST
 
     public static final String P_charg_to = "charg_to";
     String m_charg_to;
-    @doproperty(sequence=17)
+    @doproperty(sequence=19)
     @dovalidationinfo(charMaxLength=10)
     @XmlAttribute()
     public String getCharg_to() { return m_charg_to; }
@@ -61,7 +61,7 @@ public class DOFCSMOVSAPHST
 
     public static final String P_datum = "datum";
     LocalDate m_datum;
-    @doproperty(sequence=19)
+    @doproperty(sequence=21)
     @XmlAttribute() @XmlJavaTypeAdapter(LocalDateAdapter.class)
 
     public LocalDate getDatum() { return m_datum; }
@@ -69,7 +69,7 @@ public class DOFCSMOVSAPHST
 
     public static final String P_kostl = "kostl";
     String m_kostl;
-    @doproperty(sequence=5)
+    @doproperty(sequence=7)
     @dovalidationinfo(charMaxLength=10)
     @XmlAttribute()
     public String getKostl() { return m_kostl; }
@@ -77,7 +77,7 @@ public class DOFCSMOVSAPHST
 
     public static final String P_kunnr = "kunnr";
     String m_kunnr;
-    @doproperty(sequence=4)
+    @doproperty(sequence=6)
     @dovalidationinfo(charMaxLength=10)
     @XmlAttribute()
     public String getKunnr() { return m_kunnr; }
@@ -85,7 +85,7 @@ public class DOFCSMOVSAPHST
 
     public static final String P_lgort = "lgort";
     String m_lgort;
-    @doproperty(sequence=10)
+    @doproperty(sequence=12)
     @dovalidationinfo(charMaxLength=4)
     @XmlAttribute()
     public String getLgort() { return m_lgort; }
@@ -93,7 +93,7 @@ public class DOFCSMOVSAPHST
 
     public static final String P_lgort_to = "lgort_to";
     String m_lgort_to;
-    @doproperty(sequence=15)
+    @doproperty(sequence=17)
     @dovalidationinfo(charMaxLength=4)
     @XmlAttribute()
     public String getLgort_to() { return m_lgort_to; }
@@ -101,7 +101,7 @@ public class DOFCSMOVSAPHST
 
     public static final String P_lifnr = "lifnr";
     String m_lifnr;
-    @doproperty(sequence=3)
+    @doproperty(sequence=5)
     @dovalidationinfo(charMaxLength=10)
     @XmlAttribute()
     public String getLifnr() { return m_lifnr; }
@@ -109,7 +109,7 @@ public class DOFCSMOVSAPHST
 
     public static final String P_matnr = "matnr";
     String m_matnr;
-    @doproperty(sequence=11)
+    @doproperty(sequence=13)
     @dovalidationinfo(charMaxLength=18)
     @XmlAttribute()
     public String getMatnr() { return m_matnr; }
@@ -117,7 +117,7 @@ public class DOFCSMOVSAPHST
 
     public static final String P_matnr_to = "matnr_to";
     String m_matnr_to;
-    @doproperty(sequence=16)
+    @doproperty(sequence=18)
     @dovalidationinfo(charMaxLength=18)
     @XmlAttribute()
     public String getMatnr_to() { return m_matnr_to; }
@@ -125,7 +125,7 @@ public class DOFCSMOVSAPHST
 
     public static final String P_mblnr = "mblnr";
     String m_mblnr;
-    @doproperty(sequence=23)
+    @doproperty(key=true,sequence=2)
     @dovalidationinfo(charMaxLength=10)
     @XmlAttribute()
     public String getMblnr() { return m_mblnr; }
@@ -133,7 +133,7 @@ public class DOFCSMOVSAPHST
 
     public static final String P_meins = "meins";
     String m_meins;
-    @doproperty(sequence=20)
+    @doproperty(sequence=22)
     @dovalidationinfo(charMaxLength=3)
     @XmlAttribute()
     public String getMeins() { return m_meins; }
@@ -141,7 +141,7 @@ public class DOFCSMOVSAPHST
 
     public static final String P_menge = "menge";
     Float m_menge;
-    @doproperty(sequence=13)
+    @doproperty(sequence=15)
     @dovalidationinfo(numericPrecision=13,numericScale=3)
     @XmlAttribute()
     public Float getMenge() { return m_menge; }
@@ -149,7 +149,7 @@ public class DOFCSMOVSAPHST
 
     public static final String P_menge_to = "menge_to";
     Float m_menge_to;
-    @doproperty(sequence=18)
+    @doproperty(sequence=20)
     @dovalidationinfo(numericPrecision=13,numericScale=3)
     @XmlAttribute()
     public Float getMenge_to() { return m_menge_to; }
@@ -157,7 +157,7 @@ public class DOFCSMOVSAPHST
 
     public static final String P_mjahr = "mjahr";
     String m_mjahr;
-    @doproperty(sequence=24)
+    @doproperty(key=true,sequence=3)
     @dovalidationinfo(charMaxLength=4)
     @XmlAttribute()
     public String getMjahr() { return m_mjahr; }
@@ -165,7 +165,7 @@ public class DOFCSMOVSAPHST
 
     public static final String P_prctr = "prctr";
     String m_prctr;
-    @doproperty(sequence=7)
+    @doproperty(sequence=9)
     @dovalidationinfo(charMaxLength=10)
     @XmlAttribute()
     public String getPrctr() { return m_prctr; }
@@ -173,7 +173,7 @@ public class DOFCSMOVSAPHST
 
     public static final String P_sobkz = "sobkz";
     String m_sobkz;
-    @doproperty(sequence=8)
+    @doproperty(sequence=10)
     @dovalidationinfo(charMaxLength=1)
     @XmlAttribute()
     public String getSobkz() { return m_sobkz; }
@@ -181,7 +181,7 @@ public class DOFCSMOVSAPHST
 
     public static final String P_uname = "uname";
     String m_uname;
-    @doproperty(sequence=21)
+    @doproperty(sequence=23)
     @dovalidationinfo(charMaxLength=12)
     @XmlAttribute()
     public String getUname() { return m_uname; }
@@ -189,7 +189,7 @@ public class DOFCSMOVSAPHST
 
     public static final String P_uzeit = "uzeit";
     LocalTime m_uzeit;
-    @doproperty(sequence=22)
+    @doproperty(sequence=24)
     @XmlAttribute() @XmlJavaTypeAdapter(LocalTimeAdapter.class)
 
     public LocalTime getUzeit() { return m_uzeit; }
@@ -197,7 +197,7 @@ public class DOFCSMOVSAPHST
 
     public static final String P_werks = "werks";
     String m_werks;
-    @doproperty(sequence=9)
+    @doproperty(sequence=11)
     @dovalidationinfo(charMaxLength=4)
     @XmlAttribute()
     public String getWerks() { return m_werks; }
@@ -205,7 +205,7 @@ public class DOFCSMOVSAPHST
 
     public static final String P_werks_to = "werks_to";
     String m_werks_to;
-    @doproperty(sequence=14)
+    @doproperty(sequence=16)
     @dovalidationinfo(charMaxLength=4)
     @XmlAttribute()
     public String getWerks_to() { return m_werks_to; }

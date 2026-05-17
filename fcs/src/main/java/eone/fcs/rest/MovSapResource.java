@@ -6,10 +6,13 @@ import eone.fcs.client.MovementResult;
 import eone.fcs.repository.MovSapRepository;
 import eone.fcs.repository.MovSapRepository.MovsapRiga;
 import eone.fcs.repository.RepositoryException;
+import eone.fcs.repository.RestLogRepository;
 
 import jakarta.ws.rs.*;
+import jakarta.ws.rs.core.Context;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
+import jakarta.ws.rs.core.UriInfo;
 import java.time.LocalDate;
 import java.time.LocalTime;
 
@@ -29,8 +32,12 @@ import java.time.LocalTime;
 @Path("/movement")
 public class MovSapResource {
 
-    private final MovSapRepository repo   = new MovSapRepository();
-    private final MovementClient   client = new MovementClient();
+    private final MovSapRepository  repo    = new MovSapRepository();
+    private final MovementClient    client  = new MovementClient();
+    private final RestLogRepository restLog = new RestLogRepository();
+
+    @Context
+    UriInfo uriInfo;
 
     // -----------------------------------------------------------------------
     // Health check
@@ -40,21 +47,15 @@ public class MovSapResource {
     @Path("/H")
     @Produces(MediaType.TEXT_PLAIN)
     public Response handleH() {
-        return ok("FCS Movement Service OK");
+        String risposta = "FCS Movement Service OK";
+        restLog.log("GET", "ACTION=H", risposta);
+        return ok(risposta);
     }
 
     // -----------------------------------------------------------------------
     // Movimento MM (unico endpoint operativo)
     // -----------------------------------------------------------------------
 
-    /**
-     * Riceve i parametri del movimento via query string.
-     * Parametri obbligatori per tutti i bwart: MOVID, BWART, WERKS, LGORT, MATNR.
-     * Parametri aggiuntivi per bwart specifici (coerente con HANDLE_REQUEST.abap):
-     *   309 → MATNR_TO obbligatorio
-     *   311 → MENGE + (WERKS_TO o LGORT_TO) obbligatori
-     *   551/552/561/562 → MENGE obbligatorio
-     */
     @GET
     @Path("/M")
     @Produces(MediaType.TEXT_PLAIN)
@@ -64,7 +65,7 @@ public class MovSapResource {
             @QueryParam("LIFNR")    String lifnr,
             @QueryParam("KUNNR")    String kunnr,
             @QueryParam("KOSTL")    String kostl,
-            @QueryParam("NUMORD")   String aufnr,    // NUMORD → aufnr come in R/3
+            @QueryParam("NUMORD")   String aufnr,
             @QueryParam("PRCTR")    String prctr,
             @QueryParam("SOBKZ")    String sobkz,
             @QueryParam("WERKS")    String werks,
@@ -79,7 +80,8 @@ public class MovSapResource {
             @QueryParam("MENGE_TO") String mengeToStr,
             @QueryParam("MEINS")    String meins
     ) {
-        // Tutto uppercase come in R/3
+        String qs = uriInfo != null ? uriInfo.getRequestUri().getQuery() : "";
+
         movid    = upper(movid);
         bwart    = upper(bwart);
         lifnr    = upper(lifnr);
@@ -98,7 +100,6 @@ public class MovSapResource {
         charg_to = upper(charg_to);
         meins    = upper(meins);
 
-        // --- Validazione campi obbligatori base ---
         StringBuilder missingFields = new StringBuilder();
         if (isEmpty(movid))  append(missingFields, "MOVID");
         if (isEmpty(bwart))  append(missingFields, "BWART");
@@ -106,7 +107,6 @@ public class MovSapResource {
         if (isEmpty(lgort))  append(missingFields, "LGORT");
         if (isEmpty(matnr))  append(missingFields, "MATNR");
 
-        // --- Validazione per bwart ---
         if (!isEmpty(bwart)) {
             switch (bwart) {
                 case "309":
@@ -127,19 +127,17 @@ public class MovSapResource {
                         append(missingFields, "MENGE");
                     break;
                 default:
-                    return ok("Tipo movimento non gestito: " + bwart);
+                    return logAndOk(qs, "Tipo movimento non gestito: " + bwart);
             }
         }
 
         if (missingFields.length() > 0) {
-            return ok("Parametri non compilati: " + missingFields);
+            return logAndOk(qs, "Parametri non compilati: " + missingFields);
         }
 
-        // --- Parsing quantità ---
-        Float menge   = parseFloat(mengeStr);
+        Float menge    = parseFloat(mengeStr);
         Float menge_to = parseFloat(mengeToStr);
 
-        // --- Popolamento riga staging ---
         MovsapRiga riga = new MovsapRiga();
         riga.movid    = movid;
         riga.bwart    = bwart;
@@ -162,35 +160,25 @@ public class MovSapResource {
         riga.meins    = meins;
         riga.datum    = LocalDate.now();
         riga.uzeit    = LocalTime.now();
+        riga.uname    = "WMS";
 
-        // Uname: non arriva dal WMS, usiamo un valore fisso identificativo
-        riga.uname = "WMS";
-
-        // --- Fase 1: UPSERT staging ---
         try {
             repo.upsertMovsap(riga);
         } catch (RepositoryException e) {
-            return ok("Errore su inserimento TABFCSMOVSAP: " + e.getMessage());
+            return logAndOk(qs, "Errore su inserimento TABFCSMOVSAP: " + e.getMessage());
         }
 
-        // --- Fase 2: Elaborazione → S/4HC ---
         try {
             MovementResult result = client.postMovement(riga);
-
-            // Successo → archivia e rimuovi dallo staging
             repo.archiviaDopoMovimento(movid, result.mblnr, result.mjahr);
-            return ok("Documenti inviati a SAP | Documento: " + result.mblnr + " / " + result.mjahr);
+            return logAndOk(qs, "Documenti inviati a SAP | Documento: " + result.mblnr + " / " + result.mjahr, movid);
 
         } catch (MovementException e) {
-            // Errore SAP → marca wmsst='E', la riga rimane in staging
-            try {
-                repo.setWmsstErrore(movid);
-            } catch (Exception ignored) { /* non nascondere l'errore principale */ }
-            return ok("Errore elaborazione movimento: " + e.getMessage());
+            try { repo.setWmsstErrore(movid); } catch (Exception ignored) {}
+            return logAndOk(qs, "Errore elaborazione movimento: " + e.getMessage(), movid);
 
         } catch (RepositoryException e) {
-            // Errore archiviazione post-SAP
-            return ok("Errore archiviazione post-movimento: " + e.getMessage());
+            return logAndOk(qs, "Errore archiviazione post-movimento: " + e.getMessage(), movid);
         }
     }
 
@@ -200,6 +188,16 @@ public class MovSapResource {
 
     private Response ok(String text) {
         return Response.ok(text, MediaType.TEXT_PLAIN).build();
+    }
+
+    private Response logAndOk(String queryString, String text) {
+        restLog.log("GET", queryString, text, null, null);
+        return ok(text);
+    }
+
+    private Response logAndOk(String queryString, String text, String movid) {
+        restLog.log("GET", queryString, text, null, movid);
+        return ok(text);
     }
 
     private boolean isEmpty(String s) {

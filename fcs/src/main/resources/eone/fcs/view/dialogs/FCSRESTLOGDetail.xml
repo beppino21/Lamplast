@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<t:layoutdefinition xmlns:t="http://www.captaincasa.com/controllibrary/t" xmlns:tdap="http://www.captaincasa.com/controllibrary/tdap" >
+
+<t:beanprocessing id="g_1" beanbinding="#{d.FCSRESTLOGDetail}" />
+<t:row id="g_22" >
+<tdap:framedetaileditor id="g_24" pagebeanbinding="#{d.FCSRESTLOGDetail.frame}" shownullcontent="true" >
+<tdap:framedetaileditorbody id="g_25" height="100%" rowdistance="#{ccstylevalue[&#39;@defaultrowdistance@&#39;]}" width="100%" >
+<tdap:rowareas id="g_26" >
+<tdap:containerarea id="g_27" text="Some title" >
+<t:row id="g_29" coldistance="#{ccstylevalue[&#39;@defaultcoldistance@&#39;]}" >
+<t:calendarfield id="g_2" adapterbinding="#{d.FCSRESTLOGDetail.adapters.zdatetime}" />
+</t:row>
+<t:row id="g_3" coldistance="#{ccstylevalue[&#39;@defaultcoldistance@&#39;]}" >
+<t:formattedfield id="g_4" adapterbinding="#{d.FCSRESTLOGDetail.adapters.prog}" />
+</t:row>
+<t:row id="g_5" coldistance="#{ccstylevalue[&#39;@defaultcoldistance@&#39;]}" >
+<t:field id="g_6" adapterbinding="#{d.FCSRESTLOGDetail.adapters.http_method}" />
+</t:row>
+<t:row id="g_7" coldistance="#{ccstylevalue[&#39;@defaultcoldistance@&#39;]}" >
+<t:textarea id="g_8" adapterbinding="#{d.FCSRESTLOGDetail.adapters.query_string}" />
+</t:row>
+<t:row id="g_9" coldistance="#{ccstylevalue[&#39;@defaultcoldistance@&#39;]}" >
+<t:textarea id="g_10" adapterbinding="#{d.FCSRESTLOGDetail.adapters.response}" />
+</t:row>
+<t:row id="g_31" coldistance="#{ccstylevalue[&#39;@defaultcoldistance@&#39;]}" >
+<t:field id="g_32" adapterbinding="#{d.FCSRESTLOGDetail.adapters.id_eket}" />
+</t:row>
+<t:row id="g_33" coldistance="#{ccstylevalue[&#39;@defaultcoldistance@&#39;]}" >
+<t:field id="g_34" adapterbinding="#{d.FCSRESTLOGDetail.adapters.movid}" />
+</t:row>
+</tdap:containerarea>
+</tdap:rowareas>
+</tdap:framedetaileditorbody>
+</tdap:framedetaileditor>
+</t:row>
+
+</t:layoutdefinition>
