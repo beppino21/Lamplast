@@ -266,11 +266,16 @@ public class Xlsx2schedlinesUI extends PageBean implements Serializable {
                     } else if (dettaglio.startsWith("BLOCCATA:QTA_SOTTO_CONSEGNATO:")) {
                         String consegnato = dettaglio.substring("BLOCCATA:QTA_SOTTO_CONSEGNATO:".length());
                         motivo = "qtà richiesta inferiore al già consegnato (" + consegnato + ")";
+                    } else if (dettaglio.startsWith("BLOCCATA:API_INACCESSIBILE")) {
+                        motivo = "schedule line categoria CP/MRP non accessibile via API (bloccata)";
                     } else {
                         motivo = dettaglio.substring("BLOCCATA:".length());
                     }
                     data.setDryRunResult("⛔ Non modificabile — " + motivo);
                     data.setProcessingResult("⛔ Non modificabile");
+                } else if (result.isError()) {
+                    data.setDryRunResult("❌ " + (dettaglio != null ? dettaglio : result.getEsitoIcona()));
+                    data.setProcessingResult("❌ Errore dry-run");
                 } else {
                     data.setDryRunResult(result.getEsitoIcona());
                 }
@@ -312,13 +317,18 @@ public class Xlsx2schedlinesUI extends PageBean implements Serializable {
             try {
                 log.append("Elaborazione: ").append(data.toString()).append("\n");
 
-                // Salta righe marcate dal dry-run come invariate, evase o bloccate
-                String dryRun = data.getDryRunResult();
-                if (dryRun != null && (dryRun.contains("Nessuna modifica")
-                                    || dryRun.contains("già evasa")
-                                    || dryRun.contains("bloccata"))) {
-                    log.append("  ⏭️ Saltata: ").append(data.getOrderNumber())
-                       .append(" — ").append(dryRun).append("\n");
+                // Salta righe che il dry-run ha marcato come non elaborabili.
+                // Usiamo processingResult che ha valori controllati, non il testo
+                // localizzato di dryRunResult che può cambiare.
+                String procResult = data.getProcessingResult();
+                if (procResult != null && (
+                        procResult.contains("Nessuna modifica")
+                     || procResult.contains("Già evasa")
+                     || procResult.contains("Non modificabile")
+                     || procResult.contains("Errore dry-run"))) {
+                    log.append("  ⏭️ Saltata (dry-run): ").append(data.getOrderNumber())
+                       .append("/").append(data.getItemNumber())
+                       .append(" — ").append(procResult).append("\n");
                     continue;
                 }
 

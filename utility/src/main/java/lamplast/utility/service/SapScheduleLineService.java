@@ -131,9 +131,39 @@ public class SapScheduleLineService {
                 "Schedulazione " + paddedSched + " NON trovata su SAP"
                 + (isElimination ? " — nulla da eliminare" : " — modifica impossibile"));
         } else {
+            // Errore OData: proviamo a estrarre il codice e messaggio dal body
+            String sapErrCode = "";
+            String sapErrMsg  = resp.statusCode() + "";
+            try {
+                com.fasterxml.jackson.databind.ObjectMapper mapper =
+                    new com.fasterxml.jackson.databind.ObjectMapper();
+                @SuppressWarnings("unchecked")
+                java.util.Map<String, Object> errJson =
+                    mapper.readValue(resp.body(), java.util.Map.class);
+                @SuppressWarnings("unchecked")
+                java.util.Map<String, Object> error =
+                    (java.util.Map<String, Object>) errJson.get("error");
+                if (error != null) {
+                    sapErrCode = String.valueOf(error.getOrDefault("code", ""));
+                    @SuppressWarnings("unchecked")
+                    java.util.Map<String, Object> msg =
+                        (java.util.Map<String, Object>) error.get("message");
+                    if (msg != null) sapErrMsg = String.valueOf(msg.getOrDefault("value", sapErrMsg));
+                }
+            } catch (Exception ignored) { }
+
+            // /IWBEP/CM_MGW_RT/020 = entità non navigabile via questa API.
+            // Tipicamente ordini di tipo non standard (es. consegne gratuite)
+            // che non sono supportati da API_SALES_ORDER_SRV per le schedule lines.
+            if (sapErrCode.contains("CM_MGW_RT/020")) {
+                return SapDryRunResult.error(
+                    "Schedulazione " + paddedSched
+                    + " — tipo documento non supportato dall'API (codice: " + sapErrCode + ")");
+            }
             return SapDryRunResult.warning(
                 "Schedulazione " + paddedSched
-                + " — risposta SAP inattesa: HTTP " + resp.statusCode());
+                + " — risposta SAP inattesa: HTTP " + resp.statusCode()
+                + (sapErrMsg.isEmpty() ? "" : " — " + sapErrMsg));
         }
     }
 
@@ -151,23 +181,32 @@ public class SapScheduleLineService {
             if (d == null) return "dati attuali non leggibili";
 
             // --- Controlla stato consegna ---
-            // Se OpenConfdDelivQtyInOrdQtyUnit = 0 la riga è completamente evasa:
-            // nessuna quantità aperta da consegnare, modifica non applicabile.
-            double openQty = toDouble(String.valueOf(
-                d.getOrDefault("OpenConfdDelivQtyInOrdQtyUnit", "0")));
-            if (openQty <= 0.0) {
-                return "BLOCCATA:EVASA";
-            }
+            // DeliveredQtyInOrderQtyUnit > 0 significa che è già stata creata
+            // almeno una consegna per questa schedule line.
+            // OpenConfdDelivQtyInOrdQtyUnit = 0 da sola NON è affidabile:
+            // vale 0 anche per righe aperte non ancora confermate da MRP.
+            Object deliveredQtyObj = d.get("DeliveredQtyInOrderQtyUnit");
+            Object openQtyObj      = d.get("OpenConfdDelivQtyInOrdQtyUnit");
 
-            // --- Controlla quantità già consegnata vs nuova quantità richiesta ---
-            // Non si può ridurre la quantità schedulata al di sotto del già consegnato.
-            double deliveredQty = toDouble(String.valueOf(
-                d.getOrDefault("DeliveredQtyInOrderQtyUnit", "0")));
-            if (deliveredQty > 0.0) {
-                double newQty = toDouble(data.getQuantity() != null
-                    ? data.getQuantity().replace(",", ".") : "0");
-                if (newQty < deliveredQty) {
-                    return "BLOCCATA:QTA_SOTTO_CONSEGNATO:" + deliveredQty;
+            if (deliveredQtyObj != null) {
+                double deliveredQty = toDouble(deliveredQtyObj.toString());
+                if (!Double.isNaN(deliveredQty) && deliveredQty > 0.0) {
+
+                    // Riga con consegne: controlla se è completamente evasa
+                    double openQty = openQtyObj != null
+                        ? toDouble(openQtyObj.toString()) : Double.NaN;
+                    boolean fullyDelivered = !Double.isNaN(openQty) && openQty <= 0.0;
+                    if (fullyDelivered) {
+                        return "BLOCCATA:EVASA";
+                    }
+
+                    // Riga parzialmente consegnata: blocca se la nuova quantità
+                    // scende sotto il già consegnato
+                    double newQty = toDouble(data.getQuantity() != null
+                        ? data.getQuantity().replace(",", ".") : "0");
+                    if (!Double.isNaN(newQty) && newQty < deliveredQty) {
+                        return "BLOCCATA:QTA_SOTTO_CONSEGNATO:" + deliveredQty;
+                    }
                 }
             }
 
