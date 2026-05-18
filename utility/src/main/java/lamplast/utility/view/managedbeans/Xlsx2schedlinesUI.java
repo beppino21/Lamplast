@@ -259,6 +259,18 @@ public class Xlsx2schedlinesUI extends PageBean implements Serializable {
                 } else if ("EVASA".equals(dettaglio)) {
                     data.setDryRunResult("📦 Schedulazione già evasa (qtà open = 0) — verrà saltata");
                     data.setProcessingResult("📦 Già evasa");
+                } else if (dettaglio != null && dettaglio.startsWith("BLOCCATA:")) {
+                    String motivo;
+                    if (dettaglio.equals("BLOCCATA:EVASA")) {
+                        motivo = "schedulazione completamente evasa (qtà open = 0)";
+                    } else if (dettaglio.startsWith("BLOCCATA:QTA_SOTTO_CONSEGNATO:")) {
+                        String consegnato = dettaglio.substring("BLOCCATA:QTA_SOTTO_CONSEGNATO:".length());
+                        motivo = "qtà richiesta inferiore al già consegnato (" + consegnato + ")";
+                    } else {
+                        motivo = dettaglio.substring("BLOCCATA:".length());
+                    }
+                    data.setDryRunResult("⛔ Non modificabile — " + motivo);
+                    data.setProcessingResult("⛔ Non modificabile");
                 } else {
                     data.setDryRunResult(result.getEsitoIcona());
                 }
@@ -300,13 +312,13 @@ public class Xlsx2schedlinesUI extends PageBean implements Serializable {
             try {
                 log.append("Elaborazione: ").append(data.toString()).append("\n");
 
-                // Salta righe marcate dal dry-run come invariate o già evase
+                // Salta righe marcate dal dry-run come invariate, evase o bloccate
                 String dryRun = data.getDryRunResult();
                 if (dryRun != null && (dryRun.contains("Nessuna modifica")
-                                    || dryRun.contains("già evasa"))) {
+                                    || dryRun.contains("già evasa")
+                                    || dryRun.contains("bloccata"))) {
                     log.append("  ⏭️ Saltata: ").append(data.getOrderNumber())
                        .append(" — ").append(dryRun).append("\n");
-                    // processingResult già impostato dal dry-run, non sovrascrivere
                     continue;
                 }
 
@@ -327,20 +339,32 @@ public class Xlsx2schedlinesUI extends PageBean implements Serializable {
                 String azione = item.getAzione();
 
                 if (response.isSuccess()) {
-                    log.append("  ✓ [").append(azione).append("] Successo (HTTP ")
-                       .append(response.getHttpStatus()).append(")\n");
-                    data.setProcessingResult("✅ " + azione);
-                    data.setErrorMessage(null);
-
-                    if (response.isWarning()) {
-                        log.append("  ⚠ Warning: ").append(response.getSapMessage()).append("\n");
-                        data.setProcessingResult("⚠️ " + azione + " (warning)");
+                    if (response.isFrozen()) {
+                        log.append("  ⛔ [").append(azione)
+                           .append("] Non applicata — schedule line bloccata\n");
+                        log.append("    ").append(response.getSapMessage()).append("\n");
+                        data.setProcessingResult("⛔ Non applicata");
                         data.setErrorMessage(response.getSapMessage() != null
                             ? response.getSapMessage().substring(0,
-                                Math.min(120, response.getSapMessage().length()))
-                            : "HTTP " + response.getHttpStatus());
+                                Math.min(150, response.getSapMessage().length()))
+                            : "Schedule line bloccata");
+                        errori++;
+                    } else {
+                        log.append("  ✓ [").append(azione).append("] Successo (HTTP ")
+                           .append(response.getHttpStatus()).append(")\n");
+                        data.setProcessingResult("✅ " + azione);
+                        data.setErrorMessage(null);
+
+                        if (response.isWarning()) {
+                            log.append("  ⚠ Warning: ").append(response.getSapMessage()).append("\n");
+                            data.setProcessingResult("⚠️ " + azione + " (warning)");
+                            data.setErrorMessage(response.getSapMessage() != null
+                                ? response.getSapMessage().substring(0,
+                                    Math.min(120, response.getSapMessage().length()))
+                                : "HTTP " + response.getHttpStatus());
+                        }
+                        successi++;
                     }
-                    successi++;
                 } else {
                     log.append("  ✗ [").append(azione).append("] Errore (HTTP ")
                        .append(response.getHttpStatus()).append(")\n");

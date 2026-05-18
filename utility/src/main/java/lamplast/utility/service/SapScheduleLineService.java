@@ -99,7 +99,8 @@ public class SapScheduleLineService {
             + "SalesOrder='" + order + "',"
             + "SalesOrderItem='" + paddedItem + "',"
             + "ScheduleLine='" + paddedSched + "')"
-            + "?$select=SalesOrder,SalesOrderItem,ScheduleLine,RequestedDeliveryDate,ScheduleLineOrderQuantity"
+            + "?$select=SalesOrder,SalesOrderItem,ScheduleLine,RequestedDeliveryDate"
+            + ",ScheduleLineOrderQuantity,DeliveredQtyInOrderQtyUnit,OpenConfdDelivQtyInOrdQtyUnit"
             + "&sap-client=" + config.getClient();
 
         HttpResponse<String> resp = doGet(url);
@@ -118,6 +119,10 @@ public class SapScheduleLineService {
             }
             if ("EVASA".equals(detail)) {
                 return SapDryRunResult.warning("EVASA");
+            }
+            if (detail != null && detail.startsWith("BLOCCATA:")) {
+                String cat = detail.substring("BLOCCATA:".length());
+                return SapDryRunResult.warning("BLOCCATA:" + cat);
             }
             return SapDryRunResult.ok(
                 "Schedulazione " + paddedSched + " trovata — " + detail);
@@ -145,18 +150,25 @@ public class SapScheduleLineService {
             java.util.Map<String, Object> d    = (java.util.Map<String, Object>) json.get("d");
             if (d == null) return "dati attuali non leggibili";
 
-            // --- Controlla quantità open (già evasa?) ---
-            // Il campo OpenConfdDelivQtyInOrdQtyU è opzionale: presente solo
-            // in alcune release SAP. Se assente, il check viene saltato.
-            Object openQtyObj = d.get("OpenConfdDelivQtyInOrdQtyU");
-            if (openQtyObj != null) {
-                try {
-                    double openQty = Double.parseDouble(
-                            openQtyObj.toString().replace(",", "."));
-                    if (openQty == 0.0) {
-                        return "EVASA";
-                    }
-                } catch (Exception ignored) { }
+            // --- Controlla stato consegna ---
+            // Se OpenConfdDelivQtyInOrdQtyUnit = 0 la riga è completamente evasa:
+            // nessuna quantità aperta da consegnare, modifica non applicabile.
+            double openQty = toDouble(String.valueOf(
+                d.getOrDefault("OpenConfdDelivQtyInOrdQtyUnit", "0")));
+            if (openQty <= 0.0) {
+                return "BLOCCATA:EVASA";
+            }
+
+            // --- Controlla quantità già consegnata vs nuova quantità richiesta ---
+            // Non si può ridurre la quantità schedulata al di sotto del già consegnato.
+            double deliveredQty = toDouble(String.valueOf(
+                d.getOrDefault("DeliveredQtyInOrderQtyUnit", "0")));
+            if (deliveredQty > 0.0) {
+                double newQty = toDouble(data.getQuantity() != null
+                    ? data.getQuantity().replace(",", ".") : "0");
+                if (newQty < deliveredQty) {
+                    return "BLOCCATA:QTA_SOTTO_CONSEGNATO:" + deliveredQty;
+                }
             }
 
             // --- Confronto quantità (numerico, tollerante al separatore) ---
@@ -343,7 +355,10 @@ public class SapScheduleLineService {
     }
 
     private String cleanQuantity(String quantity) {
-        return quantity.split("\\.")[0].split("\\,")[0];
+        // Normalizza virgola → punto senza troncare i decimali.
+        // SAP accetta quantità decimali nel payload JSON (es. "7925.34").
+        if (quantity == null || quantity.isBlank()) return "0";
+        return quantity.replace(",", ".");
     }
 
     private boolean isQuantityZero(String qty) {

@@ -7,6 +7,7 @@ public class SapResponse {
 	private int httpStatus;
 	private boolean success;
 	private boolean warning;
+	private boolean frozen; // true = SAP ha risposto OK ma la modifica non è stata applicata
 
 	private String sapCode;
 	private String sapMessage;
@@ -37,6 +38,18 @@ public class SapResponse {
 
 	public boolean isWarning() {
 		return warning;
+	}
+
+	public boolean isFrozen() {
+		return frozen;
+	}
+
+	public void setFrozen(boolean frozen) {
+		this.frozen = frozen;
+	}
+
+	public void setSapMessage(String sapMessage) {
+		this.sapMessage = sapMessage;
 	}
 
 	public String getSapCode() {
@@ -95,7 +108,7 @@ public class SapResponse {
 			}
 
 			// --- CASO SUCCESSO POST (201) ---
-			if (json.containsKey("d")) {
+			if (json.containsKey("d") && this.httpStatus >= 200 && this.httpStatus < 300) {
 				this.success = true;
 			}
 
@@ -111,8 +124,24 @@ public class SapResponse {
 
 		// sap-message (warning / info)
 		if (headers.containsKey("sap-message")) {
-			this.warning = true;
-			this.sapMessage = headers.get("sap-message").toString();
+			String rawMsg = headers.get("sap-message").toString();
+
+			// SLS_LORD/025 "Field SLINE_DATE is not an input field" è un warning
+			// strutturale dell'API S/4HANA Public Cloud: SAP lo emette sempre quando
+			// si aggiorna RequestedDeliveryDate, ma non indica alcun problema reale.
+			boolean isKnownNoise = rawMsg.contains("SLS_LORD/025")
+					&& rawMsg.contains("SLINE_DATE");
+
+			if (!isKnownNoise) {
+				if (this.httpStatus >= 200 && this.httpStatus < 300) {
+					// Warning rilevante solo su risposta HTTP positiva
+					this.warning    = true;
+					this.sapMessage = rawMsg;
+				} else {
+					// Su errore HTTP il messaggio va nel log ma non alza il flag warning
+					this.sapMessage = rawMsg;
+				}
+			}
 		}
 
 		// transactionid (a volte è header)
