@@ -114,36 +114,31 @@ public class MovementClient {
         if (isEmpty(r.werks) || isEmpty(r.lgort) || isEmpty(r.matnr)) {
             throw new MovementException("Campi obbligatori mancanti per rettifica quantità (werks/lgort/matnr)");
         }
-        if (r.menge == null || r.menge_to == null) {
-            throw new MovementException("menge e menge_to obbligatori per rettifica quantità");
+
+        // Default a zero se non comunicato
+        float menge   = r.menge    != null ? r.menge    : 0f;
+        float mengeTo = r.menge_to != null ? r.menge_to : 0f;
+
+        // Errore solo se entrambi sono assenti/zero
+        if (menge == 0f && mengeTo == 0f) {
+            throw new MovementException("menge e menge_to sono entrambi assenti o zero: impossibile calcolare delta");
         }
 
-        // Logica ABAP: calcola bwart effettivo e quantità delta
-        String bwartEffettivo;
-        float delta;
-        boolean isRottamazione = r.bwart.charAt(1) == '5'; // secondo char = '5' → 551/552
+        // Il segno è implicito nel bwart: usiamo solo il valore assoluto della differenza
+        float delta = Math.abs(menge - mengeTo);
 
-        if (r.menge > r.menge_to) {
-            // Diminuzione
-            bwartEffettivo = isRottamazione ? "551" : "562";
-            delta = r.menge - r.menge_to;
-        } else {
-            // Aumento
-            bwartEffettivo = isRottamazione ? "552" : "561";
-            delta = r.menge_to - r.menge;
-        }
-
-        long nowMillis    = java.time.Instant.now().toEpochMilli();
-        String odataDate  = "/Date(" + nowMillis + ")/";
+        // bwart viene usato così com'è: la distinzione 551/552/561/562
+        // indica già se è scarico o carico, rottamazione o rettifica inventario
+        long nowMillis   = java.time.Instant.now().toEpochMilli();
+        String odataDate = "/Date(" + nowMillis + ")/";
         String headerText = "";
-        String refDoc     = "ID:" + (r.movid != null ? r.movid.substring(0, 10) : "");
-        String itemText   = "ID FCS:" + (r.movid != null ? r.movid : "");
+        String refDoc    = "ID:" + (r.movid != null ? r.movid.substring(0, 10) : "");
+        String itemText  = "ID FCS:" + (r.movid != null ? r.movid : "");
         String quantityStr = formatQuantity(delta);
 
-        // Rettifica: nessun campo _to (nessun trasferimento di magazzino/materiale)
         String payload = buildPayload(
                 odataDate, odataDate, headerText, refDoc,
-                bwartEffettivo, r.werks, r.lgort, r.matnr, r.charg,
+                r.bwart, r.werks, r.lgort, r.matnr, r.charg,
                 quantityStr, r.meins, itemText, r.kostl,
                 null, null, null, null
         );
