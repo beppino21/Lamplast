@@ -5,33 +5,26 @@ import java.io.InputStreamReader;
 import java.io.Serializable;
 
 import org.eclnt.editor.annotations.CCGenClass;
-import org.eclnt.jsfserver.pagebean.PageBean;
 import org.eclnt.jsfserver.base.faces.event.ActionEvent;
+import org.eclnt.jsfserver.pagebean.PageBean;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-@CCGenClass(expressionBase = "#{d.ExtractBridgeDataUI}")
-public class ExtractBridgeDataUI
-        extends PageBean
-        implements Serializable {
+import eone.fcs.client.FcsConfig;
 
-    private static final Logger log = LoggerFactory.getLogger(ExtractBridgeDataUI.class);
+@CCGenClass (expressionBase="#{d.UploadBridgeDataUI}")
 
-    // Percorsi del bridge JAR — stessa logica di EketResource:
-    // 1° JVM property (-Dbridge.jar.path=...), 2° variabile d'ambiente, 3° fallback Linux.
-    private static final String BRIDGE_JAR_PATH =
-            System.getProperty("bridge.jar.path",
-            System.getenv("BRIDGE_JAR_PATH") != null
-                ? System.getenv("BRIDGE_JAR_PATH")
-                : "/opt/fcs/fcs-wms-bridge-1.0.0.jar");
+public class UploadBridgeDataUI
+    extends PageBean 
+    implements Serializable
+{
+    private static final Logger log = LoggerFactory.getLogger(UploadBridgeDataUI.class);
 
-    private static final String BRIDGE_CONFIG_PATH =
-            System.getProperty("bridge.config.path",
-            System.getenv("BRIDGE_CONFIG_PATH") != null
-                ? System.getenv("BRIDGE_CONFIG_PATH")
-                : "/opt/fcs/config.properties");
+    // Percorsi letti da ccee_config.properties tramite FcsConfig
+    private static final String BRIDGE_JAR_PATH    = FcsConfig.getInstance().getBridgeJarPath();
+    private static final String BRIDGE_CONFIG_PATH = FcsConfig.getInstance().getBridgeConfigPath();
 
-    // Output del bridge mostrato nella textarea della pagina
+    // Output mostrato nella textarea della pagina
     private String m_bridgeOutput = "";
 
     // ------------------------------------------------------------------------
@@ -67,7 +60,7 @@ public class ExtractBridgeDataUI
     // ------------------------------------------------------------------------
 
     private void runBridge(String mode, String param) {
-        log.info("ExtractBridgeDataUI: avvio bridge mode={} param={}", mode, param);
+        log.info("UploadBridgeDataUI: avvio modalità={}", mode);
         StringBuilder sb = new StringBuilder();
         sb.append(">>> Avvio estrazione modalità: ").append(mode).append("\n");
 
@@ -141,11 +134,11 @@ public class ExtractBridgeDataUI
     // Constructors & initialization
     // ------------------------------------------------------------------------
 
-    public ExtractBridgeDataUI() {
+    public UploadBridgeDataUI() {
     }
 
-    public String getPageName() { return "/ExtractBridgeData.xml"; }
-    public String getRootExpressionUsedInPage() { return "#{d.ExtractBridgeDataUI}"; }
+    public String getPageName() { return "/UploadBridgeData.xml"; }
+    public String getRootExpressionUsedInPage() { return "#{d.UploadBridgeDataUI}"; }
 
     // ------------------------------------------------------------------------
     // Public usage

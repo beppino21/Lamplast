@@ -1,5 +1,15 @@
 package eone.fcs.rest;
 
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import eone.fcs.client.FcsConfig;
 import eone.fcs.client.GoodsReceiptClient;
 import eone.fcs.client.GoodsReceiptException;
 import eone.fcs.client.ReturnDeliveryClient;
@@ -8,19 +18,14 @@ import eone.fcs.repository.EketRepository;
 import eone.fcs.repository.EketRepository.EketRiga;
 import eone.fcs.repository.RepositoryException;
 import eone.fcs.repository.RestLogRepository;
-import jakarta.ws.rs.*;
+import jakarta.ws.rs.GET;
+import jakarta.ws.rs.Path;
+import jakarta.ws.rs.Produces;
+import jakarta.ws.rs.QueryParam;
 import jakarta.ws.rs.core.Context;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import jakarta.ws.rs.core.UriInfo;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import java.io.BufferedReader;
-import java.io.InputStreamReader;
-import java.util.List;
-import java.util.Set;
-import java.util.stream.Collectors;
 
 /**
  * Endpoint REST che replica il contratto del servizio SICF ZFCS_INBOUND di SAP R/3.
@@ -55,18 +60,9 @@ public class EketResource {
 
     private static final Logger log = LoggerFactory.getLogger(EketResource.class);
 
-    // Percorsi del bridge JAR — letti da sistema, con fallback su valori di default.
-    private static final String BRIDGE_JAR_PATH =
-            System.getProperty("bridge.jar.path",
-            System.getenv("BRIDGE_JAR_PATH") != null
-                ? System.getenv("BRIDGE_JAR_PATH")
-                : "/opt/fcs/fcs-wms-bridge-1.0.0.jar");
-
-    private static final String BRIDGE_CONFIG_PATH =
-            System.getProperty("bridge.config.path",
-            System.getenv("BRIDGE_CONFIG_PATH") != null
-                ? System.getenv("BRIDGE_CONFIG_PATH")
-                : "/opt/fcs/config.properties");
+    // Percorsi del bridge JAR — letti da ccee_config.properties tramite FcsConfig.
+    private static final String BRIDGE_JAR_PATH    = FcsConfig.getInstance().getBridgeJarPath();
+    private static final String BRIDGE_CONFIG_PATH = FcsConfig.getInstance().getBridgeConfigPath();
 
     // Valore kappl per i resi da cliente (OdV di reso)
     private static final String KAPPL_RESO = "V";

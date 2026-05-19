@@ -203,8 +203,8 @@
                 <text>Export Bridge Data</text>
                 <folderOpened>false</folderOpened>
                 <workpageStartInfo>
-                    <pageBeanName>eone.fcs.view.managedbeans.ExtractBridgeDataUI</pageBeanName>
-                    <id>eone.fcs.view.managedbeans.ExtractBridgeDataUI</id>
+                    <pageBeanName>eone.fcs.view.managedbeans.UploadBridgeDataUI</pageBeanName>
+                    <id>eone.fcs.view.managedbeans.UploadBridgeDataUI</id>
                     <openMultipleInstances>false</openMultipleInstances>
                     <decorated>true</decorated>
                     <popupSupported>false</popupSupported>

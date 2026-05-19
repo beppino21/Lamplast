@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<t:layoutdefinition xmlns:t="http://www.captaincasa.com/controllibrary/t" >
+
+<t:beanprocessing id="g_1" beanbinding="#{d.UploadBridgeDataUI}" />
+<t:row id="g_2" >
+<t:button id="g_4" actionListener="#{d.UploadBridgeDataUI.onExtractAll}" text="All" width="100" />
+<t:coldistance id="g_16" />
+<t:button id="g_10" actionListener="#{d.UploadBridgeDataUI.onExtractSuppliers}" text="Suppliers" width="100" />
+<t:coldistance id="g_18" />
+<t:button id="g_8" actionListener="#{d.UploadBridgeDataUI.onExtractCustomers}" text="Customers" width="100" />
+<t:coldistance id="g_20" />
+<t:button id="g_12" actionListener="#{d.UploadBridgeDataUI.onExtractProducts}" text="Products" width="100" />
+<t:coldistance id="g_22" />
+<t:button id="g_14" actionListener="#{d.UploadBridgeDataUI.onExtractEket}" text="Eket" width="100" />
+<t:coldistance id="g_24" />
+<t:button id="g_6" actionListener="#{d.UploadBridgeDataUI.onxtractVbep}" text="Vbep" width="100" />
+</t:row>
+
+</t:layoutdefinition>
