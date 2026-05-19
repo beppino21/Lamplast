@@ -188,10 +188,10 @@ ALTER TABLE TABFCSMSEGHST ALTER COLUMN uzeit TYPE time;
 CREATE TABLE IF NOT EXISTS TABFCSMOVSAPHST
 (
     tenant varchar(10),
-    movid varchar(50),
     mblnr varchar(10),
     mjahr varchar(4),
-    PRIMARY KEY (tenant,movid,mblnr,mjahr)
+    movid varchar(50),
+    PRIMARY KEY (tenant,mblnr,mjahr,movid)
 );
 ALTER TABLE TABFCSMOVSAPHST ADD COLUMN aufnr varchar(12);
 ALTER TABLE TABFCSMOVSAPHST ALTER COLUMN aufnr TYPE varchar(12);

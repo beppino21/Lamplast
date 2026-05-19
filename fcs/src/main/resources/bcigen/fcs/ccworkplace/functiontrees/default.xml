@@ -196,5 +196,25 @@
                 </workpageStartInfo>
             </subNodes>
         </subNodes>
+        <subNodes>
+            <text>Estrazioni</text>
+            <folderOpened>false</folderOpened>
+            <subNodes>
+                <text>Export Bridge Data</text>
+                <folderOpened>false</folderOpened>
+                <workpageStartInfo>
+                    <pageBeanName>eone.fcs.view.managedbeans.ExtractBridgeDataUI</pageBeanName>
+                    <id>eone.fcs.view.managedbeans.ExtractBridgeDataUI</id>
+                    <openMultipleInstances>false</openMultipleInstances>
+                    <decorated>true</decorated>
+                    <popupSupported>false</popupSupported>
+                    <closeSupported>true</closeSupported>
+                    <openAsPopupByDefault>false</openAsPopupByDefault>
+                    <excludeFromSavePerspective>false</excludeFromSavePerspective>
+                    <paramMap/>
+                    <sortIndex>-1</sortIndex>
+                </workpageStartInfo>
+            </subNodes>
+        </subNodes>
     </subNodes>
 </workplaceFunctionTreeInfoNode>

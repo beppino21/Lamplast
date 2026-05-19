@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<t:layoutdefinition xmlns:t="http://www.captaincasa.com/controllibrary/t" >
+
+<t:beanprocessing id="g_1" beanbinding="#{d.ExtractBridgeDataUI}" />
+<t:rowtitlebar id="g_2" text="SAP2FCS integration" />
+<t:rowheader id="g_3" coldistance="10" >
+<t:button id="g_6" text="all" width="100" actionlistener="#{d.ExtractBridgeDataUI.onExtractAll}" />
+<t:button id="g_10" text="products" width="100" actionlistener="#{d.ExtractBridgeDataUI.onExtractProducts}" />
+<t:button id="g_12" text="suppliers" width="100" actionlistener="#{d.ExtractBridgeDataUI.onExtractSuppliers}" />
+<t:button id="g_8" text="customers" width="100" actionlistener="#{d.ExtractBridgeDataUI.onExtractCustomers}" />
+<t:button id="g_16" text="eket" width="100" actionlistener="#{d.ExtractBridgeDataUI.onExtractEket}" />
+<t:button id="g_14" text="vbep" width="100" actionlistener="#{d.ExtractBridgeDataUI.onExtractVbep}" />
+</t:rowheader>
+<t:rowbodypane id="g_4" >
+<t:textarea id="g_20" height="400" text="#{d.ExtractBridgeDataUI.bridgeOutput}" width="100%" readonly="true" />
+</t:rowbodypane>
+
+</t:layoutdefinition>

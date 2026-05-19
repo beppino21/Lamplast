@@ -19,6 +19,22 @@ import jakarta.xml.bind.annotation.adapters.*;
 public class DOFCSMOVSAPHST
     implements Serializable
 {
+    public static final String P_mblnr = "mblnr";
+    String m_mblnr;
+    @doproperty(key=true,sequence=2)
+    @dovalidationinfo(charMaxLength=10)
+    @XmlAttribute()
+    public String getMblnr() { return m_mblnr; }
+    public void setMblnr(String value) { m_mblnr = value; }
+
+    public static final String P_mjahr = "mjahr";
+    String m_mjahr;
+    @doproperty(key=true,sequence=3)
+    @dovalidationinfo(charMaxLength=4)
+    @XmlAttribute()
+    public String getMjahr() { return m_mjahr; }
+    public void setMjahr(String value) { m_mjahr = value; }
+
     public static final String P_movid = "movid";
     String m_movid;
     @doproperty(key=true,sequence=1)
@@ -123,14 +139,6 @@ public class DOFCSMOVSAPHST
     public String getMatnr_to() { return m_matnr_to; }
     public void setMatnr_to(String value) { m_matnr_to = value; }
 
-    public static final String P_mblnr = "mblnr";
-    String m_mblnr;
-    @doproperty(key=true,sequence=2)
-    @dovalidationinfo(charMaxLength=10)
-    @XmlAttribute()
-    public String getMblnr() { return m_mblnr; }
-    public void setMblnr(String value) { m_mblnr = value; }
-
     public static final String P_meins = "meins";
     String m_meins;
     @doproperty(sequence=22)
@@ -154,14 +162,6 @@ public class DOFCSMOVSAPHST
     @XmlAttribute()
     public Float getMenge_to() { return m_menge_to; }
     public void setMenge_to(Float value) { m_menge_to = value; }
-
-    public static final String P_mjahr = "mjahr";
-    String m_mjahr;
-    @doproperty(key=true,sequence=3)
-    @dovalidationinfo(charMaxLength=4)
-    @XmlAttribute()
-    public String getMjahr() { return m_mjahr; }
-    public void setMjahr(String value) { m_mjahr = value; }
 
     public static final String P_prctr = "prctr";
     String m_prctr;

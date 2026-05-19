@@ -230,6 +230,8 @@
         <property dataType="WMSST" id="wmsst" mandatory="false" sequence="20" text="SAP-FCS Event Status"/>
     </entity>
     <entity id="FCSMOVSAPHST" isPublic="true" text="Storicizzazione ZFCSMOVSAP">
+        <property dataType="MBLNR" id="mblnr" key="true" mandatory="false" sequence="2" text="Doc. Materiale"/>
+        <property dataType="MJAHR" id="mjahr" key="true" mandatory="false" sequence="3" text="Esercizio"/>
         <property dataType="ccda_base.idString50" id="movid" key="true" mandatory="false" sequence="1" text="MOV ID"/>
         <property dataType="AUFNR" id="aufnr" mandatory="false" sequence="8" text="Commessa"/>
         <property dataType="BWART" id="bwart" mandatory="false" sequence="4" text="Tipo Movimento"/>
@@ -243,11 +245,9 @@
         <property dataType="LIFNR" id="lifnr" mandatory="false" sequence="5" text="Fornitore"/>
         <property dataType="MATNR" id="matnr" mandatory="false" sequence="13" text="Materiale"/>
         <property dataType="MATNR" id="matnr_to" mandatory="false" sequence="18" text="materiale"/>
-        <property dataType="MBLNR" id="mblnr" key="true" mandatory="false" sequence="2" text="Doc. Materiale"/>
         <property dataType="MEINS" id="meins" mandatory="false" sequence="22" text="UM"/>
         <property dataType="MENGE_D" id="menge" mandatory="false" sequence="15" text="Quantità"/>
         <property dataType="MENGE_D" id="menge_to" mandatory="false" sequence="20" text="Quantità Dest."/>
-        <property dataType="MJAHR" id="mjahr" key="true" mandatory="false" sequence="3" text="Esercizio"/>
         <property dataType="PRCTR" id="prctr" mandatory="false" sequence="9" text="Profit Center"/>
         <property dataType="SOBKZ" id="sobkz" mandatory="false" sequence="10" text="Cd. stock speciale"/>
         <property dataType="UNAME" id="uname" mandatory="false" sequence="23" text="Utente"/>
