@@ -28,7 +28,7 @@
 
 	<properties>
 		<!-- This is the CaptainCasa version to be used. -->
-		<cc.version>20251124</cc.version>
+		<cc.version>20260518	</cc.version>
 	</properties>
 
 	<dependencies>

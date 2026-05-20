@@ -10,7 +10,7 @@ import org.eclnt.jsfserver.pagebean.PageBean;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import eone.fcs.client.FcsConfig;
+import eone.fcs.FcsConfig;
 
 @CCGenClass (expressionBase="#{d.UploadBridgeDataUI}")
 

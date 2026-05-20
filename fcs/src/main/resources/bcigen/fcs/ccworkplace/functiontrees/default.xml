@@ -197,10 +197,10 @@
             </subNodes>
         </subNodes>
         <subNodes>
-            <text>Estrazioni</text>
+            <text>Sincronizzazione SAP -&gt; FCS Bridge</text>
             <folderOpened>false</folderOpened>
             <subNodes>
-                <text>Export Bridge Data</text>
+                <text>Update Bridge Data</text>
                 <folderOpened>false</folderOpened>
                 <workpageStartInfo>
                     <pageBeanName>eone.fcs.view.managedbeans.UploadBridgeDataUI</pageBeanName>

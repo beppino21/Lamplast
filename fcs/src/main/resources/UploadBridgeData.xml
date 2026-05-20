@@ -13,7 +13,10 @@
 <t:coldistance id="g_22" />
 <t:button id="g_14" actionListener="#{d.UploadBridgeDataUI.onExtractEket}" text="Eket" width="100" />
 <t:coldistance id="g_24" />
-<t:button id="g_6" actionListener="#{d.UploadBridgeDataUI.onxtractVbep}" text="Vbep" width="100" />
+<t:button id="g_6" actionListener="#{d.UploadBridgeDataUI.onExtractVbep}" text="Vbep" width="100" />
 </t:row>
+<t:rowbodypane id="g_26" >
+<t:textarea id="g_28" height="100%" text="#{d.UploadBridgeDataUI.bridgeOutput}" width="100%" readonly="true" />
+</t:rowbodypane>
 
 </t:layoutdefinition>

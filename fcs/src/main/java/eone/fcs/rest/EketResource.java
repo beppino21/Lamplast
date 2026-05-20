@@ -9,7 +9,7 @@ import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import eone.fcs.client.FcsConfig;
+import eone.fcs.FcsConfig;
 import eone.fcs.client.GoodsReceiptClient;
 import eone.fcs.client.GoodsReceiptException;
 import eone.fcs.client.ReturnDeliveryClient;
