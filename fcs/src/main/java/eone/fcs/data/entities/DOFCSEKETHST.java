@@ -67,14 +67,6 @@ public class DOFCSEKETHST
     public Float getAmeng() { return m_ameng; }
     public void setAmeng(Float value) { m_ameng = value; }
 
-    public static final String P_bemid = "bemid";
-    String m_bemid;
-    @doproperty(autoIncrement=true,sequence=37)
-    @dovalidationinfo(charMaxLength=50,convertEmptyToNull=true)
-    @XmlAttribute()
-    public String getBemid() { return m_bemid; }
-    public void setBemid(String value) { m_bemid = value; }
-
     public static final String P_brgew_row = "brgew_row";
     Float m_brgew_row;
     @doproperty(sequence=32)
@@ -133,7 +125,7 @@ public class DOFCSEKETHST
 
     public static final String P_gewei = "gewei";
     String m_gewei;
-    @doproperty(sequence=38)
+    @doproperty(sequence=37)
     @dovalidationinfo(charMaxLength=3)
     @XmlAttribute()
     public String getGewei() { return m_gewei; }
@@ -393,6 +385,14 @@ public class DOFCSEKETHST
     @XmlAttribute()
     public Boolean getXchpf() { return m_xchpf; }
     public void setXchpf(Boolean value) { m_xchpf = value; }
+
+    public static final String P_bemid = "bemid";
+    String m_bemid;
+    @doproperty(sequence=38)
+    @dovalidationinfo(charMaxLength=50,convertEmptyToNull=true)
+    @XmlAttribute()
+    public String getBemid() { return m_bemid; }
+    public void setBemid(String value) { m_bemid = value; }
 
 
 }

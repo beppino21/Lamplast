@@ -116,14 +116,13 @@
         <property dataType="WMSST" id="wmsst" mandatory="false" sequence="38" text="SAP-FCS Event Status"/>
         <property dataType="XCHPF" id="xchpf" mandatory="false" sequence="6" text="Obbligo gestione a partita"/>
     </entity>
-    <entity id="FCSEKETHST" isPublic="true" text="Storicizzazione FCSEKET">
+    <entity id="FCSEKETHST" isPublic="true" text="Storicizzazione FCSEKET .">
         <property dataType="EBELN" id="ebeln" key="true" mandatory="false" sequence="1" text="Numero ordine d'acquisto"/>
         <property dataType="EBELP" id="ebelp" key="true" mandatory="false" sequence="2" text="Numero posizione ordine d'acquisto"/>
         <property dataType="ETENR" id="etenr" key="true" mandatory="false" sequence="3" text="Numero schedulazione"/>
         <property dataType="MBLNR" id="mblnr" key="true" mandatory="false" sequence="4" text="Numero documento materiale"/>
         <property dataType="MJAHR" id="mjahr" key="true" mandatory="false" sequence="5" text="Esercizio documento materiale"/>
         <property dataType="VOMNG" id="ameng" mandatory="false" sequence="19" text="Qta precedente per schedulazioni"/>
-        <property autoIncrement="true" dataType="ccda_base.idString50" id="bemid" mandatory="false" sequence="37" text="BEM ID"/>
         <property dataType="ZBRGEW_EXANTE" id="brgew_row" mandatory="false" sequence="32" text="Peso lordo &quot;Ex ante&quot;"/>
         <property dataType="BSTME" id="bstme" mandatory="false" sequence="24" text="UM dell'ordine d'acquisto"/>
         <property dataType="ZFCS_BSTMEXPALLET" id="bstmexpallet" mandatory="false" sequence="27" text="Qta di acquisto per pallet"/>
@@ -131,7 +130,7 @@
         <property dataType="DATUM" id="datum" mandatory="false" sequence="34" text="Data"/>
         <property dataType="EINDT" id="eindt" mandatory="false" sequence="9" text="Data di consegna "/>
         <property dataType="ERNAM" id="ernam" mandatory="false" sequence="36" text="Utente"/>
-        <property dataType="GEWEI" id="gewei" mandatory="false" sequence="38" text="Unità di peso"/>
+        <property dataType="GEWEI" id="gewei" mandatory="false" sequence="37" text="Unità di peso"/>
         <property dataType="ID_EKET" id="id_eket" mandatory="false" sequence="7" text="Chiave concatenata"/>
         <property dataType="BLDAT" id="in_bldat" mandatory="false" sequence="41" text="Data del documento di riferimento"/>
         <property dataType="ZBRGEW_EXPOST" id="in_brgew_tot" mandatory="false" sequence="44" text="Peso lordo &quot;Ex post&quot;"/>
@@ -164,6 +163,7 @@
         <property dataType="WERKS_D" id="werks" mandatory="false" sequence="16" text="Divisione"/>
         <property dataType="WMSST" id="wmsst" mandatory="false" sequence="39" text="SAP-FCS Event Status"/>
         <property dataType="XCHPF" id="xchpf" mandatory="false" sequence="8" text="Obbligo gestione a partita"/>
+        <property dataType="ccda_base.idString50" id="bemid" mandatory="false" sequence="38" text="ID univoco BEM"/>
     </entity>
     <entity id="FCSKNA1" isPublic="true" text="Anagrafiche Clienti esposte per FCS">
         <property dataType="KUNNR" id="kunnr" key="true" mandatory="false" sequence="1" text="Codice Cliente"/>
