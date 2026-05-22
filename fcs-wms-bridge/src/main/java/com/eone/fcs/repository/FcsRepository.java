@@ -26,8 +26,16 @@ import com.eone.fcs.model.Supplier;
  *
  * Strategia:
  *   - Anagrafiche: UPSERT (INSERT ... ON CONFLICT DO UPDATE)
- *   - EKET: DELETE righe in attesa (wmsst=' ') + INSERT
- *           Le righe con wmsst != ' ' non vengono mai toccate
+ *   - EKET massiva:  DELETE tutte le righe con wmsst IN ('0','3') del tenant + INSERT
+ *   - EKET puntuale: DELETE righe con wmsst IN ('0','3') per il singolo ebeln + INSERT
+ *   Le righe con wmsst IN ('1','2','E') non vengono mai toccate.
+ *
+ * Valori wmsst:
+ *   '0' = in attesa (stato iniziale)
+ *   '1' = scarico iniziato
+ *   '2' = scarico in corso
+ *   '3' = scarico completato
+ *   'E' = errore
  */
 public class FcsRepository implements AutoCloseable {
 
@@ -191,17 +199,14 @@ public class FcsRepository implements AutoCloseable {
     // -------------------------------------------------------------------------
 
     /**
-     * Sincronizza le righe EKET per una lista di OdA.
+     * Sincronizzazione MASSIVA: usata dall'estrazione giornaliera completa.
      *
-     * Per ogni ebeln presente nelle righe estratte:
-     *   1. DELETE righe con wmsst = ' ' (in attesa) → possono essere sovrascritte
-     *   2. INSERT le nuove righe estratte da S/4HC
-     *      con ON CONFLICT (tenant, ebeln, ebelp, etenr, kappl) DO NOTHING:
-     *      se una riga esiste già con wmsst != ' ' (in lavorazione, completata, errore),
-     *      viene silenziosamente ignorata senza errore e senza interrompere l'elaborazione.
-     *
-     * Le righe con wmsst != ' ' NON vengono mai sovrascritte.
-     * Il log riporta separatamente quante righe sono state inserite e quante saltate.
+     * Strategia:
+     *   1. DELETE tutte le righe con wmsst IN ('0','3') del tenant
+     *      (include OdA non più presenti in S/4HANA e righe impallate)
+     *   2. INSERT le nuove righe estratte da S/4HC con wmsst = '0'
+     *      ON CONFLICT DO NOTHING: le righe con wmsst IN ('1','2','E')
+     *      (in lavorazione / errore) non vengono mai sovrascritte.
      *
      * @param lines righe estratte da S/4HC
      * @return numero di righe effettivamente inserite
@@ -212,19 +217,13 @@ public class FcsRepository implements AutoCloseable {
             return 0;
         }
 
-        // Raccogli gli ebeln distinti presenti nelle righe estratte
-        Set<String> ebelns = lines.stream()
-                .map(EketLine::ebeln)
-                .collect(Collectors.toSet());
+        log.info("Sincronizzazione EKET massiva: {} righe estratte da S/4H", lines.size());
 
-        log.info("Sincronizzazione EKET: {} OdA distinti, {} righe totali",
-                ebelns.size(), lines.size());
+        // 1. DELETE massiva: tutte le righe in attesa o completate del tenant
+        int deleted = deleteEketMassiva();
+        log.info("Righe EKET cancellate (wmsst in '0','3'): {}", deleted);
 
-        // 1. DELETE righe in attesa per gli OdA estratti
-        int deleted = deleteEketInAttesa(ebelns);
-        log.info("Righe EKET in attesa cancellate: {}", deleted);
-
-        // 2. INSERT righe nuove (ON CONFLICT DO NOTHING per le righe in lavorazione)
+        // 2. INSERT righe nuove (ON CONFLICT DO NOTHING per le righe in lavorazione/errore)
         int inserted = insertEketLines(lines);
         log.info("Righe EKET inserite: {} su {} estratte da S/4H", inserted, lines.size());
 
@@ -233,17 +232,26 @@ public class FcsRepository implements AutoCloseable {
     }
 
     /**
-     * Sincronizzazione puntuale per un singolo OdA.
-     * Usato quando S/4HC notifica il salvataggio di un OdA specifico.
+     * Sincronizzazione PUNTUALE per un singolo OdA.
+     * Usata dopo ogni scarico o quando S/4HC notifica il salvataggio di un OdA specifico.
+     *
+     * Strategia:
+     *   1. DELETE righe con wmsst IN ('0','3') per il singolo ebeln
+     *   2. INSERT le nuove righe estratte da S/4HC con wmsst = '0'
+     *      ON CONFLICT DO NOTHING: le righe con wmsst IN ('1','2','E') non vengono toccate.
+     *
+     * @param ebeln numero OdA
+     * @param lines righe estratte da S/4HC per questo OdA
+     * @return numero di righe effettivamente inserite
      */
     public int syncEketLinesForOrder(String ebeln, List<EketLine> lines) throws SQLException {
         log.info("Sincronizzazione EKET puntuale per OdA: {}", ebeln);
 
-        // DELETE righe in attesa per questo OdA
-        int deleted = deleteEketInAttesaByEbeln(ebeln);
-        log.info("Righe in attesa cancellate per OdA {}: {}", ebeln, deleted);
+        // 1. DELETE righe in attesa o completate per questo OdA
+        int deleted = deleteEketPuntuale(ebeln);
+        log.info("Righe cancellate (wmsst in '0','3') per OdA {}: {}", ebeln, deleted);
 
-        // INSERT righe nuove (ON CONFLICT DO NOTHING per le righe in lavorazione)
+        // 2. INSERT righe nuove (ON CONFLICT DO NOTHING per le righe in lavorazione/errore)
         int inserted = lines.isEmpty() ? 0 : insertEketLines(lines);
         log.info("Righe inserite per OdA {}: {} su {} estratte da S/4H", ebeln, inserted, lines.size());
 
@@ -255,28 +263,26 @@ public class FcsRepository implements AutoCloseable {
     // Metodi privati EKET
     // -------------------------------------------------------------------------
 
-    private int deleteEketInAttesa(Set<String> ebelns) throws SQLException {
-        // Costruisce WHERE ebeln IN (?,?,?) per gli OdA estratti
-        String placeholders = ebelns.stream()
-                .map(e -> "?")
-                .collect(Collectors.joining(","));
-
+    /**
+     * DELETE massiva: rimuove tutte le righe con wmsst IN ('0','3') del tenant.
+     * Usata dall'estrazione giornaliera completa.
+     */
+    private int deleteEketMassiva() throws SQLException {
         String sql = "DELETE FROM public.tabfcseket " +
-                     "WHERE tenant = ? AND wmsst = ' ' AND ebeln IN (" + placeholders + ")";
-
+                     "WHERE tenant = ? AND wmsst IN ('0', '3')";
         try (PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, tenant);
-            int i = 2;
-            for (String ebeln : ebelns) {
-                ps.setString(i++, ebeln);
-            }
             return ps.executeUpdate();
         }
     }
 
-    private int deleteEketInAttesaByEbeln(String ebeln) throws SQLException {
+    /**
+     * DELETE puntuale: rimuove le righe con wmsst IN ('0','3') per un singolo OdA.
+     * Usata dall'aggiornamento post-scarico.
+     */
+    private int deleteEketPuntuale(String ebeln) throws SQLException {
         String sql = "DELETE FROM public.tabfcseket " +
-                     "WHERE tenant = ? AND ebeln = ? AND wmsst = ' '";
+                     "WHERE tenant = ? AND ebeln = ? AND wmsst IN ('0', '3')";
         try (PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, tenant);
             ps.setString(2, ebeln);
@@ -288,14 +294,9 @@ public class FcsRepository implements AutoCloseable {
         /*
          * ON CONFLICT (tenant, ebeln, ebelp, etenr, kappl) DO NOTHING
          *
-         * Se la riga esiste già con wmsst <> ' ' (in lavorazione / completata / errore)
+         * Se la riga esiste già con wmsst IN ('1','2','E') (in lavorazione / errore)
          * il record non viene toccato e l'inserimento viene silenziosamente ignorato.
-         * In questo modo non si genera mai un errore di chiave duplicata e
-         * l'elaborazione procede senza interruzioni.
-         *
-         * Le righe effettivamente inserite sono quelle per cui il DELETE precedente
-         * ha rimosso il record con wmsst = ' '; le righe "in lavorazione" rimangono
-         * intatte e vengono conteggiate separatamente come "saltate".
+         * Le righe effettivamente inserite sono solo quelle non in lavorazione/errore.
          */
         String sql = """
                 INSERT INTO public.tabfcseket
@@ -313,7 +314,7 @@ public class FcsRepository implements AutoCloseable {
                      ?, ?, ?, ?, ?,
                      ?, ?, ?, ?, ?,
                      ?, ?, ?, ?, ?,
-                     ?, ?, ?, ' ')
+                     ?, ?, ?, '0')
                 ON CONFLICT (tenant, ebeln, ebelp, etenr, kappl) DO NOTHING
                 """;
 
@@ -327,7 +328,6 @@ public class FcsRepository implements AutoCloseable {
                 ps.setString(2,  e.ebeln());
                 ps.setString(3,  e.ebelp());
                 ps.setString(4,  e.etenr());
-                // Gruppo 1
                 ps.setString(5,  e.kappl());
                 ps.setString(6,  e.idEket());
                 ps.setObject(7,  e.xchpf());
@@ -344,7 +344,6 @@ public class FcsRepository implements AutoCloseable {
                 ps.setObject(18, e.mengeOpen());
                 ps.setString(19, e.meins());
                 ps.setString(20, e.bstme());
-                // Gruppo 2
                 ps.setObject(21, e.mengexbstme());
                 ps.setObject(22, e.qtaxtag());
                 ps.setObject(23, e.bstmexpallet());
@@ -355,7 +354,6 @@ public class FcsRepository implements AutoCloseable {
                 ps.setObject(28, e.brgewRow());
                 ps.setObject(29, e.ntgewRow());
                 ps.setObject(30, e.gewei());
-                // Gestione
                 ps.setDate  (31, e.datum() != null ? Date.valueOf(e.datum()) : null);
                 ps.setTime  (32, e.uzeit() != null ? Time.valueOf(e.uzeit()) : null);
                 ps.setString(33, e.ernam());
@@ -372,7 +370,7 @@ public class FcsRepository implements AutoCloseable {
 
         int skipped = attempted - inserted;
         if (skipped > 0) {
-            log.info("Righe EKET in lavorazione (wmsst <> ' ') non sovrascritte: {}", skipped);
+            log.info("Righe EKET in lavorazione/errore (wmsst in '1','2','E') non sovrascritte: {}", skipped);
         }
         return inserted;
     }
@@ -405,7 +403,13 @@ public class FcsRepository implements AutoCloseable {
 
     /**
      * Aggiorna lo stato WMS di una riga.
-     * wmsst: ' '=attesa, 'I'=in scarico, 'C'=completata, 'E'=errore
+     *
+     * Valori wmsst:
+     *   '0' = in attesa (stato iniziale)
+     *   '1' = scarico iniziato
+     *   '2' = scarico in corso
+     *   '3' = scarico completato
+     *   'E' = errore
      */
     public void updateWmsStatus(String ebeln, String ebelp, String etenr,
                                 String wmsst) throws SQLException {
@@ -424,38 +428,20 @@ public class FcsRepository implements AutoCloseable {
         }
         conn.commit();
     }
-    
+
     // -------------------------------------------------------------------------
     // UMFOR → tabumfor  (parametrizzazioni Materiale/Fornitore)
     // -------------------------------------------------------------------------
 
-    /**
-     * Carica da tabumfor i fattori di conversione validi alla data odierna
-     * per i soli matnr presenti nelle righe EKET da sincronizzare.
-     *
-     * Strategia:
-     *   - Query con WHERE matnr IN (...) → carica solo ciò che serve
-     *   - Per ogni (matnr, lifnr, bstme) tiene il record con datab più recente
-     *     tra quelli con datab <= CURRENT_DATE  (record attivo)
-     *   - Restituisce una Map<"matnr|lifnr|bstme", Umfor> pronta per il lookup O(1)
-     *
-     * @param matnrs insieme dei codici materiale di interesse
-     * @return mappa fattori di conversione indicizzata per chiave composta
-     */
     public Map<String, com.eone.fcs.model.Umfor> loadUmfor(
             java.util.Set<String> matnrs) throws SQLException {
 
         if (matnrs.isEmpty()) return java.util.Map.of();
 
-        // Costruisce IN (?, ?, ...)
         String placeholders = matnrs.stream()
                 .map(m -> "?")
                 .collect(java.util.stream.Collectors.joining(","));
 
-        // DISTINCT ON (matnr, lifnr) + ORDER BY datab DESC
-        // → per ogni coppia materiale/fornitore prende il record attivo più recente.
-        // bstme NON è parte della chiave di ricerca: per ogni matnr+lifnr esiste
-        // un solo imballo attivo, parametrizzato in tabumfor.
         String sql = """
                 SELECT DISTINCT ON (matnr, lifnr)
                        matnr, lifnr, bstme, datab, meins,
@@ -471,17 +457,14 @@ public class FcsRepository implements AutoCloseable {
 
         try (PreparedStatement ps = conn.prepareStatement(sql)) {
             int i = 1;
-            for (String matnr : matnrs) {
-                ps.setString(i++, matnr);
-            }
+            for (String matnr : matnrs) ps.setString(i++, matnr);
             try (ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) {
                     com.eone.fcs.model.Umfor u = new com.eone.fcs.model.Umfor(
                             rs.getString("matnr"),
                             rs.getString("lifnr"),
                             rs.getString("bstme"),
-                            rs.getDate("datab") != null
-                                    ? rs.getDate("datab").toLocalDate() : null,
+                            rs.getDate("datab") != null ? rs.getDate("datab").toLocalDate() : null,
                             rs.getString("meins"),
                             rs.getObject("mengexbstme")  != null ? rs.getDouble("mengexbstme")  : null,
                             rs.getObject("bstmexpallet") != null ? rs.getInt("bstmexpallet")    : null
@@ -491,8 +474,7 @@ public class FcsRepository implements AutoCloseable {
             }
         }
 
-        log.info("Fattori UMFOR caricati: {} record per {} matnr distinti",
-                result.size(), matnrs.size());
+        log.info("Fattori UMFOR caricati: {} record per {} matnr distinti", result.size(), matnrs.size());
         return result;
     }
 
@@ -500,13 +482,6 @@ public class FcsRepository implements AutoCloseable {
     // Pesi materiale → tabfcsmara
     // -------------------------------------------------------------------------
 
-    /**
-     * Carica i pesi unitari (brgew, ntgew, gewei) da tabfcsmara
-     * per i soli matnr presenti nelle righe EKET da sincronizzare.
-     *
-     * @param matnrs insieme dei codici materiale di interesse
-     * @return mappa matnr → double[]{brgew, ntgew} + gewei, indicizzata per matnr
-     */
     public Map<String, com.eone.fcs.model.PesoMateriale> loadPesi(
             java.util.Set<String> matnrs) throws SQLException {
 
@@ -527,9 +502,7 @@ public class FcsRepository implements AutoCloseable {
 
         try (PreparedStatement ps = conn.prepareStatement(sql)) {
             int i = 1;
-            for (String matnr : matnrs) {
-                ps.setString(i++, matnr);
-            }
+            for (String matnr : matnrs) ps.setString(i++, matnr);
             try (ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) {
                     String matnr = rs.getString("matnr");
@@ -541,8 +514,7 @@ public class FcsRepository implements AutoCloseable {
             }
         }
 
-        log.info("Pesi materiale caricati: {} record per {} matnr distinti",
-                result.size(), matnrs.size());
+        log.info("Pesi materiale caricati: {} record per {} matnr distinti", result.size(), matnrs.size());
         return result;
     }
 
@@ -550,11 +522,6 @@ public class FcsRepository implements AutoCloseable {
     // Aggiornamento Gruppo 2 su righe già inserite (uso futuro / ricalcolo)
     // -------------------------------------------------------------------------
 
-    /**
-     * Aggiorna i soli campi del Gruppo 2 su una riga EKET già persistita.
-     * Utile se si vuole ricalcolare i valori senza rifare il ciclo DELETE+INSERT.
-     * Per ora non usato nel flusso principale (i valori vengono inseriti direttamente).
-     */
     public void updateGruppo2(EketLine e) throws SQLException {
         String sql = """
                 UPDATE public.tabfcseket
@@ -591,21 +558,11 @@ public class FcsRepository implements AutoCloseable {
         }
         conn.commit();
     }
-    
+
     // -------------------------------------------------------------------------
     // UMCLI → tabumcli  (parametrizzazioni Materiale/Cliente per resi)
     // -------------------------------------------------------------------------
 
-    /**
-     * Carica da tabumcli i fattori di conversione validi alla data odierna
-     * per i soli matnr presenti nelle righe di reso da sincronizzare.
-     *
-     * Speculare a loadUmfor ma usa kunnr (cliente) invece di lifnr (fornitore).
-     * Usato da EketEnricher per le righe con kappl='V'.
-     *
-     * @param matnrs insieme dei codici materiale di interesse
-     * @return mappa fattori di conversione indicizzata per "matnr|kunnr"
-     */
     public Map<String, com.eone.fcs.model.Umcli> loadUmcli(
             java.util.Set<String> matnrs) throws SQLException {
 
@@ -630,17 +587,14 @@ public class FcsRepository implements AutoCloseable {
 
         try (PreparedStatement ps = conn.prepareStatement(sql)) {
             int i = 1;
-            for (String matnr : matnrs) {
-                ps.setString(i++, matnr);
-            }
+            for (String matnr : matnrs) ps.setString(i++, matnr);
             try (ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) {
                     com.eone.fcs.model.Umcli u = new com.eone.fcs.model.Umcli(
                             rs.getString("matnr"),
                             rs.getString("kunnr"),
                             rs.getString("bstme"),
-                            rs.getDate("datab") != null
-                                    ? rs.getDate("datab").toLocalDate() : null,
+                            rs.getDate("datab") != null ? rs.getDate("datab").toLocalDate() : null,
                             rs.getString("meins"),
                             rs.getObject("mengexbstme")  != null ? rs.getDouble("mengexbstme")  : null,
                             rs.getObject("bstmexpallet") != null ? rs.getInt("bstmexpallet")    : null
@@ -650,8 +604,7 @@ public class FcsRepository implements AutoCloseable {
             }
         }
 
-        log.info("Fattori UMCLI caricati: {} record per {} matnr distinti",
-                result.size(), matnrs.size());
+        log.info("Fattori UMCLI caricati: {} record per {} matnr distinti", result.size(), matnrs.size());
         return result;
     }
 
@@ -659,13 +612,6 @@ public class FcsRepository implements AutoCloseable {
     // Nomi fornitori → tabfcslfa1
     // -------------------------------------------------------------------------
 
-    /**
-     * Carica il campo name1 da tabfcslfa1 per i lifnr forniti.
-     * Usato da EketEnricher per popolare il campo name1 nelle righe OdA.
-     *
-     * @param lifnrs insieme dei codici fornitore
-     * @return mappa lifnr → name1
-     */
     public Map<String, String> loadNomiFornitori(
             java.util.Set<String> lifnrs) throws SQLException {
 
@@ -688,13 +634,9 @@ public class FcsRepository implements AutoCloseable {
         try (PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, tenant);
             int i = 2;
-            for (String lifnr : lifnrs) {
-                ps.setString(i++, lifnr);
-            }
+            for (String lifnr : lifnrs) ps.setString(i++, lifnr);
             try (ResultSet rs = ps.executeQuery()) {
-                while (rs.next()) {
-                    result.put(rs.getString("lifnr"), rs.getString("name1"));
-                }
+                while (rs.next()) result.put(rs.getString("lifnr"), rs.getString("name1"));
             }
         }
 
@@ -706,14 +648,6 @@ public class FcsRepository implements AutoCloseable {
     // Nomi clienti → tabfcskna1
     // -------------------------------------------------------------------------
 
-    /**
-     * Carica il campo name1 da tabfcskna1 per i kunnr forniti.
-     * Usato da EketEnricher per popolare il campo name1 nelle righe di reso.
-     * I kunnr sono in lifnr delle EketLine di tipo 'V' (cliente → lifnr per coerenza modello).
-     *
-     * @param kunnrs insieme dei codici cliente
-     * @return mappa kunnr → name1
-     */
     public Map<String, String> loadNomiClienti(
             java.util.Set<String> kunnrs) throws SQLException {
 
@@ -736,24 +670,20 @@ public class FcsRepository implements AutoCloseable {
         try (PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, tenant);
             int i = 2;
-            for (String kunnr : kunnrs) {
-                ps.setString(i++, kunnr);
-            }
+            for (String kunnr : kunnrs) ps.setString(i++, kunnr);
             try (ResultSet rs = ps.executeQuery()) {
-                while (rs.next()) {
-                    result.put(rs.getString("kunnr"), rs.getString("name1"));
-                }
+                while (rs.next()) result.put(rs.getString("kunnr"), rs.getString("name1"));
             }
         }
 
         log.info("Nomi clienti caricati: {} record", result.size());
         return result;
     }
-    
+
     // -------------------------------------------------------------------------
     // AutoCloseable
     // -------------------------------------------------------------------------
-    
+
     @Override
     public void close() {
         try {

@@ -26,9 +26,10 @@ import java.util.Map;
  * NOTA: il filtro OpenPurchaseOrderQuantity gt 0 viene applicato in Java
  * perché S/4HC V4 non permette filtri su campi quantità senza unità di misura.
  *
- * Filtri aggiuntivi applicati sulle posizioni OdA (A_PurchaseOrderItem V2):
- *   - DeletionIndicator   (EKPO-LOEKZ): posizioni cancellate → escluse
- *   - DeliveryIsCompleted (EKPO-ELIKZ): posizioni con consegna finale → escluse
+ * Le posizioni con LOEKZ (cancellate) ed ELIKZ (consegna finale) vengono escluse
+ * implicitamente: entrambi i flag azzerano OpenPurchaseOrderQuantity in S/4HANA,
+ * quindi il filtro Java openQty <= 0 le scarta già a monte.
+ * Non è necessario alcun filtro aggiuntivo sulla chiamata V2 A_PurchaseOrderItem.
  */
 public class PurchaseOrderClient extends AbstractS4Client {
 
@@ -183,33 +184,22 @@ public class PurchaseOrderClient extends AbstractS4Client {
     private void fetchOrderItems(
             Map<String, Map<String, EketLine.Builder>> builders, String singleEbeln) {
 
-        // Filtri OData V2: escludiamo posizioni cancellate e con consegna finale
-        // DeletionIndicator   = EKPO-LOEKZ  (flag cancellazione)
-        // DeliveryIsCompleted = EKPO-ELIKZ  (flag consegna finale)
-        List<String> itemFilters = new ArrayList<>();
-        itemFilters.add("DeletionIndicator eq false");
-        itemFilters.add("DeliveryIsCompleted eq false");
-        if (singleEbeln != null) {
-            itemFilters.add("PurchaseOrder eq '" + singleEbeln + "'");
-        }
-
+        // Nessun filtro su LOEKZ/ELIKZ: le posizioni cancellate o con consegna finale
+        // hanno già OpenPurchaseOrderQuantity = 0 in S/4HANA e sono state escluse
+        // dal filtro Java nel passo V4. Qui servono solo per il join (matnr, werks, ecc.).
         StringBuilder url = new StringBuilder(
                 buildUrl(SERVICE_PATH_V2, "A_PurchaseOrderItem") +
-                "?$top=" + config.s4PageSize +
-                "&$filter=" + enc(String.join(" and ", itemFilters)));
+                "?$top=" + config.s4PageSize);
+
+        if (singleEbeln != null) {
+            url.append("&$filter=").append(enc("PurchaseOrder eq '" + singleEbeln + "'"));
+        }
 
         List<JsonNode> nodes = fetchAllPages(url.toString());
 
         for (JsonNode n : nodes) {
             String po   = str(n, "PurchaseOrder",    "");
             String item = str(n, "PurchaseOrderItem","");
-
-            // Doppio controllo in memoria (difesa da API che ignorano il filtro)
-            if ("X".equals(str(n, "DeletionIndicator"))   ||
-                "X".equals(str(n, "DeliveryIsCompleted"))) {
-                log.debug("Posizione esclusa (LOEKZ/ELIKZ): OdA={} Item={}", po, item);
-                continue;
-            }
 
             Map<String, EketLine.Builder> poBuilders = builders.get(po);
             if (poBuilders == null) continue;

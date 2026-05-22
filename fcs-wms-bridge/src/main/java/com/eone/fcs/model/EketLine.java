@@ -15,6 +15,13 @@ import java.time.LocalTime;
  * kappl discrimina il tipo di riga:
  *   'M' o 'ME' → OdA (acquisto) — popolato da PurchaseOrderClient
  *   'V'        → OdV di reso    — popolato da SalesReturnClient
+ *
+ * Valori wmsst:
+ *   '0' = in attesa (stato iniziale)
+ *   '1' = scarico iniziato
+ *   '2' = scarico in corso
+ *   '3' = scarico completato
+ *   'E' = errore
  */
 public record EketLine(
 
@@ -58,7 +65,8 @@ public record EketLine(
         LocalDate datum,        // data creazione/aggiornamento record
         LocalTime uzeit,        // ora creazione/aggiornamento
         String    ernam,        // utente creazione
-        String    wmsst         // stato WMS: ' '=attesa, 'I'=in scarico, 'C'=completata, 'E'=errore
+        String    wmsst         // stato WMS: '0'=attesa, '1'=scarico iniziato,
+                                //            '2'=in corso, '3'=completato, 'E'=errore
 
         // NOTA: i campi in_ (WMS inbound) non sono inclusi nel record
         // perché vengono scritti esclusivamente dal sistema WMS RFID
@@ -89,7 +97,7 @@ public record EketLine(
         private Double    mengeOpen;
         private String    meins;
         private String    bstme;
-        private String    wmsst     = " ";  // default: in attesa
+        private String    wmsst     = "0";  // default: in attesa
 
         // Campi Calcolati/Derivati
         private Double   mengexbstme;
@@ -107,7 +115,7 @@ public record EketLine(
         public Builder ebeln(String v)     { this.ebeln = v;     return this; }
         public Builder ebelp(String v)     { this.ebelp = v;     return this; }
         public Builder etenr(String v)     { this.etenr = v;     return this; }
-        public Builder kappl(String v)     { this.kappl = v;     return this; }  // ← AGGIUNTO
+        public Builder kappl(String v)     { this.kappl = v;     return this; }
         public Builder xchpf(Boolean v)    { this.xchpf = v;     return this; }
         public Builder eindt(LocalDate v)  { this.eindt = v;     return this; }
         public Builder lifnr(String v)     { this.lifnr = v;     return this; }
