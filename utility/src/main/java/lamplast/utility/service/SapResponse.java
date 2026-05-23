@@ -1,163 +1,267 @@
 package lamplast.utility.service;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 
 public class SapResponse {
 
-	private int httpStatus;
-	private boolean success;
-	private boolean warning;
-	private boolean frozen; // true = SAP ha risposto OK ma la modifica non è stata applicata
+    private int     httpStatus;
+    private boolean success;
+    private boolean warning;
+    private boolean frozen;     // SAP ha risposto OK ma la modifica non è stata applicata
 
-	private String sapCode;
-	private String sapMessage;
-	private String transactionId;
+    private String sapCode;
+    private String sapMessage;  // messaggio sintetico (solo severity warning/error)
+    private String transactionId;
+    private String rawBody;
 
-	private String rawBody;
+    /**
+     * Per INSERT riusciti (HTTP 201): numero schedulazione assegnato da SAP
+     * (campo d.ScheduleLine). Null se non presente o non applicabile.
+     */
+    private String createdScheduleLine;
 
-	// =========================
-	// COSTRUTTORI
-	// =========================
+    // =========================
+    // COSTRUTTORI
+    // =========================
 
-	public SapResponse(int httpStatus) {
-		this.httpStatus = httpStatus;
-		this.success = httpStatus >= 200 && httpStatus < 300;
-	}
+    public SapResponse(int httpStatus) {
+        this.httpStatus = httpStatus;
+        this.success    = httpStatus >= 200 && httpStatus < 300;
+    }
 
-	// =========================
-	// GETTER
-	// =========================
+    // =========================
+    // GETTER
+    // =========================
 
-	public int getHttpStatus() {
-		return httpStatus;
-	}
+    public int     getHttpStatus()           { return httpStatus; }
+    public boolean isSuccess()               { return success; }
+    public boolean isWarning()               { return warning; }
+    public boolean isFrozen()                { return frozen; }
+    public String  getSapCode()              { return sapCode; }
+    public String  getSapMessage()           { return sapMessage; }
+    public String  getTransactionId()        { return transactionId; }
+    public String  getRawBody()              { return rawBody; }
+    public String  getCreatedScheduleLine()  { return createdScheduleLine; }
 
-	public boolean isSuccess() {
-		return success;
-	}
+    public void setFrozen(boolean frozen)       { this.frozen = frozen; }
+    public void setSapMessage(String sapMessage){ this.sapMessage = sapMessage; }
 
-	public boolean isWarning() {
-		return warning;
-	}
+    // =========================
+    // PARSING BODY
+    // =========================
 
-	public boolean isFrozen() {
-		return frozen;
-	}
+    @SuppressWarnings("unchecked")
+    public void parseBody(String body) {
 
-	public void setFrozen(boolean frozen) {
-		this.frozen = frozen;
-	}
+        this.rawBody = body;
 
-	public void setSapMessage(String sapMessage) {
-		this.sapMessage = sapMessage;
-	}
+        if (body == null || body.isBlank() || body.startsWith("<")) return;
 
-	public String getSapCode() {
-		return sapCode;
-	}
+        try {
+            com.fasterxml.jackson.databind.ObjectMapper mapper =
+                new com.fasterxml.jackson.databind.ObjectMapper();
 
-	public String getSapMessage() {
-		return sapMessage;
-	}
+            Map<String, Object> json = mapper.readValue(body, Map.class);
 
-	public String getTransactionId() {
-		return transactionId;
-	}
+            // --- CASO ERRORE ODATA ---
+            if (json.containsKey("error")) {
+                Map<String, Object> error = (Map<String, Object>) json.get("error");
+                this.success  = false;
+                this.sapCode  = (String) error.get("code");
 
-	public String getRawBody() {
-		return rawBody;
-	}
+                Map<String, Object> message = (Map<String, Object>) error.get("message");
+                if (message != null) {
+                    this.sapMessage = (String) message.get("value");
+                }
 
-	// =========================
-	// PARSING
-	// =========================
+                Map<String, Object> inner = (Map<String, Object>) error.get("innererror");
+                if (inner != null) {
+                    this.transactionId = (String) inner.get("transactionid");
+                }
+            }
 
-	@SuppressWarnings("unchecked")
-	public void parseBody(String body) {
+            // --- CASO SUCCESSO (2xx) con body "d" ---
+            if (json.containsKey("d") && this.httpStatus >= 200 && this.httpStatus < 300) {
+                this.success = true;
 
-		this.rawBody = body;
+                // Per POST 201: estrai il numero schedulazione assegnato da SAP
+                if (this.httpStatus == 201) {
+                    Map<String, Object> d = (Map<String, Object>) json.get("d");
+                    if (d != null) {
+                        Object sl = d.get("ScheduleLine");
+                        if (sl != null) {
+                            // SAP restituisce "0001", "0002" ecc. — manteniamo il formato
+                            this.createdScheduleLine = sl.toString();
+                        }
+                    }
+                }
+            }
 
-		if (body == null || body.isBlank() || body.startsWith("<")) {
-			return;
-		}
+        } catch (Exception e) {
+            this.sapMessage = "Errore parsing risposta SAP: " + e.getMessage();
+        }
+    }
 
-		try {
-			com.fasterxml.jackson.databind.ObjectMapper mapper = new com.fasterxml.jackson.databind.ObjectMapper();
+    // =========================
+    // PARSING HEADERS
+    // =========================
 
-			Map<String, Object> json = mapper.readValue(body, Map.class);
+    @SuppressWarnings("unchecked")
+    public void parseHeaders(Map<String, java.util.List<String>> headers) {
 
-			// --- CASO ERRORE ODATA ---
-			if (json.containsKey("error")) {
+        if (headers == null) return;
 
-				Map<String, Object> error = (Map<String, Object>) json.get("error");
+        // sap-message: array JSON di messaggi OData
+        if (headers.containsKey("sap-message")) {
+            String rawMsg = headers.get("sap-message").get(0);
 
-				this.success = false;
-				this.sapCode = (String) error.get("code");
+            // SLS_LORD/025 "SLINE_DATE not an input field" — rumore strutturale dell'API,
+            // ignorato sempre (già documentato nelle versioni precedenti).
+            boolean isKnownNoise = rawMsg.contains("SLS_LORD/025")
+                                && rawMsg.contains("SLINE_DATE");
 
-				Map<String, Object> message = (Map<String, Object>) error.get("message");
+            if (!isKnownNoise) {
+                String filtered = filterSapMessages(rawMsg);
+                if (filtered != null && !filtered.isBlank()) {
+                    if (this.httpStatus >= 200 && this.httpStatus < 300) {
+                        this.warning    = true;
+                        this.sapMessage = filtered;
+                    } else {
+                        // Su errore HTTP il messaggio integra quello del body
+                        if (this.sapMessage == null) this.sapMessage = filtered;
+                    }
+                }
+            }
+        }
 
-				if (message != null) {
-					this.sapMessage = (String) message.get("value");
-				}
+        // transactionid (a volte è header)
+        if (headers.containsKey("transactionid")) {
+            this.transactionId = headers.get("transactionid").get(0);
+        }
+    }
 
-				Map<String, Object> inner = (Map<String, Object>) error.get("innererror");
+    // =========================
+    // UTILITY — filtro messaggi
+    // =========================
 
-				if (inner != null) {
-					this.transactionId = (String) inner.get("transactionid");
-				}
-			}
+    /**
+     * Estrae dal JSON array sap-message solo i messaggi con severity
+     * "warning" o "error", ricorsivamente anche nei "details".
+     * Restituisce una stringa multi-riga leggibile, o null se non ci sono
+     * messaggi rilevanti.
+     *
+     * I messaggi "noise" noti vengono soppressi:
+     *   - SLS_LORD/009  "Document is incomplete"  (wrapper generico)
+     *   - SLS_LORD/099  "Consider the subsequent documents"  (info strutturale)
+     *   - SLS_LORD/023  messaggi di credito/scaduto (fuori scope dell'integrazione)
+     *   - V1/311        "Standard Order X has been saved"  (esito positivo, ridondante)
+     *   - V1/399        "Date is in the past"  (warning prevedibile, non azionabile)
+     */
+    @SuppressWarnings("unchecked")
+    private String filterSapMessages(String rawJson) {
+        try {
+            com.fasterxml.jackson.databind.ObjectMapper mapper =
+                new com.fasterxml.jackson.databind.ObjectMapper();
 
-			// --- CASO SUCCESSO POST (201) ---
-			if (json.containsKey("d") && this.httpStatus >= 200 && this.httpStatus < 300) {
-				this.success = true;
-			}
+            // Il header sap-message può essere un array o un singolo oggetto
+            List<Map<String, Object>> msgs;
+            String trimmed = rawJson.trim();
+            if (trimmed.startsWith("[")) {
+                msgs = mapper.readValue(trimmed, List.class);
+            } else {
+                msgs = new ArrayList<>();
+                msgs.add(mapper.readValue(trimmed, Map.class));
+            }
 
-		} catch (Exception e) {
-			this.sapMessage = "Errore parsing risposta SAP: " + e.getMessage();
-		}
-	}
+            List<String> relevant = new ArrayList<>();
+            for (Map<String, Object> msg : msgs) {
+                collectRelevant(msg, relevant);
+            }
 
-	public void parseHeaders(Map<String, java.util.List<String>> headers) {
+            return relevant.isEmpty() ? null : String.join(" | ", relevant);
 
-		if (headers == null)
-			return;
+        } catch (Exception e) {
+            // Parsing fallito: restituisco il raw JSON troncato
+            return rawJson.length() > 200 ? rawJson.substring(0, 200) + "…" : rawJson;
+        }
+    }
 
-		// sap-message (warning / info)
-		if (headers.containsKey("sap-message")) {
-			String rawMsg = headers.get("sap-message").toString();
+    /** Raccoglie ricorsivamente i messaggi rilevanti (warning/error, non noise). */
+    @SuppressWarnings("unchecked")
+    private void collectRelevant(Map<String, Object> msg, List<String> out) {
+        if (msg == null) return;
 
-			// SLS_LORD/025 "Field SLINE_DATE is not an input field" è un warning
-			// strutturale dell'API S/4HANA Public Cloud: SAP lo emette sempre quando
-			// si aggiorna RequestedDeliveryDate, ma non indica alcun problema reale.
-			boolean isKnownNoise = rawMsg.contains("SLS_LORD/025")
-					&& rawMsg.contains("SLINE_DATE");
+        String code     = String.valueOf(msg.getOrDefault("code",     ""));
+        String severity = String.valueOf(msg.getOrDefault("severity", ""));
+        String text     = String.valueOf(msg.getOrDefault("message",  ""));
 
-			if (!isKnownNoise) {
-				if (this.httpStatus >= 200 && this.httpStatus < 300) {
-					// Warning rilevante solo su risposta HTTP positiva
-					this.warning    = true;
-					this.sapMessage = rawMsg;
-				} else {
-					// Su errore HTTP il messaggio va nel log ma non alza il flag warning
-					this.sapMessage = rawMsg;
-				}
-			}
-		}
+        boolean isRelevantSeverity = severity.equals("warning") || severity.equals("error");
+        boolean isNoise = isKnownNoise(code, text);
 
-		// transactionid (a volte è header)
-		if (headers.containsKey("transactionid")) {
-			this.transactionId = headers.get("transactionid").get(0);
-		}
-	}
+        if (isRelevantSeverity && !isNoise && !text.isBlank()) {
+            out.add("[" + code + "] " + text);
+        }
 
-	// =========================
-	// UTIL
-	// =========================
+        // Ricorsione sui details
+        Object details = msg.get("details");
+        if (details instanceof List) {
+            for (Object d : (List<?>) details) {
+                if (d instanceof Map) {
+                    collectRelevant((Map<String, Object>) d, out);
+                }
+            }
+        }
+    }
 
-	@Override
-	public String toString() {
-		return "SapResponse{" + "httpStatus=" + httpStatus + ", success=" + success + ", warning=" + warning
-				+ ", sapCode='" + sapCode + '\'' + ", sapMessage='" + sapMessage + '\'' + ", transactionId='"
-				+ transactionId + '\'' + '}';
-	}
+    /**
+     * Codici/testi da sopprimere perché ridondanti o fuori scope.
+     */
+    private boolean isKnownNoise(String code, String text) {
+        if (code == null || text == null) return false;
+        // Wrapper generico "Document is incomplete"
+        if (code.equals("SLS_LORD/009")) return true;
+        // Info strutturale "Consider subsequent documents"
+        if (code.equals("SLS_LORD/099")) return true;
+        // Messaggi di credito/scaduto (fuori scope dell'integrazione)
+        if (code.equals("SLS_LORD/023")) return true;
+        // Ordine salvato (esito positivo, ridondante)
+        if (code.equals("V1/311"))       return true;
+        // Data nel passato (prevedibile, non azionabile dall'integrazione)
+        if (code.equals("V1/399"))       return true;
+        // Rumore strutturale data schedulazione
+        if (code.equals("SLS_LORD/025") && text.contains("SLINE_DATE")) return true;
+        return false;
+    }
+
+    // =========================
+    // UTIL
+    // =========================
+
+    /**
+     * Messaggio leggibile per la colonna "Messaggio SAP" della griglia.
+     * Priorità: sapMessage > "HTTP {status}" come fallback.
+     * Tronca a maxLen caratteri per non rompere il layout.
+     */
+    public String getDisplayMessage(int maxLen) {
+        if (sapMessage != null && !sapMessage.isBlank()) {
+            return sapMessage.length() > maxLen
+                ? sapMessage.substring(0, maxLen) + "…"
+                : sapMessage;
+        }
+        if (!success) return "HTTP " + httpStatus;
+        return "";
+    }
+
+    @Override
+    public String toString() {
+        return "SapResponse{httpStatus=" + httpStatus
+             + ", success=" + success
+             + ", warning=" + warning
+             + ", sapCode='" + sapCode + '\''
+             + ", sapMessage='" + sapMessage + '\''
+             + ", createdScheduleLine='" + createdScheduleLine + '\''
+             + ", transactionId='" + transactionId + '\'' + '}';
+    }
 }

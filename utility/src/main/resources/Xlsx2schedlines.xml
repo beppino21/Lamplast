@@ -56,6 +56,9 @@
 <t:gridcol id="g_310" text="Azione" width="120" >
 <t:label id="g_311" text=".{azione}" />
 </t:gridcol>
+<t:gridcol id="g_320" text="N° Sch. creata" width="110" >
+<t:label id="g_321" align="right" stylevariant="ccbig" text=".{createdScheduleLine}" />
+</t:gridcol>
 <t:gridcol id="g_314" text="Verifica (Dry-run)" width="100%;250" >
 <t:label id="g_315" text=".{dryRunEsito}" />
 </t:gridcol>
@@ -77,6 +80,15 @@
 </t:tabbedpanetab>
 <t:tabbedpanetab id="g_181" text="Parametri" >
 <t:row id="g_236" >
+<t:foldablepane id="g_400" opened="true" rowdistance="0" text="Visualizzazione risultati" width="100%" >
+<t:row id="g_401" >
+<t:coldistance id="g_402" width="10" />
+<t:button id="g_403" actionListener="#{d.Xlsx2schedlinesUI.onToggleViewMode}" text="#{d.Xlsx2schedlinesUI.viewModeButtonLabel}" width="250+" />
+<t:coldistance id="g_409" width="10" />
+<t:label id="g_407" stylevariant="ccsmalldesc" text="In modalità sintetica il Log continua a registrare tutte le righe elaborate." />
+</t:row>
+</t:foldablepane>
+<t:rowdistance id="g_408" height="12" />
 <t:foldablepane id="g_237" opened="false" rowdistance="0" text="Label Excel" width="100%" >
 <t:row id="g_260" >
 <t:field id="g_261" labeltext="Foglio" text="#{d.Xlsx2schedlinesUI.sheetName}" width="100" />

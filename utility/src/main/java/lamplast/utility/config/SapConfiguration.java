@@ -36,6 +36,13 @@ public class SapConfiguration {
     private final String colQuantita;
     private final String colDataProd;
 
+    /**
+     * Modalità visualizzazione griglia dopo "Aggiorna Ordini".
+     * "sintetico" = solo errori + inserimenti + cancellazioni.
+     * "completo"  = tutto.
+     */
+    private final String viewModeAfterUpdate;
+
     private static final String CONFIG_FILE = "config.properties";
 
     public SapConfiguration() {
@@ -53,13 +60,13 @@ public class SapConfiguration {
         this.urlFiori = props.getProperty("sap.url.fiori",
                             "/sap/bc/ui2/flp#SalesOrder-displayFactSheet?SalesOrder=");
 
-        // Cartella log stampa (default "logprint", relativa alla webapp root)
+        // Cartella log stampa
         this.logPrintFolder = props.getProperty("log.printFolder", "logprint");
 
-        // Foglio Excel (default "Export")
+        // Foglio Excel
         this.sheetName = props.getProperty("excel.sheetName", "Export");
 
-        // Colonne Excel (con valori di default nel caso mancassero)
+        // Colonne Excel
         this.colOrdine        = props.getProperty("excel.col.ordine",        "Ordine");
         this.colPosizione     = props.getProperty("excel.col.posizione",     "Pos.");
         this.colSchedulazione = props.getProperty("excel.col.schedulazione", "Sch.");
@@ -67,6 +74,10 @@ public class SapConfiguration {
         this.colMaterialeText = props.getProperty("excel.col.materialeText", "Text");
         this.colQuantita      = props.getProperty("excel.col.quantita",      "Qtà");
         this.colDataProd      = props.getProperty("excel.col.dataProd",      "Data prod.");
+
+        // Modalità visualizzazione post-aggiornamento (default: sintetico)
+        this.viewModeAfterUpdate = props.getProperty(
+                "ui.viewMode.afterUpdate", "sintetico").trim().toLowerCase();
 
         validateSapConfig();
     }
@@ -139,21 +150,15 @@ public class SapConfiguration {
     // GETTER — URL ordini
     // -------------------------------------------------------
 
-    public String getFullUrlVa03(String salesOrder) {
-        return baseUrl + urlVa03 + salesOrder;
-    }
-
-    public String getFullUrlFiori(String salesOrder) {
-        return baseUrl + urlFiori + salesOrder;
-    }
+    public String getFullUrlVa03(String salesOrder)  { return baseUrl + urlVa03  + salesOrder; }
+    public String getFullUrlFiori(String salesOrder) { return baseUrl + urlFiori + salesOrder; }
 
     // -------------------------------------------------------
-    // GETTER — Excel: foglio e colonne
+    // GETTER — Excel
     // -------------------------------------------------------
 
     public String getLogPrintFolder()   { return logPrintFolder; }
     public String getSheetName()        { return sheetName; }
-
     public String getColOrdine()        { return colOrdine; }
     public String getColPosizione()     { return colPosizione; }
     public String getColSchedulazione() { return colSchedulazione; }
@@ -161,4 +166,13 @@ public class SapConfiguration {
     public String getColMaterialeText() { return colMaterialeText; }
     public String getColQuantita()      { return colQuantita; }
     public String getColDataProd()      { return colDataProd; }
+
+    // -------------------------------------------------------
+    // GETTER — UI
+    // -------------------------------------------------------
+
+    /** true se la modalità di default è "sintetico" (solo errori/aggiunte/cancellazioni). */
+    public boolean isViewModeSinteticoDefault() {
+        return !"completo".equals(viewModeAfterUpdate);
+    }
 }

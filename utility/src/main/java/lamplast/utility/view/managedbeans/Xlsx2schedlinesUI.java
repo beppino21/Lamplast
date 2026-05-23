@@ -1,6 +1,7 @@
 package lamplast.utility.view.managedbeans;
 
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.List;
 
 import org.eclnt.editor.annotations.CCGenClass;
@@ -26,7 +27,7 @@ public class Xlsx2schedlinesUI extends PageBean implements Serializable {
     // SERVIZI
     // =========================
 
-    private SapConfiguration        sapConfig;
+    private SapConfiguration       sapConfig;
     private SapScheduleLineService  sapService;
     private ExcelParser             excelParser;
 
@@ -34,19 +35,31 @@ public class Xlsx2schedlinesUI extends PageBean implements Serializable {
     // DATI UI
     // =========================
 
+    /** Lista completa degli item (sempre tutti, usata per elaborazione). */
+    private final List<GridJSONdataItem> allItems = new ArrayList<>();
+
     private FIXGRIDListBinding<GridJSONdataItem> m_gridJSONdata = new FIXGRIDListBinding<>();
 
     // Link VA03 - App Fiori Manage Sales Order
-    private Boolean m_enableVA03           = false;
+    private Boolean m_enableVA03          = false;
     private String  m_salesOrderNumberVA03;
 
     // Link FioriVA03 - FactSheet Fiori (read-only)
-    private Boolean m_enableFioriVA03      = false;
+    private Boolean m_enableFioriVA03     = false;
     private String  m_salesOrderNumberFiori;
 
     private String  m_fileName;
-    private String  m_logText    = "Nuova sessione";
-    private boolean m_dryRunDone = false;
+    private String  m_logText          = "Nuova sessione";
+    private boolean m_dryRunDone       = false;
+    private boolean m_elaborazioneFatta = false;
+
+    /**
+     * Modalità visualizzazione griglia dopo "Aggiorna Ordini".
+     * true  = sintetico (errori + aggiunte + cancellazioni).
+     * false = completo (tutto).
+     * Il default viene letto da config.properties.
+     */
+    private Boolean m_viewModeSintetico = true;
 
     // Label colonne — lette da config.properties tramite SapConfiguration
     String m_sheetName;
@@ -69,16 +82,14 @@ public class Xlsx2schedlinesUI extends PageBean implements Serializable {
 
         private ScheduleLineData data;
 
-        public GridJSONdataItem(ScheduleLineData data) {
-            this.data = data;
-        }
+        public GridJSONdataItem(ScheduleLineData data) { this.data = data; }
 
-        public String getOrderNumber()      { return data.getOrderNumber(); }
-        public String getItemNumber()       { return data.getItemNumber()   != null ? data.getItemNumber().toString()   : ""; }
-        public String getSchedLine()        { return data.getScheduleLine() != null ? data.getScheduleLine().toString() : ""; }
-        public String getMaterial()         { return data.getMaterial(); }
-        public String getMaterialText()     { return data.getMaterialText(); }
-        public String getQuantity()         { return data.getQuantity(); }
+        public String getOrderNumber()  { return data.getOrderNumber(); }
+        public String getItemNumber()   { return data.getItemNumber()   != null ? data.getItemNumber().toString()   : ""; }
+        public String getSchedLine()    { return data.getScheduleLine() != null ? data.getScheduleLine().toString() : ""; }
+        public String getMaterial()     { return data.getMaterial(); }
+        public String getMaterialText() { return data.getMaterialText(); }
+        public String getQuantity()     { return data.getQuantity(); }
 
         public String getSchedDate() {
             return data.getProductionDate() != null
@@ -86,25 +97,22 @@ public class Xlsx2schedlinesUI extends PageBean implements Serializable {
                 : "";
         }
 
-        public String getProcessingResult() {
-            return data.getProcessingResult() != null ? data.getProcessingResult() : "";
-        }
-
-        public String getErrorMessage() {
-            return data.getErrorMessage() != null ? data.getErrorMessage() : "";
+        /**
+         * Numero schedulazione creata (solo INSERT riusciti).
+         * Per cancellazioni/errori: "0". Per PATCH: "".
+         */
+        public String getCreatedScheduleLine() {
+            String v = data.getCreatedScheduleLine();
+            return v != null ? v : "";
         }
 
         /**
-         * Tipo di operazione prevista — calcolata al caricamento del file:
-         *   scheduleLine < 0                    → Inserimento nuova schedulazione
-         *   scheduleLine >= 0 && quantity == 0  → Eliminazione schedulazione
-         *   scheduleLine >= 0 && quantity > 0   → Modifica quantità/data
+         * Tipo di operazione prevista — calcolata al caricamento del file.
          */
         public String getAzione() {
             Integer sl = data.getScheduleLine();
             if (sl == null) return "";
             if (sl < 0) return "Inserimento";
-            // Quantità zero o blank = eliminazione
             String qty = data.getQuantity();
             boolean qtyZero = (qty == null || qty.isBlank()
                     || qty.equals("0") || qty.equals("0.0")
@@ -113,11 +121,7 @@ public class Xlsx2schedlinesUI extends PageBean implements Serializable {
         }
 
         /**
-         * Esito con icona Unicode:
-         *  - Prima dell'elaborazione: blank (l'azione è già nella colonna Azione)
-         *  - Dopo elaborazione OK:    ✅ Successo
-         *  - Dopo elaborazione KO:    ❌ Errore
-         *  - Dopo elaborazione warn:  ⚠️ Warning
+         * Esito con icona Unicode.
          */
         public String getEsito() {
             String r = data.getProcessingResult();
@@ -125,6 +129,7 @@ public class Xlsx2schedlinesUI extends PageBean implements Serializable {
             if (r.startsWith("✅") || r.startsWith("✓")) return r;
             if (r.startsWith("❌") || r.startsWith("✗")) return r;
             if (r.startsWith("⚠"))                       return r;
+            if (r.startsWith("⏭") || r.startsWith("📦") || r.startsWith("⛔")) return r;
             String rl = r.toLowerCase();
             if (rl.contains("successo") || rl.equals("ok")) return "✅ " + r;
             if (rl.contains("errore")   || rl.equals("ko")) return "❌ " + r;
@@ -132,10 +137,16 @@ public class Xlsx2schedlinesUI extends PageBean implements Serializable {
             return r;
         }
 
-        /** Esito del dry-run — colonna separata, non sovrascritta dall'elaborazione reale. */
+        /** Esito del dry-run — colonna separata. */
         public String getDryRunEsito() {
             String r = data.getDryRunResult();
             return r != null ? r : "";
+        }
+
+        /** Messaggio SAP leggibile (non il JSON grezzo). */
+        public String getErrorMessage() {
+            String m = data.getErrorMessage();
+            return m != null ? m : "";
         }
 
         public void onRowSelect()  { showOrderDetails(data.getOrderNumber()); }
@@ -143,14 +154,31 @@ public class Xlsx2schedlinesUI extends PageBean implements Serializable {
 
         private void showOrderDetails(String orderNumber) {
             Statusbar.outputSuccess("Ordine selezionato: " + orderNumber);
+            m_salesOrderNumberVA03  = sapConfig.getFullUrlVa03(orderNumber);
+            m_enableVA03            = true;
+            m_salesOrderNumberFiori = sapConfig.getFullUrlFiori(orderNumber);
+            m_enableFioriVA03       = true;
+        }
 
-            // Link VA03 - App Fiori Manage Sales Order (transazionale)
-            m_salesOrderNumberVA03   = sapConfig.getFullUrlVa03(orderNumber);
-            m_enableVA03             = true;
-
-            // Link FioriVA03 - FactSheet Fiori (read-only)
-            m_salesOrderNumberFiori  = sapConfig.getFullUrlFiori(orderNumber);
-            m_enableFioriVA03        = true;
+        /**
+         * Indica se la riga deve essere inclusa nel filtro sintetico.
+         * Include: errori, inserimenti riusciti, cancellazioni riuscite.
+         * Esclude: PATCH riusciti, righe saltate.
+         */
+        public boolean isSignificativa() {
+            String r = data.getProcessingResult();
+            if (r == null) return false;
+            String azione = getAzione();
+            // Errori e blocchi: richiedono attenzione del richiedente
+            if (r.contains("Errore") || r.contains("Non applicata") || r.contains("Eccezione")) return true;
+            // Non modificabile (evase, bloccate, disallineamento materiale):
+            // visibili nel sintetico perché il richiedente deve rimuoverle dal file MRP
+            if (r.contains("Non modificabile")) return true;
+            // INSERT riuscito (con o senza warning)
+            if ("Inserimento".equals(azione) && (r.contains("Inserimento") || r.contains("warning"))) return true;
+            // Cancellazione riuscita (con o senza warning)
+            if ("Eliminazione".equals(azione) && (r.contains("Eliminazione") || r.contains("warning"))) return true;
+            return false;
         }
     }
 
@@ -163,14 +191,15 @@ public class Xlsx2schedlinesUI extends PageBean implements Serializable {
             this.sapConfig  = new SapConfiguration();
             this.sapService = new SapScheduleLineService(sapConfig);
 
-            m_sheetName        = sapConfig.getSheetName();
-            m_lblOrdine        = sapConfig.getColOrdine();
-            m_lblPosizione     = sapConfig.getColPosizione();
-            m_lblSchedulazione = sapConfig.getColSchedulazione();
-            m_lblMateriale     = sapConfig.getColMateriale();
-            m_lblMaterialeText = sapConfig.getColMaterialeText();
-            m_lblQuantita      = sapConfig.getColQuantita();
-            m_lblDataProd      = sapConfig.getColDataProd();
+            m_sheetName           = sapConfig.getSheetName();
+            m_lblOrdine           = sapConfig.getColOrdine();
+            m_lblPosizione        = sapConfig.getColPosizione();
+            m_lblSchedulazione    = sapConfig.getColSchedulazione();
+            m_lblMateriale        = sapConfig.getColMateriale();
+            m_lblMaterialeText    = sapConfig.getColMaterialeText();
+            m_lblQuantita         = sapConfig.getColQuantita();
+            m_lblDataProd         = sapConfig.getColDataProd();
+            m_viewModeSintetico   = sapConfig.isViewModeSinteticoDefault();
 
         } catch (Exception e) {
             m_logText = "ERRORE CONFIGURAZIONE: " + e.getMessage()
@@ -205,6 +234,7 @@ public class Xlsx2schedlinesUI extends PageBean implements Serializable {
         this.excelParser = new ExcelParser(mapping);
 
         // Reset stato
+        allItems.clear();
         m_gridJSONdata.getItems().clear();
         m_salesOrderNumberVA03  = "";
         m_salesOrderNumberFiori = "";
@@ -212,6 +242,7 @@ public class Xlsx2schedlinesUI extends PageBean implements Serializable {
         m_enableFioriVA03       = false;
         m_logText               = "Nuova sessione";
         m_dryRunDone            = false;
+        m_elaborazioneFatta     = false;
         scheduleLines           = null;
 
         if (!(ae instanceof BaseActionEventUpload)) return;
@@ -224,7 +255,9 @@ public class Xlsx2schedlinesUI extends PageBean implements Serializable {
             scheduleLines = excelParser.parseExcel(excelBytes, m_fileName);
 
             for (ScheduleLineData data : scheduleLines) {
-                m_gridJSONdata.getItems().add(new GridJSONdataItem(data));
+                GridJSONdataItem item = new GridJSONdataItem(data);
+                allItems.add(item);
+                m_gridJSONdata.getItems().add(item);
             }
 
             String sheetNote = excelParser.getLastSheetNote();
@@ -254,11 +287,14 @@ public class Xlsx2schedlinesUI extends PageBean implements Serializable {
                 SapDryRunResult result = sapService.dryRun(data);
                 String dettaglio = result.getDettaglio();
                 if ("NESSUNA_MODIFICA".equals(dettaglio)) {
+                    // Blank: la schedulazione è corretta, semplicemente non verrà toccata
                     data.setDryRunResult("⏭️ Nessuna modifica — qtà e data invariate, verrà saltata");
                     data.setProcessingResult("⏭️ Nessuna modifica");
+                    // createdScheduleLine: blank (situazione ok, nessuna azione)
                 } else if ("EVASA".equals(dettaglio)) {
                     data.setDryRunResult("📦 Schedulazione già evasa (qtà open = 0) — verrà saltata");
                     data.setProcessingResult("📦 Già evasa");
+                    data.setCreatedScheduleLine("0"); // saltata = 0
                 } else if (dettaglio != null && dettaglio.startsWith("BLOCCATA:")) {
                     String motivo;
                     if (dettaglio.equals("BLOCCATA:EVASA")) {
@@ -273,11 +309,14 @@ public class Xlsx2schedlinesUI extends PageBean implements Serializable {
                     }
                     data.setDryRunResult("⛔ Non modificabile — " + motivo);
                     data.setProcessingResult("⛔ Non modificabile");
+                    data.setCreatedScheduleLine("0"); // bloccata = 0
                 } else if (result.isError()) {
                     data.setDryRunResult("❌ " + (dettaglio != null ? dettaglio : result.getEsitoIcona()));
                     data.setProcessingResult("❌ Errore dry-run");
+                    data.setCreatedScheduleLine("0"); // errore = 0
                 } else {
                     data.setDryRunResult(result.getEsitoIcona());
+                    // createdScheduleLine: blank (verrà valorizzato dopo aggiornamento reale)
                 }
                 if      (result.isOk())    ok++;
                 else if (result.isError()) errori++;
@@ -313,21 +352,20 @@ public class Xlsx2schedlinesUI extends PageBean implements Serializable {
         int successi = 0;
         int errori   = 0;
 
-        for (ScheduleLineData data : scheduleLines) {
+        for (int idx = 0; idx < scheduleLines.size(); idx++) {
+            ScheduleLineData data = scheduleLines.get(idx);
             try {
                 log.append("Elaborazione: ").append(data.toString()).append("\n");
 
-                // Salta righe che il dry-run ha marcato come non elaborabili.
-                // Usiamo processingResult che ha valori controllati, non il testo
-                // localizzato di dryRunResult che può cambiare.
+                // Salta righe marcate dal dry-run
                 String procResult = data.getProcessingResult();
                 if (procResult != null && (
                         procResult.contains("Nessuna modifica")
                      || procResult.contains("Già evasa")
                      || procResult.contains("Non modificabile")
                      || procResult.contains("Errore dry-run"))) {
-                    log.append("  ⏭️ Saltata (dry-run): ").append(data.getOrderNumber())
-                       .append("/").append(data.getItemNumber())
+                    log.append("  ⏭️ Saltata (dry-run): ")
+                       .append(data.getOrderNumber()).append("/").append(data.getItemNumber())
                        .append(" — ").append(procResult).append("\n");
                     continue;
                 }
@@ -341,23 +379,24 @@ public class Xlsx2schedlinesUI extends PageBean implements Serializable {
                     continue;
                 }
 
-                SapResponse response = sapService.updateScheduleLine(data);
-
-                // Recupera l'azione prevista dalla grid item
-                GridJSONdataItem item = (GridJSONdataItem)
-                    m_gridJSONdata.getItems().get(scheduleLines.indexOf(data));
+                GridJSONdataItem item = allItems.get(idx);
                 String azione = item.getAzione();
+
+                SapResponse response = sapService.updateScheduleLine(data);
 
                 if (response.isSuccess()) {
                     if (response.isFrozen()) {
+                        // SAP ha risposto 2xx ma la modifica non è stata applicata
+                        String msg = response.getDisplayMessage(200);
                         log.append("  ⛔ [").append(azione)
                            .append("] Non applicata — schedule line bloccata\n");
-                        log.append("    ").append(response.getSapMessage()).append("\n");
+                        log.append("    ").append(msg).append("\n");
                         data.setProcessingResult("⛔ Non applicata");
-                        data.setErrorMessage(response.getSapMessage() != null
-                            ? response.getSapMessage().substring(0,
-                                Math.min(150, response.getSapMessage().length()))
-                            : "Schedule line bloccata");
+                        data.setErrorMessage(msg.isBlank() ? "Schedule line bloccata" : msg);
+                        // Colonna schedulazione: 0 per operazione non applicata
+                        if (data.isInsert() || data.isDelete()) {
+                            data.setCreatedScheduleLine("0");
+                        }
                         errori++;
                     } else {
                         log.append("  ✓ [").append(azione).append("] Successo (HTTP ")
@@ -365,25 +404,39 @@ public class Xlsx2schedlinesUI extends PageBean implements Serializable {
                         data.setProcessingResult("✅ " + azione);
                         data.setErrorMessage(null);
 
+                        // Colonna schedulazione creata
+                        if (data.isInsert()) {
+                            String sl = response.getCreatedScheduleLine();
+                            data.setCreatedScheduleLine(sl != null ? sl : "?");
+                        } else if (data.isDelete()) {
+                            data.setCreatedScheduleLine("0");
+                        }
+                        // PATCH riuscito: createdScheduleLine rimane null → cella vuota
+
                         if (response.isWarning()) {
-                            log.append("  ⚠ Warning: ").append(response.getSapMessage()).append("\n");
+                            String msg = response.getDisplayMessage(200);
+                            log.append("  ⚠ Warning SAP: ").append(msg).append("\n");
                             data.setProcessingResult("⚠️ " + azione + " (warning)");
-                            data.setErrorMessage(response.getSapMessage() != null
-                                ? response.getSapMessage().substring(0,
-                                    Math.min(120, response.getSapMessage().length()))
-                                : "HTTP " + response.getHttpStatus());
+                            data.setErrorMessage(msg.isBlank() ? "HTTP " + response.getHttpStatus() : msg);
                         }
                         successi++;
                     }
                 } else {
+                    // Errore HTTP — costruiamo un messaggio esplicativo
+                    String msg = buildErrorMessage(response);
                     log.append("  ✗ [").append(azione).append("] Errore (HTTP ")
                        .append(response.getHttpStatus()).append(")\n");
-                    data.setProcessingResult("❌ Errore");
-                    data.setErrorMessage("HTTP " + response.getHttpStatus());
-                    if (response.getSapMessage() != null)
-                        log.append("    SAP: ").append(response.getSapMessage()).append("\n");
+                    log.append("    ").append(msg).append("\n");
                     if (response.getSapCode() != null)
                         log.append("    Codice: ").append(response.getSapCode()).append("\n");
+
+                    data.setProcessingResult("❌ Errore");
+                    data.setErrorMessage(msg);
+
+                    // Colonna schedulazione: 0 per errore su INSERT o DELETE
+                    if (data.isInsert() || data.isDelete()) {
+                        data.setCreatedScheduleLine("0");
+                    }
                     errori++;
                 }
 
@@ -393,6 +446,9 @@ public class Xlsx2schedlinesUI extends PageBean implements Serializable {
                 log.append("  ✗ Eccezione: ").append(e.getMessage()).append("\n\n");
                 data.setProcessingResult("✗ Eccezione");
                 data.setErrorMessage("Eccezione: " + e.getMessage());
+                if (data.isInsert() || data.isDelete()) {
+                    data.setCreatedScheduleLine("0");
+                }
                 errori++;
             }
         }
@@ -403,12 +459,87 @@ public class Xlsx2schedlinesUI extends PageBean implements Serializable {
         log.append("Errori: ").append(errori).append("\n");
 
         m_logText = log.toString();
+        m_elaborazioneFatta = true;
+
+        // Aggiorna la griglia in base alla modalità di visualizzazione
+        applyViewFilter();
+
         Statusbar.outputMessage("Elaborazione completata: " + successi + " OK, " + errori + " KO");
+    }
+
+    /**
+     * Commutazione modalità visualizzazione dalla checkbox in tab Parametri.
+     * Riapplica il filtro sulla griglia (solo dopo l'elaborazione).
+     */
+    public void onToggleViewMode(ActionEvent event) {
+        m_viewModeSintetico = !Boolean.TRUE.equals(m_viewModeSintetico);
+        Statusbar.outputMessage("Modalità: " + (Boolean.TRUE.equals(m_viewModeSintetico) ? "Sintetica" : "Completa"));
+        applyViewFilter();
+    }
+
+    /**
+     * Applica il filtro sintetico/completo sulla griglia.
+     * Se l'elaborazione non è ancora avvenuta, mostra tutto.
+     */
+    private void applyViewFilter() {
+        m_gridJSONdata.getItems().clear();
+        if (m_elaborazioneFatta && Boolean.TRUE.equals(m_viewModeSintetico)) {
+            // Sintetico: solo righe significative
+            for (GridJSONdataItem item : allItems) {
+                if (item.isSignificativa()) {
+                    m_gridJSONdata.getItems().add(item);
+                }
+            }
+        } else {
+            // Completo: tutto (anche prima dell'elaborazione)
+            m_gridJSONdata.getItems().addAll(allItems);
+        }
     }
 
     // =========================
     // UTILITY
     // =========================
+
+    /**
+     * Costruisce un messaggio d'errore leggibile dalla SapResponse.
+     * Intercetta casi specifici noti (lock, tipo documento, ecc.).
+     */
+    private String buildErrorMessage(SapResponse response) {
+        int    status   = response.getHttpStatus();
+        String sapMsg   = response.getSapMessage();
+        String sapCode  = response.getSapCode();
+
+        // Caso: documento bloccato da altro utente
+        // SAP restituisce tipicamente HTTP 423 (Locked) o 400/409 con codici specifici
+        if (status == 423) {
+            return "Documento bloccato da un altro utente — riprovare più tardi"
+                + (sapMsg != null && !sapMsg.isBlank() ? " (" + sapMsg + ")" : "");
+        }
+
+        // Codici OData noti per il lock
+        if (sapCode != null && (
+                sapCode.contains("CM_MGW_RT/021")   // entità bloccata
+             || sapCode.contains("LOCK")
+             || sapCode.contains("locked"))) {
+            return "Documento bloccato — " + (sapMsg != null ? sapMsg : "HTTP " + status);
+        }
+
+        // Messaggio SAP disponibile: usalo direttamente
+        if (sapMsg != null && !sapMsg.isBlank()) {
+            return sapMsg;
+        }
+
+        // Fallback generico con status code esplicito
+        switch (status) {
+            case 400: return "Richiesta non valida (HTTP 400) — verificare i dati della schedulazione";
+            case 401: return "Credenziali non autorizzate (HTTP 401) — verificare utente tecnico";
+            case 403: return "Accesso negato (HTTP 403) — utente privo delle autorizzazioni necessarie";
+            case 404: return "Schedulazione non trovata su SAP (HTTP 404)";
+            case 409: return "Conflitto — il documento potrebbe essere bloccato (HTTP 409)";
+            case 500: return "Errore interno SAP (HTTP 500) — contattare l'amministratore";
+            default:  return "Errore HTTP " + status;
+        }
+    }
 
     private byte[] hexStringToByteArray(String hex) {
         int len     = hex.length();
@@ -427,39 +558,49 @@ public class Xlsx2schedlinesUI extends PageBean implements Serializable {
     public FIXGRIDListBinding<GridJSONdataItem> getGridJSONdata() { return m_gridJSONdata; }
 
     // Link VA03
-    public Boolean getEnableVA03()              { return m_enableVA03; }
-    public void    setEnableVA03(Boolean v)     { this.m_enableVA03 = v; }
-    public String  getSalesOrderNumber()        { return m_salesOrderNumberVA03; }
-    public void    setSalesOrderNumber(String v){ this.m_salesOrderNumberVA03 = v; }
+    public Boolean getEnableVA03()               { return m_enableVA03; }
+    public void    setEnableVA03(Boolean v)      { this.m_enableVA03 = v; }
+    public String  getSalesOrderNumber()         { return m_salesOrderNumberVA03; }
+    public void    setSalesOrderNumber(String v) { this.m_salesOrderNumberVA03 = v; }
 
     // Link FioriVA03
-    public Boolean getEnableFioriVA03()              { return m_enableFioriVA03; }
-    public void    setEnableFioriVA03(Boolean v)     { this.m_enableFioriVA03 = v; }
-    public String  getSalesOrderNumberFiori()        { return m_salesOrderNumberFiori; }
-    public void    setSalesOrderNumberFiori(String v){ this.m_salesOrderNumberFiori = v; }
+    public Boolean getEnableFioriVA03()               { return m_enableFioriVA03; }
+    public void    setEnableFioriVA03(Boolean v)      { this.m_enableFioriVA03 = v; }
+    public String  getSalesOrderNumberFiori()          { return m_salesOrderNumberFiori; }
+    public void    setSalesOrderNumberFiori(String v)  { this.m_salesOrderNumberFiori = v; }
 
     // Label colonne
-    public String  getSheetName()           { return m_sheetName; }
-    public void    setSheetName(String v)   { this.m_sheetName = v; }
-    public String  getLblOrdine()           { return m_lblOrdine; }
-    public void    setLblOrdine(String v)   { this.m_lblOrdine = v; }
+    public String  getSheetName()              { return m_sheetName; }
+    public void    setSheetName(String v)      { this.m_sheetName = v; }
+    public String  getLblOrdine()              { return m_lblOrdine; }
+    public void    setLblOrdine(String v)      { this.m_lblOrdine = v; }
     public String  getLblPosizione()           { return m_lblPosizione; }
     public void    setLblPosizione(String v)   { this.m_lblPosizione = v; }
-    public String  getLblSchedulazione()           { return m_lblSchedulazione; }
-    public void    setLblSchedulazione(String v)   { this.m_lblSchedulazione = v; }
+    public String  getLblSchedulazione()       { return m_lblSchedulazione; }
+    public void    setLblSchedulazione(String v){ this.m_lblSchedulazione = v; }
     public String  getLblMateriale()           { return m_lblMateriale; }
     public void    setLblMateriale(String v)   { this.m_lblMateriale = v; }
-    public String  getLblMaterialeText()           { return m_lblMaterialeText; }
-    public void    setLblMaterialeText(String v)   { this.m_lblMaterialeText = v; }
-    public String  getLblQuantita()           { return m_lblQuantita; }
-    public void    setLblQuantita(String v)   { this.m_lblQuantita = v; }
-    public String  getLblDataProd()           { return m_lblDataProd; }
-    public void    setLblDataProd(String v)   { this.m_lblDataProd = v; }
+    public String  getLblMaterialeText()       { return m_lblMaterialeText; }
+    public void    setLblMaterialeText(String v){ this.m_lblMaterialeText = v; }
+    public String  getLblQuantita()            { return m_lblQuantita; }
+    public void    setLblQuantita(String v)    { this.m_lblQuantita = v; }
+    public String  getLblDataProd()            { return m_lblDataProd; }
+    public void    setLblDataProd(String v)    { this.m_lblDataProd = v; }
+
+    // Modalità visualizzazione
+    public Boolean getViewModeSintetico()          { return m_viewModeSintetico; }
+    public void    setViewModeSintetico(Boolean v) { this.m_viewModeSintetico = v; }
+
+    public String  getViewModeButtonLabel() {
+        return Boolean.TRUE.equals(m_viewModeSintetico)
+            ? "Vista: Sintetica (click per Completa)"
+            : "Vista: Completa (click per Sintetica)";
+    }
 
     // Altri
     public String  getLogText()          { return m_logText; }
-    public boolean isDryRunDone()        { return m_dryRunDone; }
     public void    setLogText(String v)  { this.m_logText = v; }
+    public boolean isDryRunDone()        { return m_dryRunDone; }
     public String  getFileName()         { return m_fileName; }
     public void    setFileName(String v) { this.m_fileName = v; }
 

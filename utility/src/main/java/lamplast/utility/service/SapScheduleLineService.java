@@ -15,14 +15,14 @@ import lamplast.utility.service.SapAuthenticationService.SapAuthToken;
  */
 public class SapScheduleLineService {
 
-    private final SapConfiguration config;
+    private final SapConfiguration        config;
     private final SapAuthenticationService authService;
-    private final HttpClient httpClient;
+    private final HttpClient               httpClient;
 
     public SapScheduleLineService(SapConfiguration config) {
-        this.config = config;
+        this.config      = config;
         this.authService = new SapAuthenticationService(config);
-        this.httpClient = HttpClient.newBuilder()
+        this.httpClient  = HttpClient.newBuilder()
             .followRedirects(HttpClient.Redirect.ALWAYS)
             .build();
     }
@@ -34,10 +34,7 @@ public class SapScheduleLineService {
     /**
      * Verifica preventiva: interroga SAP in sola lettura e restituisce
      * una descrizione di cosa accadrà (o perché fallirà).
-     *
      * Non esegue nessuna modifica su SAP.
-     *
-     * @return SapDryRunResult con esito e dettaglio leggibile
      */
     public SapDryRunResult dryRun(ScheduleLineData data) throws Exception {
 
@@ -50,23 +47,21 @@ public class SapScheduleLineService {
         String paddedSched = String.format("%04d", Math.abs(data.getScheduleLine()));
 
         if (data.isInsert()) {
-            // INSERIMENTO: verifica che la posizione ordine esista
-            return checkPositionExists(data.getOrderNumber(), paddedItem);
+            return checkPositionExists(data, paddedItem);
         } else {
-            // MODIFICA o ELIMINAZIONE: verifica che la schedulazione esista
-            return checkScheduleLineExists(
-                    data.getOrderNumber(), paddedItem, paddedSched, data);
+            return checkScheduleLineExists(data.getOrderNumber(), paddedItem, paddedSched, data);
         }
     }
 
     /**
      * Verifica esistenza della posizione ordine (per inserimento).
-     * GET A_SalesOrderItem(SalesOrder='X',SalesOrderItem='000010')
+     * Controlla anche che il materiale nel file coincida con quello SAP.
+     * GET A_SalesOrderItem(SalesOrder='X', SalesOrderItem='000010')
      */
-    private SapDryRunResult checkPositionExists(String order,
-                                                 String paddedItem) throws Exception {
+    private SapDryRunResult checkPositionExists(ScheduleLineData data,
+                                                String paddedItem) throws Exception {
         String url = config.getSalesOrderApiUrl()
-            + "A_SalesOrderItem(SalesOrder='" + order + "'"
+            + "A_SalesOrderItem(SalesOrder='" + data.getOrderNumber() + "'"
             + ",SalesOrderItem='" + paddedItem + "')"
             + "?$select=SalesOrder,SalesOrderItem,Material"
             + "&sap-client=" + config.getClient();
@@ -74,6 +69,12 @@ public class SapScheduleLineService {
         HttpResponse<String> resp = doGet(url);
 
         if (resp.statusCode() == 200) {
+            // Controllo materiale — tollerante agli zeri iniziali
+            String materialMismatch = checkMaterialMatch(resp.body(), data.getMaterial());
+            if (materialMismatch != null) {
+                return SapDryRunResult.error(
+                    "Posizione " + paddedItem + " — " + materialMismatch);
+            }
             return SapDryRunResult.ok(
                 "Posizione " + paddedItem + " esistente — inserimento possibile");
         } else if (resp.statusCode() == 404) {
@@ -86,14 +87,78 @@ public class SapScheduleLineService {
     }
 
     /**
+     * Confronta il materiale del file con quello presente sulla posizione SAP.
+     * Il confronto è numerico/tollerante: "100012" == "000100012".
+     *
+     * @return null se i materiali coincidono, stringa di errore altrimenti.
+     */
+    @SuppressWarnings("unchecked")
+    private String checkMaterialMatch(String body, String materialFromFile) {
+        if (materialFromFile == null || materialFromFile.isBlank()) {
+            // Materiale non comunicato nel file: controllo non applicabile
+            return null;
+        }
+        try {
+            com.fasterxml.jackson.databind.ObjectMapper mapper =
+                new com.fasterxml.jackson.databind.ObjectMapper();
+            java.util.Map<String, Object> json = mapper.readValue(body, java.util.Map.class);
+            java.util.Map<String, Object> d    =
+                (java.util.Map<String, Object>) json.get("d");
+            if (d == null) return null; // non leggibile, non blocchiamo
+
+            String sapMaterial  = String.valueOf(d.getOrDefault("Material", "")).trim();
+            String fileMaterial = materialFromFile.trim();
+
+            // Normalizzazione: rimuoviamo leading zeros e confrontiamo
+            String sapNorm  = sapMaterial.replaceFirst("^0+(?!$)", "");
+            String fileNorm = fileMaterial.replaceFirst("^0+(?!$)", "");
+
+            if (sapNorm.equalsIgnoreCase(fileNorm)) return null; // OK
+
+            return "Materiale non corrispondente: file='" + fileMaterial
+                 + "' SAP='" + sapMaterial + "'";
+        } catch (Exception e) {
+            return null; // parsing fallito: non blocchiamo
+        }
+    }
+
+    /**
      * Verifica esistenza della schedulazione (per modifica/eliminazione).
-     * GET A_SalesOrderScheduleLine(SalesOrder='X',SalesOrderItem='000010',ScheduleLine='0001')
-     * Confronta anche quantità e data attuali vs nuove.
+     * Prima controlla la coerenza del materiale sulla posizione (bloccante),
+     * poi verifica schedulazione, quantità e data.
      */
     private SapDryRunResult checkScheduleLineExists(String order,
-                                                     String paddedItem,
-                                                     String paddedSched,
-                                                     ScheduleLineData data) throws Exception {
+                                                    String paddedItem,
+                                                    String paddedSched,
+                                                    ScheduleLineData data) throws Exception {
+
+        // --- Controllo materiale sulla posizione (GET A_SalesOrderItem) ---
+        // Bloccante: se il materiale nel file non corrisponde a quello SAP,
+        // i due sistemi sono disallineati e non possiamo procedere.
+        if (data.getMaterial() != null && !data.getMaterial().isBlank()) {
+            String itemUrl = config.getSalesOrderApiUrl()
+                + "A_SalesOrderItem(SalesOrder='" + order + "'"
+                + ",SalesOrderItem='" + paddedItem + "')"
+                + "?$select=SalesOrder,SalesOrderItem,Material"
+                + "&sap-client=" + config.getClient();
+
+            HttpResponse<String> itemResp = doGet(itemUrl);
+
+            if (itemResp.statusCode() == 200) {
+                String materialMismatch = checkMaterialMatch(itemResp.body(), data.getMaterial());
+                if (materialMismatch != null) {
+                    return SapDryRunResult.error(
+                        "Posizione " + paddedItem + " — " + materialMismatch
+                        + " — operazione bloccata per disallineamento dati");
+                }
+            } else if (itemResp.statusCode() == 404) {
+                return SapDryRunResult.error(
+                    "Posizione " + paddedItem + " NON trovata su SAP — operazione impossibile");
+            }
+            // Altri status HTTP: non blocchiamo sul materiale, proseguiamo
+        }
+
+        // --- Verifica schedulazione ---
         String url = config.getSalesOrderApiUrl()
             + "A_SalesOrderScheduleLine("
             + "SalesOrder='" + order + "',"
@@ -112,7 +177,6 @@ public class SapScheduleLineService {
                 return SapDryRunResult.ok(
                     "Schedulazione " + paddedSched + " trovata — sarà eliminata (qty=0)");
             }
-            // Estrai dati attuali per confronto
             String detail = extractCurrentValues(resp.body(), data);
             if ("NESSUNA_MODIFICA".equals(detail)) {
                 return SapDryRunResult.warning("NESSUNA_MODIFICA");
@@ -124,14 +188,14 @@ public class SapScheduleLineService {
                 String cat = detail.substring("BLOCCATA:".length());
                 return SapDryRunResult.warning("BLOCCATA:" + cat);
             }
-            return SapDryRunResult.ok(
-                "Schedulazione " + paddedSched + " trovata — " + detail);
+            return SapDryRunResult.ok("Schedulazione " + paddedSched + " trovata — " + detail);
+
         } else if (resp.statusCode() == 404) {
             return SapDryRunResult.error(
                 "Schedulazione " + paddedSched + " NON trovata su SAP"
                 + (isElimination ? " — nulla da eliminare" : " — modifica impossibile"));
         } else {
-            // Errore OData: proviamo a estrarre il codice e messaggio dal body
+            // Errore OData: estrai codice e messaggio
             String sapErrCode = "";
             String sapErrMsg  = resp.statusCode() + "";
             try {
@@ -148,13 +212,11 @@ public class SapScheduleLineService {
                     @SuppressWarnings("unchecked")
                     java.util.Map<String, Object> msg =
                         (java.util.Map<String, Object>) error.get("message");
-                    if (msg != null) sapErrMsg = String.valueOf(msg.getOrDefault("value", sapErrMsg));
+                    if (msg != null)
+                        sapErrMsg = String.valueOf(msg.getOrDefault("value", sapErrMsg));
                 }
-            } catch (Exception ignored) { }
+            } catch (Exception ignored) {}
 
-            // /IWBEP/CM_MGW_RT/020 = entità non navigabile via questa API.
-            // Tipicamente ordini di tipo non standard (es. consegne gratuite)
-            // che non sono supportati da API_SALES_ORDER_SRV per le schedule lines.
             if (sapErrCode.contains("CM_MGW_RT/020")) {
                 return SapDryRunResult.error(
                     "Schedulazione " + paddedSched
@@ -177,31 +239,22 @@ public class SapScheduleLineService {
             com.fasterxml.jackson.databind.ObjectMapper mapper =
                 new com.fasterxml.jackson.databind.ObjectMapper();
             java.util.Map<String, Object> json = mapper.readValue(body, java.util.Map.class);
-            java.util.Map<String, Object> d    = (java.util.Map<String, Object>) json.get("d");
+            java.util.Map<String, Object> d    =
+                (java.util.Map<String, Object>) json.get("d");
             if (d == null) return "dati attuali non leggibili";
 
             // --- Controlla stato consegna ---
-            // DeliveredQtyInOrderQtyUnit > 0 significa che è già stata creata
-            // almeno una consegna per questa schedule line.
-            // OpenConfdDelivQtyInOrdQtyUnit = 0 da sola NON è affidabile:
-            // vale 0 anche per righe aperte non ancora confermate da MRP.
             Object deliveredQtyObj = d.get("DeliveredQtyInOrderQtyUnit");
             Object openQtyObj      = d.get("OpenConfdDelivQtyInOrdQtyUnit");
 
             if (deliveredQtyObj != null) {
                 double deliveredQty = toDouble(deliveredQtyObj.toString());
                 if (!Double.isNaN(deliveredQty) && deliveredQty > 0.0) {
-
-                    // Riga con consegne: controlla se è completamente evasa
                     double openQty = openQtyObj != null
                         ? toDouble(openQtyObj.toString()) : Double.NaN;
                     boolean fullyDelivered = !Double.isNaN(openQty) && openQty <= 0.0;
-                    if (fullyDelivered) {
-                        return "BLOCCATA:EVASA";
-                    }
+                    if (fullyDelivered) return "BLOCCATA:EVASA";
 
-                    // Riga parzialmente consegnata: blocca se la nuova quantità
-                    // scende sotto il già consegnato
                     double newQty = toDouble(data.getQuantity() != null
                         ? data.getQuantity().replace(",", ".") : "0");
                     if (!Double.isNaN(newQty) && newQty < deliveredQty) {
@@ -210,7 +263,7 @@ public class SapScheduleLineService {
                 }
             }
 
-            // --- Confronto quantità (numerico, tollerante al separatore) ---
+            // --- Confronto quantità ---
             String currentQtyStr = String.valueOf(d.getOrDefault("ScheduleLineOrderQuantity", "?"));
             String newQtyStr     = data.getQuantity() != null ? data.getQuantity() : "?";
             boolean qtyChanged   = !toDouble(currentQtyStr).equals(toDouble(newQtyStr));
@@ -224,51 +277,15 @@ public class SapScheduleLineService {
                 : "?";
             boolean dateChanged = !currentDate.equals(newDate);
 
-            if (!qtyChanged && !dateChanged) {
-                return "NESSUNA_MODIFICA";
-            }
+            if (!qtyChanged && !dateChanged) return "NESSUNA_MODIFICA";
 
-            // --- Descrizione variazioni ---
             StringBuilder sb = new StringBuilder("modifica prevista:");
-            if (qtyChanged) {
-                sb.append(" Qtà ").append(fmt(currentQtyStr)).append("→").append(fmt(newQtyStr));
-            }
-            if (dateChanged) {
-                sb.append(" Data ").append(currentDate).append("→").append(newDate);
-            }
+            if (qtyChanged) sb.append(" Qtà ").append(fmt(currentQtyStr)).append("→").append(fmt(newQtyStr));
+            if (dateChanged) sb.append(" Data ").append(currentDate).append("→").append(newDate);
             return sb.toString();
 
         } catch (Exception e) {
             return "dati attuali non leggibili";
-        }
-    }
-
-    /** Converte stringa numerica in Double normalizzato (gestisce punto e virgola). */
-    private Double toDouble(String s) {
-        if (s == null || s.isBlank() || s.equals("?")) return Double.NaN;
-        try { return Double.parseDouble(s.replace(",", ".")); }
-        catch (Exception e) { return Double.NaN; }
-    }
-
-    /** Formatta un numero rimuovendo zeri decimali inutili. */
-    private String fmt(String s) {
-        try {
-            double v = Double.parseDouble(s.replace(",", "."));
-            return v == Math.floor(v) ? String.valueOf((long) v) : String.valueOf(v);
-        } catch (Exception e) { return s; }
-    }
-
-    /** Converte /Date(millis)/ in gg/mm/aaaa. */
-    private String parseSapDate(String sapDate) {
-        try {
-            if (sapDate == null || !sapDate.startsWith("/Date(")) return sapDate;
-            long millis = Long.parseLong(sapDate.replaceAll("[^0-9]", ""));
-            return java.time.Instant.ofEpochMilli(millis)
-                .atZone(java.time.ZoneOffset.UTC)
-                .toLocalDate()
-                .format(java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy"));
-        } catch (Exception e) {
-            return sapDate;
         }
     }
 
@@ -280,7 +297,9 @@ public class SapScheduleLineService {
 
         String validationError = data.validate();
         if (validationError != null) {
-            return new SapResponse(400);
+            SapResponse r = new SapResponse(400);
+            r.setSapMessage("Validazione: " + validationError);
+            return r;
         }
 
         SapAuthToken auth = authService.fetchCsrfToken();
@@ -304,10 +323,10 @@ public class SapScheduleLineService {
         String paddedItem = String.format("%06d", data.getItemNumber());
 
         String payload = "{"
-            + "\"SalesOrder\":\""               + data.getOrderNumber() + "\","
-            + "\"SalesOrderItem\":\""           + paddedItem            + "\","
-            + "\"RequestedDeliveryDate\":\""    + sapDate               + "\","
-            + "\"ScheduleLineOrderQuantity\":\"" + cleanQty             + "\""
+            + "\"SalesOrder\":\""                + data.getOrderNumber() + "\","
+            + "\"SalesOrderItem\":\""            + paddedItem            + "\","
+            + "\"RequestedDeliveryDate\":\""     + sapDate               + "\","
+            + "\"ScheduleLineOrderQuantity\":\"" + cleanQty              + "\""
             + "}";
 
         String url = config.getSalesOrderApiUrl()
@@ -323,8 +342,7 @@ public class SapScheduleLineService {
             .POST(HttpRequest.BodyPublishers.ofString(payload))
             .build();
 
-        return parseSapResponse(httpClient.send(request,
-            HttpResponse.BodyHandlers.ofString()));
+        return parseSapResponse(httpClient.send(request, HttpResponse.BodyHandlers.ofString()));
     }
 
     // -------------------------------------------------------
@@ -351,8 +369,6 @@ public class SapScheduleLineService {
             + "ScheduleLine='"   + paddedSched           + "'"
             + ")?sap-client="    + config.getClient();
 
-        System.out.println(">>> DEBUG URL PATCH: " + url);
-
         HttpRequest request = HttpRequest.newBuilder()
             .uri(URI.create(url))
             .method("PATCH", HttpRequest.BodyPublishers.ofString(payload))
@@ -364,8 +380,7 @@ public class SapScheduleLineService {
             .header("If-Match",       "*")
             .build();
 
-        return parseSapResponse(httpClient.send(request,
-            HttpResponse.BodyHandlers.ofString()));
+        return parseSapResponse(httpClient.send(request, HttpResponse.BodyHandlers.ofString()));
     }
 
     // -------------------------------------------------------
@@ -394,8 +409,6 @@ public class SapScheduleLineService {
     }
 
     private String cleanQuantity(String quantity) {
-        // Normalizza virgola → punto senza troncare i decimali.
-        // SAP accetta quantità decimali nel payload JSON (es. "7925.34").
         if (quantity == null || quantity.isBlank()) return "0";
         return quantity.replace(",", ".");
     }
@@ -404,6 +417,30 @@ public class SapScheduleLineService {
         if (qty == null || qty.isBlank()) return true;
         try { return Double.parseDouble(qty.replace(",", ".")) == 0; }
         catch (Exception e) { return false; }
+    }
+
+    private Double toDouble(String s) {
+        if (s == null || s.isBlank() || s.equals("?")) return Double.NaN;
+        try { return Double.parseDouble(s.replace(",", ".")); }
+        catch (Exception e) { return Double.NaN; }
+    }
+
+    private String fmt(String s) {
+        try {
+            double v = Double.parseDouble(s.replace(",", "."));
+            return v == Math.floor(v) ? String.valueOf((long) v) : String.valueOf(v);
+        } catch (Exception e) { return s; }
+    }
+
+    private String parseSapDate(String sapDate) {
+        try {
+            if (sapDate == null || !sapDate.startsWith("/Date(")) return sapDate;
+            long millis = Long.parseLong(sapDate.replaceAll("[^0-9]", ""));
+            return java.time.Instant.ofEpochMilli(millis)
+                .atZone(java.time.ZoneOffset.UTC)
+                .toLocalDate()
+                .format(java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy"));
+        } catch (Exception e) { return sapDate; }
     }
 
     private SapResponse parseSapResponse(HttpResponse<String> httpResponse) {
@@ -444,7 +481,6 @@ public class SapScheduleLineService {
         public boolean isOk()        { return stato == Stato.OK; }
         public boolean isError()     { return stato == Stato.ERRORE; }
 
-        /** Icona per la colonna Esito nella griglia CC. */
         public String getEsitoIcona() {
             switch (stato) {
                 case OK:      return "✅ " + dettaglio;
