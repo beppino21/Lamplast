@@ -123,6 +123,7 @@
         <property dataType="MBLNR" id="mblnr" key="true" mandatory="false" sequence="4" text="Numero documento materiale"/>
         <property dataType="MJAHR" id="mjahr" key="true" mandatory="false" sequence="5" text="Esercizio documento materiale"/>
         <property dataType="VOMNG" id="ameng" mandatory="false" sequence="19" text="Qta precedente per schedulazioni"/>
+        <property dataType="ccda_base.idString50" id="bemid" mandatory="false" sequence="38" text="ID univoco BEM"/>
         <property dataType="ZBRGEW_EXANTE" id="brgew_row" mandatory="false" sequence="32" text="Peso lordo &quot;Ex ante&quot;"/>
         <property dataType="BSTME" id="bstme" mandatory="false" sequence="24" text="UM dell'ordine d'acquisto"/>
         <property dataType="ZFCS_BSTMEXPALLET" id="bstmexpallet" mandatory="false" sequence="27" text="Qta di acquisto per pallet"/>
@@ -163,7 +164,6 @@
         <property dataType="WERKS_D" id="werks" mandatory="false" sequence="16" text="Divisione"/>
         <property dataType="WMSST" id="wmsst" mandatory="false" sequence="39" text="SAP-FCS Event Status"/>
         <property dataType="XCHPF" id="xchpf" mandatory="false" sequence="8" text="Obbligo gestione a partita"/>
-        <property dataType="ccda_base.idString50" id="bemid" mandatory="false" sequence="38" text="ID univoco BEM"/>
     </entity>
     <entity id="FCSKNA1" isPublic="true" text="Anagrafiche Clienti esposte per FCS">
         <property dataType="KUNNR" id="kunnr" key="true" mandatory="false" sequence="1" text="Codice Cliente"/>

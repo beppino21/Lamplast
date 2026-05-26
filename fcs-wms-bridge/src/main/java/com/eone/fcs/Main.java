@@ -51,6 +51,12 @@ public class Main {
 
     private static final Logger log = LoggerFactory.getLogger(Main.class);
 
+    /** Applicativo EKET: schedulazioni da OdA (tabella EKET in S/4H) */
+    private static final String KAPPL_EKET = "ME";
+
+    /** Applicativo VBEP: schedulazioni da OdV reso (tabella VBEP in S/4H) */
+    private static final String KAPPL_VBEP = "V";
+
     public static void main(String[] args) {
         log.info("=== FCS WMS Bridge - Extractor ===");
 
@@ -178,7 +184,8 @@ public class Main {
         }
 
         List<EketLine> enriched = enrichLinesOda(lines, repo);
-        repo.syncEketLines(enriched);
+        // Passa kappl='ME': la DELETE preliminare tocca solo le righe EKET
+        repo.syncEketLines(enriched, KAPPL_EKET);
     }
 
     // =========================================================================
@@ -199,7 +206,8 @@ public class Main {
         }
 
         List<EketLine> enriched = lines.isEmpty() ? List.of() : enrichLinesOda(lines, repo);
-        repo.syncEketLinesForOrder(ebeln, enriched);
+        // Passa kappl='ME': la DELETE tocca solo le righe EKET di questo OdA
+        repo.syncEketLinesForOrder(ebeln, enriched, KAPPL_EKET);
     }
 
     // =========================================================================
@@ -218,7 +226,8 @@ public class Main {
         }
 
         List<EketLine> enriched = enrichLinesReso(lines, repo);
-        repo.syncEketLines(enriched);
+        // Passa kappl='V': la DELETE preliminare tocca solo le righe VBEP
+        repo.syncEketLines(enriched, KAPPL_VBEP);
     }
 
     // =========================================================================
@@ -239,7 +248,8 @@ public class Main {
         }
 
         List<EketLine> enriched = lines.isEmpty() ? List.of() : enrichLinesReso(lines, repo);
-        repo.syncEketLinesForOrder(vbeln, enriched);
+        // Passa kappl='V': la DELETE tocca solo le righe VBEP di questo OdV
+        repo.syncEketLinesForOrder(vbeln, enriched, KAPPL_VBEP);
     }
 
     // =========================================================================

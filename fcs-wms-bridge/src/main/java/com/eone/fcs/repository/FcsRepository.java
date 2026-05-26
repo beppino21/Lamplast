@@ -26,8 +26,10 @@ import com.eone.fcs.model.Supplier;
  *
  * Strategia:
  *   - Anagrafiche: UPSERT (INSERT ... ON CONFLICT DO UPDATE)
- *   - EKET massiva:  DELETE tutte le righe con wmsst IN ('0','3') del tenant + INSERT
- *   - EKET puntuale: DELETE righe con wmsst IN ('0','3') per il singolo ebeln + INSERT
+ *   - EKET massiva:  DELETE tutte le righe con wmsst IN ('0','3') del tenant
+ *                    FILTRATE per kappl (es. 'ME' o 'V') + INSERT
+ *   - EKET puntuale: DELETE righe con wmsst IN ('0','3') per singolo ebeln
+ *                    FILTRATE per kappl + INSERT
  *   Le righe con wmsst IN ('1','2','E') non vengono mai toccate.
  *
  * Valori wmsst:
@@ -36,6 +38,10 @@ import com.eone.fcs.model.Supplier;
  *   '2' = scarico in corso
  *   '3' = scarico completato
  *   'E' = errore
+ *
+ * Valori kappl:
+ *   'ME' = schedulazioni da OdA (EKET)
+ *   'V'  = schedulazioni da OdV reso (VBEP)
  */
 public class FcsRepository implements AutoCloseable {
 
@@ -195,7 +201,7 @@ public class FcsRepository implements AutoCloseable {
     }
 
     // -------------------------------------------------------------------------
-    // EKET → tabfcseket
+    // EKET / VBEP → tabfcseket
     // -------------------------------------------------------------------------
 
     /**
@@ -203,57 +209,63 @@ public class FcsRepository implements AutoCloseable {
      *
      * Strategia:
      *   1. DELETE tutte le righe con wmsst IN ('0','3') del tenant
-     *      (include OdA non più presenti in S/4HANA e righe impallate)
-     *   2. INSERT le nuove righe estratte da S/4HC con wmsst = '0'
+     *      LIMITATE al kappl indicato (es. 'ME' per EKET, 'V' per VBEP)
+     *      → le righe dell'altro applicativo non vengono mai toccate.
+     *   2. INSERT le nuove righe estratte da S/4H con wmsst = '0'
      *      ON CONFLICT DO NOTHING: le righe con wmsst IN ('1','2','E')
      *      (in lavorazione / errore) non vengono mai sovrascritte.
      *
-     * @param lines righe estratte da S/4HC
+     * @param lines righe estratte da S/4H
+     * @param kappl applicativo di provenienza ('ME' = OdA EKET, 'V' = OdV VBEP)
      * @return numero di righe effettivamente inserite
      */
-    public int syncEketLines(List<EketLine> lines) throws SQLException {
+    public int syncEketLines(List<EketLine> lines, String kappl) throws SQLException {
         if (lines.isEmpty()) {
-            log.info("Nessuna riga EKET da sincronizzare.");
+            log.info("Nessuna riga da sincronizzare (kappl={}).", kappl);
             return 0;
         }
 
-        log.info("Sincronizzazione EKET massiva: {} righe estratte da S/4H", lines.size());
+        log.info("Sincronizzazione massiva (kappl={}): {} righe estratte da S/4H", kappl, lines.size());
 
-        // 1. DELETE massiva: tutte le righe in attesa o completate del tenant
-        int deleted = deleteEketMassiva();
-        log.info("Righe EKET cancellate (wmsst in '0','3'): {}", deleted);
+        // 1. DELETE massiva filtrata per kappl
+        int deleted = deleteEketMassiva(kappl);
+        log.info("Righe cancellate (wmsst in '0','3', kappl={}): {}", kappl, deleted);
 
         // 2. INSERT righe nuove (ON CONFLICT DO NOTHING per le righe in lavorazione/errore)
         int inserted = insertEketLines(lines);
-        log.info("Righe EKET inserite: {} su {} estratte da S/4H", inserted, lines.size());
+        log.info("Righe inserite: {} su {} estratte da S/4H (kappl={})", inserted, lines.size(), kappl);
 
         conn.commit();
         return inserted;
     }
 
     /**
-     * Sincronizzazione PUNTUALE per un singolo OdA.
-     * Usata dopo ogni scarico o quando S/4HC notifica il salvataggio di un OdA specifico.
+     * Sincronizzazione PUNTUALE per un singolo documento (OdA o OdV reso).
+     * Usata dopo ogni scarico o quando S/4H notifica il salvataggio di un documento specifico.
      *
      * Strategia:
      *   1. DELETE righe con wmsst IN ('0','3') per il singolo ebeln
-     *   2. INSERT le nuove righe estratte da S/4HC con wmsst = '0'
+     *      LIMITATE al kappl indicato → le righe dell'altro applicativo non vengono toccate.
+     *   2. INSERT le nuove righe estratte da S/4H con wmsst = '0'
      *      ON CONFLICT DO NOTHING: le righe con wmsst IN ('1','2','E') non vengono toccate.
      *
-     * @param ebeln numero OdA
-     * @param lines righe estratte da S/4HC per questo OdA
+     * @param ebeln numero documento (OdA o OdV)
+     * @param lines righe estratte da S/4H per questo documento
+     * @param kappl applicativo di provenienza ('ME' = OdA EKET, 'V' = OdV VBEP)
      * @return numero di righe effettivamente inserite
      */
-    public int syncEketLinesForOrder(String ebeln, List<EketLine> lines) throws SQLException {
-        log.info("Sincronizzazione EKET puntuale per OdA: {}", ebeln);
+    public int syncEketLinesForOrder(String ebeln, List<EketLine> lines,
+                                     String kappl) throws SQLException {
+        log.info("Sincronizzazione puntuale (kappl={}) per documento: {}", kappl, ebeln);
 
-        // 1. DELETE righe in attesa o completate per questo OdA
-        int deleted = deleteEketPuntuale(ebeln);
-        log.info("Righe cancellate (wmsst in '0','3') per OdA {}: {}", ebeln, deleted);
+        // 1. DELETE righe in attesa o completate per questo documento, limitata a kappl
+        int deleted = deleteEketPuntuale(ebeln, kappl);
+        log.info("Righe cancellate (wmsst in '0','3', kappl={}) per {}: {}", kappl, ebeln, deleted);
 
         // 2. INSERT righe nuove (ON CONFLICT DO NOTHING per le righe in lavorazione/errore)
         int inserted = lines.isEmpty() ? 0 : insertEketLines(lines);
-        log.info("Righe inserite per OdA {}: {} su {} estratte da S/4H", ebeln, inserted, lines.size());
+        log.info("Righe inserite per {} (kappl={}): {} su {} estratte da S/4H",
+                 ebeln, kappl, inserted, lines.size());
 
         conn.commit();
         return inserted;
@@ -264,28 +276,30 @@ public class FcsRepository implements AutoCloseable {
     // -------------------------------------------------------------------------
 
     /**
-     * DELETE massiva: rimuove tutte le righe con wmsst IN ('0','3') del tenant.
-     * Usata dall'estrazione giornaliera completa.
+     * DELETE massiva: rimuove le righe con wmsst IN ('0','3') del tenant
+     * limitate al kappl specificato.
      */
-    private int deleteEketMassiva() throws SQLException {
+    private int deleteEketMassiva(String kappl) throws SQLException {
         String sql = "DELETE FROM public.tabfcseket " +
-                     "WHERE tenant = ? AND wmsst IN ('0', '3')";
+                     "WHERE tenant = ? AND kappl = ? AND wmsst IN ('0', '3')";
         try (PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, tenant);
+            ps.setString(2, kappl);
             return ps.executeUpdate();
         }
     }
 
     /**
-     * DELETE puntuale: rimuove le righe con wmsst IN ('0','3') per un singolo OdA.
-     * Usata dall'aggiornamento post-scarico.
+     * DELETE puntuale: rimuove le righe con wmsst IN ('0','3') per un singolo documento
+     * limitata al kappl specificato.
      */
-    private int deleteEketPuntuale(String ebeln) throws SQLException {
+    private int deleteEketPuntuale(String ebeln, String kappl) throws SQLException {
         String sql = "DELETE FROM public.tabfcseket " +
-                     "WHERE tenant = ? AND ebeln = ? AND wmsst IN ('0', '3')";
+                     "WHERE tenant = ? AND ebeln = ? AND kappl = ? AND wmsst IN ('0', '3')";
         try (PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, tenant);
             ps.setString(2, ebeln);
+            ps.setString(3, kappl);
             return ps.executeUpdate();
         }
     }
@@ -370,7 +384,7 @@ public class FcsRepository implements AutoCloseable {
 
         int skipped = attempted - inserted;
         if (skipped > 0) {
-            log.info("Righe EKET in lavorazione/errore (wmsst in '1','2','E') non sovrascritte: {}", skipped);
+            log.info("Righe in lavorazione/errore (wmsst in '1','2','E') non sovrascritte: {}", skipped);
         }
         return inserted;
     }
@@ -380,7 +394,7 @@ public class FcsRepository implements AutoCloseable {
     // -------------------------------------------------------------------------
 
     /**
-     * Aggiorna wemng e menge_open dopo la registrazione dell'entrata merce su S/4HC.
+     * Aggiorna wemng e menge_open dopo la registrazione dell'entrata merce su S/4H.
      */
     public void updateWemng(String ebeln, String ebelp, String etenr,
                             double wemng, double mengeOpen) throws SQLException {
