@@ -1,5 +1,6 @@
 package com.eone.fcs;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -16,6 +17,7 @@ import com.eone.fcs.config.AppConfig;
 import com.eone.fcs.config.ConfigException;
 import com.eone.fcs.model.Customer;
 import com.eone.fcs.model.EketLine;
+import com.eone.fcs.model.Fcst001;
 import com.eone.fcs.model.PesoMateriale;
 import com.eone.fcs.model.Product;
 import com.eone.fcs.model.Supplier;
@@ -183,7 +185,10 @@ public class Main {
             return;
         }
 
-        List<EketLine> enriched = enrichLinesOda(lines, repo);
+        List<EketLine>       withMtart = applyMaterialTypes(lines, config);
+        Map<String, Fcst001> fcst001   = repo.loadFcst001();
+        List<EketLine>       filtered  = filterByFcst001(withMtart, fcst001);
+        List<EketLine>       enriched  = enrichLinesOda(filtered, repo);
         // Passa kappl='ME': la DELETE preliminare tocca solo le righe EKET
         repo.syncEketLines(enriched, KAPPL_EKET);
     }
@@ -205,7 +210,10 @@ public class Main {
             log.info("Schedulazioni recuperate per OdA {}: {} righe", ebeln, lines.size());
         }
 
-        List<EketLine> enriched = lines.isEmpty() ? List.of() : enrichLinesOda(lines, repo);
+        List<EketLine>       withMtart = lines.isEmpty() ? List.of() : applyMaterialTypes(lines, config);
+        Map<String, Fcst001> fcst001   = repo.loadFcst001();
+        List<EketLine>       filtered  = withMtart.isEmpty() ? List.of() : filterByFcst001(withMtart, fcst001);
+        List<EketLine>       enriched  = filtered.isEmpty() ? List.of() : enrichLinesOda(filtered, repo);
         // Passa kappl='ME': la DELETE tocca solo le righe EKET di questo OdA
         repo.syncEketLinesForOrder(ebeln, enriched, KAPPL_EKET);
     }
@@ -225,7 +233,10 @@ public class Main {
             return;
         }
 
-        List<EketLine> enriched = enrichLinesReso(lines, repo);
+        List<EketLine>       withMtart = applyMaterialTypes(lines, config);
+        Map<String, Fcst001> fcst001   = repo.loadFcst001();
+        List<EketLine>       filtered  = filterByFcst001(withMtart, fcst001);
+        List<EketLine>       enriched  = enrichLinesReso(filtered, repo);
         // Passa kappl='V': la DELETE preliminare tocca solo le righe VBEP
         repo.syncEketLines(enriched, KAPPL_VBEP);
     }
@@ -247,9 +258,119 @@ public class Main {
             log.info("Schedulazioni recuperate per OdV reso {}: {} righe", vbeln, lines.size());
         }
 
-        List<EketLine> enriched = lines.isEmpty() ? List.of() : enrichLinesReso(lines, repo);
+        List<EketLine>       withMtart = lines.isEmpty() ? List.of() : applyMaterialTypes(lines, config);
+        Map<String, Fcst001> fcst001   = repo.loadFcst001();
+        List<EketLine>       filtered  = withMtart.isEmpty() ? List.of() : filterByFcst001(withMtart, fcst001);
+        List<EketLine>       enriched  = filtered.isEmpty() ? List.of() : enrichLinesReso(filtered, repo);
         // Passa kappl='V': la DELETE tocca solo le righe VBEP di questo OdV
         repo.syncEketLinesForOrder(vbeln, enriched, KAPPL_VBEP);
+    }
+
+    // =========================================================================
+    // Arricchimento mtart da API_PRODUCT_SRV
+    // =========================================================================
+
+    /**
+     * Recupera il tipo materiale (mtart) per le righe che ce l'hanno vuoto,
+     * tramite una chiamata batch a API_PRODUCT_SRV (A_Product → ProductType).
+     *
+     * Questo passaggio è necessario perché A_PurchaseOrderItem e
+     * A_CustomerReturn non restituiscono MaterialType in modo affidabile.
+     *
+     * @param lines   righe già costruite dal client S/4H
+     * @param config  configurazione (per istanziare ProductClient)
+     * @return nuova lista con mtart valorizzato dove prima era null/blank
+     */
+    private static List<EketLine> applyMaterialTypes(List<EketLine> lines, AppConfig config) {
+        // Raccoglie i matnr con mtart ancora mancante
+        java.util.Set<String> matnrsDaMappare = lines.stream()
+                .filter(l -> l.mtart() == null || l.mtart().isBlank())
+                .map(EketLine::matnr)
+                .filter(m -> m != null && !m.isBlank())
+                .collect(Collectors.toSet());
+
+        if (matnrsDaMappare.isEmpty()) {
+            log.debug("mtart già valorizzato per tutte le righe — skip lookup API_PRODUCT_SRV.");
+            return lines;
+        }
+
+        log.info("Recupero mtart da API_PRODUCT_SRV per {} matnr distinti", matnrsDaMappare.size());
+        Map<String, String> mtartMap = new com.eone.fcs.client.ProductClient(config)
+                .fetchMaterialTypes(matnrsDaMappare);
+
+        List<EketLine> result = new ArrayList<>(lines.size());
+        for (EketLine line : lines) {
+            String mtart = line.mtart();
+            if (mtart == null || mtart.isBlank()) {
+                String matnr = line.matnr() != null ? line.matnr().strip() : "";
+                mtart = mtartMap.get(matnr);
+            }
+            if (mtart != null && !mtart.isBlank()) {
+                result.add(EketLine.Builder.from(line).mtart(mtart).build());
+            } else {
+                result.add(line);
+            }
+        }
+
+        long filled = result.stream().filter(l -> l.mtart() != null && !l.mtart().isBlank()).count();
+        log.info("mtart valorizzato: {} su {} righe totali", filled, result.size());
+        return result;
+    }
+
+    // =========================================================================
+    // Filtro per configurazione tabfcst001
+    // =========================================================================
+
+    /**
+     * Filtra le righe estratte da S/4H in base alla configurazione tabfcst001.
+     *
+     * Logica:
+     *   - Se tabfcst001 è vuota (nessuna configurazione) → nessun filtro,
+     *     tutte le righe passano (comportamento open / fail-safe).
+     *   - Altrimenti una riga è inclusa solo se esiste un record in tabfcst001
+     *     con la stessa combinazione (mtart, werks) e exp2fcs = true.
+     *   - Righe con mtart o werks null/blank vengono escluse quando la
+     *     configurazione è presente (non è possibile verificarne l'abilitazione).
+     *
+     * @param lines   righe estratte dopo il fetch S/4H (mtart già popolato)
+     * @param fcst001 Map caricata da {@code FcsRepository.loadFcst001()}
+     * @return lista filtrata
+     */
+    private static List<EketLine> filterByFcst001(List<EketLine> lines,
+                                                   Map<String, Fcst001> fcst001) {
+        if (fcst001.isEmpty()) {
+            log.warn("tabfcst001 vuota: nessun filtro per tipo materiale applicato.");
+            return lines;
+        }
+
+        List<EketLine> included = new ArrayList<>();
+        int skipped = 0;
+
+        for (EketLine line : lines) {
+            String mtart = line.mtart() != null ? line.mtart().strip() : "";
+            String werks = line.werks() != null ? line.werks().strip() : "";
+
+            if (mtart.isBlank() || werks.isBlank()) {
+                log.debug("Riga esclusa (mtart o werks assente): ebeln={} ebelp={} etenr={}",
+                        line.ebeln(), line.ebelp(), line.etenr());
+                skipped++;
+                continue;
+            }
+
+            Fcst001 cfg = fcst001.get(Fcst001.key(mtart, werks));
+            if (cfg != null && cfg.isEnabled()) {
+                included.add(line);
+            } else {
+                log.debug("Riga esclusa da tabfcst001 (mtart={} werks={} exp2fcs={}): ebeln={} ebelp={}",
+                        mtart, werks, cfg != null ? cfg.exp2fcs() : "N/A",
+                        line.ebeln(), line.ebelp());
+                skipped++;
+            }
+        }
+
+        log.info("Filtro tabfcst001: {} righe incluse, {} escluse su {} totali",
+                included.size(), skipped, lines.size());
+        return included;
     }
 
     // =========================================================================

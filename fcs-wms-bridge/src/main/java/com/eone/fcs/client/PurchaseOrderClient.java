@@ -49,6 +49,7 @@ public class PurchaseOrderClient extends AbstractS4Client {
             "ScheduleLineDeliveryDate,ScheduleLineOrderQuantity," +
             "OpenPurchaseOrderQuantity,PurchaseOrderQuantityUnit";
 
+
     public PurchaseOrderClient(AppConfig config) {
         super(config);
     }
@@ -208,6 +209,7 @@ public class PurchaseOrderClient extends AbstractS4Client {
                 if (entry.getKey().startsWith(item + "|")) {
                     entry.getValue()
                             .matnr(str(n, "Material"))
+                            .mtart(str(n, "MaterialType"))
                             .maktx(str(n, "PurchaseOrderItemText"))
                             .werks(str(n, "Plant"))
                             .lgort(str(n, "StorageLocation"))

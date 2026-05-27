@@ -126,4 +126,53 @@ public class ProductClient extends AbstractS4Client {
                 .ntgew(dbl(n, "NetWeight"))      // peso netto unitario
                 .gewei(str(n, "WeightUnit"));    // UM peso (es. KG)
     }
+    // -------------------------------------------------------------------------
+    // Lookup tipo materiale per lista di matnr (uso da PurchaseOrderClient / SalesReturnClient)
+    // -------------------------------------------------------------------------
+
+    /**
+     * Recupera il tipo materiale (ProductType → mtart) per un insieme di matnr.
+     *
+     * Usa A_Product con $filter su Product in (...) e $select minimo.
+     * Chiamata in batch da 50 matnr alla volta per rispettare i limiti URL OData V2.
+     *
+     * @param matnrs insieme di codici materiale
+     * @return Map<matnr, mtart>
+     */
+    public Map<String, String> fetchMaterialTypes(java.util.Set<String> matnrs) {
+        if (matnrs == null || matnrs.isEmpty()) return java.util.Map.of();
+
+        Map<String, String> result = new HashMap<>();
+        List<String> list = new ArrayList<>(matnrs);
+        int batchSize = 50;
+
+        for (int i = 0; i < list.size(); i += batchSize) {
+            List<String> batch = list.subList(i, Math.min(i + batchSize, list.size()));
+
+            StringBuilder filter = new StringBuilder();
+            for (int j = 0; j < batch.size(); j++) {
+                if (j > 0) filter.append(" or ");
+                filter.append("Product eq '").append(batch.get(j)).append("'");
+            }
+
+            String url = buildUrl(SERVICE_PATH, "A_Product") +
+                    "?$select=" + enc("Product,ProductType") +
+                    "&$filter=" + enc(filter.toString()) +
+                    "&$top=" + batchSize;
+
+            List<JsonNode> nodes = fetchAllPages(url);
+            for (JsonNode n : nodes) {
+                String matnr = str(n, "Product");
+                String mtart = str(n, "ProductType");
+                if (matnr != null && mtart != null) {
+                    result.put(matnr.strip(), mtart.strip());
+                }
+            }
+        }
+
+        log.info("Tipi materiale recuperati: {} su {} richiesti", result.size(), matnrs.size());
+        return result;
+    }
+
+
 }

@@ -220,20 +220,21 @@ public class FcsRepository implements AutoCloseable {
      * @return numero di righe effettivamente inserite
      */
     public int syncEketLines(List<EketLine> lines, String kappl) throws SQLException {
-        if (lines.isEmpty()) {
-            log.info("Nessuna riga da sincronizzare (kappl={}).", kappl);
-            return 0;
-        }
+        log.info("Sincronizzazione massiva (kappl={}): {} righe da inserire", kappl, lines.size());
 
-        log.info("Sincronizzazione massiva (kappl={}): {} righe estratte da S/4H", kappl, lines.size());
-
-        // 1. DELETE massiva filtrata per kappl
+        // 1. DELETE massiva filtrata per kappl — avviene SEMPRE,
+        //    anche se la lista e' vuota (pulizia righe non piu' presenti in S/4H
+        //    o escluse dal filtro tabfcst001)
         int deleted = deleteEketMassiva(kappl);
         log.info("Righe cancellate (wmsst in '0','3', kappl={}): {}", kappl, deleted);
 
         // 2. INSERT righe nuove (ON CONFLICT DO NOTHING per le righe in lavorazione/errore)
-        int inserted = insertEketLines(lines);
-        log.info("Righe inserite: {} su {} estratte da S/4H (kappl={})", inserted, lines.size(), kappl);
+        int inserted = lines.isEmpty() ? 0 : insertEketLines(lines);
+        if (lines.isEmpty()) {
+            log.info("Nessuna riga da inserire (kappl={}) — tabella ripulita.", kappl);
+        } else {
+            log.info("Righe inserite: {} su {} (kappl={})", inserted, lines.size(), kappl);
+        }
 
         conn.commit();
         return inserted;
@@ -691,6 +692,48 @@ public class FcsRepository implements AutoCloseable {
         }
 
         log.info("Nomi clienti caricati: {} record", result.size());
+        return result;
+    }
+
+    // -------------------------------------------------------------------------
+    // FCST001 → tabfcst001  (configurazione export per tipo materiale / plant)
+    // -------------------------------------------------------------------------
+
+    /**
+     * Carica l'intera tabella tabfcst001 e restituisce una Map indicizzata
+     * per chiave "mtart|werks".
+     *
+     * Solo le righe con exp2fcs = true abilitano l'export verso tabfcseket.
+     * Se la tabella è vuota (nessuna configurazione) il metodo restituisce
+     * una Map vuota; il chiamante decide se applicare un filtro open o chiuso.
+     *
+     * @return Map<"mtart|werks", Fcst001>
+     */
+    public Map<String, com.eone.fcs.model.Fcst001> loadFcst001() throws SQLException {
+
+        String sql = """
+                SELECT mtart, werks, exp2fcs
+                  FROM public.tabfcst001
+                 WHERE tenant = ?
+                """;
+
+        Map<String, com.eone.fcs.model.Fcst001> result = new java.util.HashMap<>();
+
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, tenant);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    com.eone.fcs.model.Fcst001 row = new com.eone.fcs.model.Fcst001(
+                            rs.getString("mtart"),
+                            rs.getString("werks"),
+                            rs.getObject("exp2fcs") != null ? rs.getBoolean("exp2fcs") : null
+                    );
+                    result.put(row.key(), row);
+                }
+            }
+        }
+
+        log.info("Configurazione FCST001 caricata: {} righe (tenant={})", result.size(), tenant);
         return result;
     }
 

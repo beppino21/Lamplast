@@ -63,7 +63,7 @@ public class SalesReturnClient extends AbstractS4Client {
 
     // Campi posizione verificati sui $metadata reali
     private static final String SELECT_ITEM =
-            "CustomerReturn,CustomerReturnItem,Material,CustomerReturnItemText," +
+            "CustomerReturn,CustomerReturnItem,Material,ProductType,CustomerReturnItemText," +
             "ProductionPlant,StorageLocation,RequestedQuantity,RequestedQuantityUnit,Batch";
 
     // Campi testata verificati sui $metadata reali
@@ -218,6 +218,7 @@ public class SalesReturnClient extends AbstractS4Client {
                 if (entry.getKey().startsWith(posnr + "|")) {
                     entry.getValue()
                             .matnr(str(n, "Material"))
+                            .mtart(str(n, "ProductType"))
                             .maktx(str(n, "CustomerReturnItemText"))
                             .werks(str(n, "ProductionPlant"))
                             .lgort(str(n, "StorageLocation"))
