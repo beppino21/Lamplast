@@ -195,8 +195,7 @@ public class SalesReturnClient extends AbstractS4Client {
 
         StringBuilder url = new StringBuilder(
                 buildUrl(SERVICE_PATH, "A_CustomerReturnItem") +
-                "?$select=" + enc(SELECT_ITEM) +
-                "&$top=" + config.s4PageSize);
+                "?$top=" + config.s4PageSize);
 
         if (singleVbeln != null) {
             url.append("&$filter=").append(
