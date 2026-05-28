@@ -7,6 +7,9 @@ import com.fasterxml.jackson.databind.JsonNode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -19,6 +22,13 @@ import java.util.Map;
  *   IT0 = Partita IVA italiana → stceg
  *   IT1 = Codice Fiscale italiano → stcd1
  *   XX0 = Partita IVA estera → stceg
+ *
+ * [DELTA] Aggiunto:
+ *   fetchSuppliersModifiedSince(OffsetDateTime)  → delta LFA1
+ *   fetchCustomersModifiedSince(OffsetDateTime)  → delta KNA1
+ *
+ * Il campo LastChangeDate (precisione al giorno) è disponibile su A_BusinessPartner
+ * in S/4HC Public Edition. LastChangeDateTime non è esposto in questo tenant.
  */
 public class BusinessPartnerClient extends AbstractS4Client {
 
@@ -26,36 +36,44 @@ public class BusinessPartnerClient extends AbstractS4Client {
 
     private static final String SERVICE_PATH = "/sap/opu/odata/SAP/API_BUSINESS_PARTNER";
 
+    // LastChangeDate (solo data, senza orario) è il campo disponibile
+    // su A_BusinessPartner in S/4HC Public Edition per il filtro delta.
+    // LastChangeDateTime non è esposto in questo tenant.
     private static final String SELECT_BP =
-            "BusinessPartner,BusinessPartnerFullName,BusinessPartnerName,Customer,Supplier";
+            "BusinessPartner,BusinessPartnerFullName,BusinessPartnerName," +
+            "Customer,Supplier,LastChangeDate";
 
     public BusinessPartnerClient(AppConfig config) {
         super(config);
     }
 
     // -------------------------------------------------------------------------
-    // Fornitori
+    // Fornitori - estrazione completa (invariata)
     // -------------------------------------------------------------------------
 
     public List<Supplier> fetchAllSuppliers() {
         log.info("Avvio estrazione fornitori");
+        return fetchSuppliers(null);
+    }
 
-        String url = buildUrl(SERVICE_PATH, "A_BusinessPartner") +
-                "?$filter=" + enc("Supplier ne ''") +
-                "&$select=" + SELECT_BP +
-                "&$top=" + config.s4PageSize;
+    // -------------------------------------------------------------------------
+    // [DELTA] Fornitori - estrazione differenziale
+    // -------------------------------------------------------------------------
 
-        List<JsonNode> nodes = fetchAllPages(url);
-        Map<String, Map<String, String>> taxNumbers = fetchTaxNumbers();
-
-        List<Supplier> suppliers = new ArrayList<>();
-        for (JsonNode n : nodes) {
-            Supplier s = toSupplier(n, taxNumbers);
-            if (s != null) suppliers.add(s);
-        }
-
-        log.info("Estrazione fornitori completata: {} fornitori", suppliers.size());
-        return suppliers;
+    /**
+     * Recupera solo i fornitori (Business Partner con ruolo Supplier)
+     * modificati dopo il timestamp indicato.
+     *
+     * Filtro OData: LastChangeDateTime gt datetime'...' AND Supplier ne ''
+     *
+     * @param since timestamp UTC di riferimento (esclusivo)
+     * @return lista di fornitori modificati
+     */
+    public List<Supplier> fetchSuppliersModifiedSince(OffsetDateTime since) {
+        log.info("[delta-LFA1] Avvio estrazione fornitori modificati dopo: {}", since);
+        List<Supplier> result = fetchSuppliers(since);
+        log.info("[delta-LFA1] Fornitori modificati trovati: {}", result.size());
+        return result;
     }
 
     public Supplier fetchSupplierByLifnr(String lifnr) {
@@ -69,28 +87,30 @@ public class BusinessPartnerClient extends AbstractS4Client {
     }
 
     // -------------------------------------------------------------------------
-    // Clienti
+    // Clienti - estrazione completa (invariata)
     // -------------------------------------------------------------------------
 
     public List<Customer> fetchAllCustomers() {
         log.info("Avvio estrazione clienti");
+        return fetchCustomers(null);
+    }
 
-        String url = buildUrl(SERVICE_PATH, "A_BusinessPartner") +
-                "?$filter=" + enc("Customer ne ''") +
-                "&$select=" + SELECT_BP +
-                "&$top=" + config.s4PageSize;
+    // -------------------------------------------------------------------------
+    // [DELTA] Clienti - estrazione differenziale
+    // -------------------------------------------------------------------------
 
-        List<JsonNode> nodes = fetchAllPages(url);
-        Map<String, Map<String, String>> taxNumbers = fetchTaxNumbers();
-
-        List<Customer> customers = new ArrayList<>();
-        for (JsonNode n : nodes) {
-            Customer c = toCustomer(n, taxNumbers);
-            if (c != null) customers.add(c);
-        }
-
-        log.info("Estrazione clienti completata: {} clienti", customers.size());
-        return customers;
+    /**
+     * Recupera solo i clienti (Business Partner con ruolo Customer)
+     * modificati dopo il timestamp indicato.
+     *
+     * @param since timestamp UTC di riferimento (esclusivo)
+     * @return lista di clienti modificati
+     */
+    public List<Customer> fetchCustomersModifiedSince(OffsetDateTime since) {
+        log.info("[delta-KNA1] Avvio estrazione clienti modificati dopo: {}", since);
+        List<Customer> result = fetchCustomers(since);
+        log.info("[delta-KNA1] Clienti modificati trovati: {}", result.size());
+        return result;
     }
 
     public Customer fetchCustomerByKunnr(String kunnr) {
@@ -104,7 +124,89 @@ public class BusinessPartnerClient extends AbstractS4Client {
     }
 
     // -------------------------------------------------------------------------
-    // Dati fiscali
+    // Implementazione interna condivisa
+    // -------------------------------------------------------------------------
+
+    /**
+     * Recupera i fornitori applicando opzionalmente il filtro delta.
+     *
+     * @param since se non null, aggiunge il filtro LastChangeDateTime
+     */
+    private List<Supplier> fetchSuppliers(OffsetDateTime since) {
+        String filter = "Supplier ne ''";
+        if (since != null) {
+            filter += " and LastChangeDate gt datetime'" + formatOdata(since) + "'";
+            log.debug("[delta-LFA1] Filtro OData: {}", filter);
+        }
+
+        String url = buildUrl(SERVICE_PATH, "A_BusinessPartner") +
+                "?$filter=" + enc(filter) +
+                "&$select=" + SELECT_BP +
+                "&$top=" + config.s4PageSize;
+
+        List<JsonNode> nodes = fetchAllPages(url);
+
+        // Ottimizzazione delta: se non ci sono BP modificati, salta il fetch
+        // dei dati fiscali (14.000+ record) che sarebbe inutile.
+        if (nodes.isEmpty()) {
+            log.debug("Nessun fornitore trovato — skip fetch dati fiscali.");
+            log.info("Fornitori recuperati: 0{}", since != null ? " (delta da " + since + ")" : " (full)");
+            return List.of();
+        }
+
+        Map<String, Map<String, String>> taxNumbers = fetchTaxNumbers();
+
+        List<Supplier> suppliers = new ArrayList<>();
+        for (JsonNode n : nodes) {
+            Supplier s = toSupplier(n, taxNumbers);
+            if (s != null) suppliers.add(s);
+        }
+
+        log.info("Fornitori recuperati: {}{}", suppliers.size(),
+                 since != null ? " (delta da " + since + ")" : " (full)");
+        return suppliers;
+    }
+
+    /**
+     * Recupera i clienti applicando opzionalmente il filtro delta.
+     */
+    private List<Customer> fetchCustomers(OffsetDateTime since) {
+        String filter = "Customer ne ''";
+        if (since != null) {
+            filter += " and LastChangeDate gt datetime'" + formatOdata(since) + "'";
+            log.debug("[delta-KNA1] Filtro OData: {}", filter);
+        }
+
+        String url = buildUrl(SERVICE_PATH, "A_BusinessPartner") +
+                "?$filter=" + enc(filter) +
+                "&$select=" + SELECT_BP +
+                "&$top=" + config.s4PageSize;
+
+        List<JsonNode> nodes = fetchAllPages(url);
+
+        // Ottimizzazione delta: se non ci sono BP modificati, salta il fetch
+        // dei dati fiscali (14.000+ record) che sarebbe inutile.
+        if (nodes.isEmpty()) {
+            log.debug("Nessun cliente trovato — skip fetch dati fiscali.");
+            log.info("Clienti recuperati: 0{}", since != null ? " (delta da " + since + ")" : " (full)");
+            return List.of();
+        }
+
+        Map<String, Map<String, String>> taxNumbers = fetchTaxNumbers();
+
+        List<Customer> customers = new ArrayList<>();
+        for (JsonNode n : nodes) {
+            Customer c = toCustomer(n, taxNumbers);
+            if (c != null) customers.add(c);
+        }
+
+        log.info("Clienti recuperati: {}{}", customers.size(),
+                 since != null ? " (delta da " + since + ")" : " (full)");
+        return customers;
+    }
+
+    // -------------------------------------------------------------------------
+    // Dati fiscali (invariato)
     // -------------------------------------------------------------------------
 
     private Map<String, Map<String, String>> fetchTaxNumbers() {
@@ -130,7 +232,7 @@ public class BusinessPartnerClient extends AbstractS4Client {
     }
 
     // -------------------------------------------------------------------------
-    // Mapping
+    // Mapping (invariato)
     // -------------------------------------------------------------------------
 
     private Supplier toSupplier(JsonNode n, Map<String, Map<String, String>> taxNumbers) {
@@ -172,5 +274,19 @@ public class BusinessPartnerClient extends AbstractS4Client {
                 .map(Map.Entry::getValue)
                 .findFirst()
                 .orElse(null);
+    }
+
+    // -------------------------------------------------------------------------
+    // Utility
+    // -------------------------------------------------------------------------
+
+    /**
+     * Formatta un OffsetDateTime nel formato OData V2 datetime per LastChangeDate.
+     * Il campo LastChangeDate su A_BusinessPartner ha precisione al giorno,
+     * quindi usiamo yyyy-MM-ddT00:00:00 come formato del filtro.
+     */
+    private static String formatOdata(OffsetDateTime dt) {
+        return dt.atZoneSameInstant(ZoneOffset.UTC)
+                 .format(DateTimeFormatter.ofPattern("yyyy-MM-dd")) + "T00:00:00";
     }
 }

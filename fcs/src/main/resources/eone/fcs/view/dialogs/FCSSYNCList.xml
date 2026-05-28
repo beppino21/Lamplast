@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<t:layoutdefinition xmlns:t="http://www.captaincasa.com/controllibrary/t" xmlns:tdap="http://www.captaincasa.com/controllibrary/tdap" xmlns:tpbc="http://www.captaincasa.com/controllibrary/tpbc" >
+
+<t:beanprocessing id="g_1" beanbinding="#{d.FCSSYNCList}" />
+<t:row id="g_16" >
+<tdap:beangridwitheditor id="g_4" pagebeanbinding="#{d.FCSSYNCList.gridWithEditor}" >
+<tpbc:datagridview2column id="g_18" propertyName="entity" title="#{rr.fcs[&#39;PROP.FCSSYNC.entity&#39;]}" />
+<tpbc:datagridview2column id="g_5" propertyName="last_count" title="#{rr.fcs[&#39;PROP.FCSSYNC.last_count&#39;]}" />
+<tpbc:datagridview2column id="g_6" propertyName="last_error" title="#{rr.fcs[&#39;PROP.FCSSYNC.last_error&#39;]}" />
+<tpbc:datagridview2column id="g_7" propertyName="last_status" title="#{rr.fcs[&#39;PROP.FCSSYNC.last_status&#39;]}" />
+<tpbc:datagridview2column id="g_8" propertyName="last_sync" title="#{rr.fcs[&#39;PROP.FCSSYNC.last_sync&#39;]}" />
+<tpbc:datagridview2column id="g_9" propertyName="last_upserted" title="#{rr.fcs[&#39;PROP.FCSSYNC.last_upserted&#39;]}" />
+<tpbc:datagridview2column id="g_10" propertyName="next_sync_from" title="#{rr.fcs[&#39;PROP.FCSSYNC.next_sync_from&#39;]}" />
+<tpbc:datagridview2column id="g_11" propertyName="created_at" title="#{rr.fcs[&#39;PROP.FCSSYNC.created_at&#39;]}" />
+<tpbc:datagridview2column id="g_12" propertyName="updated_at" title="#{rr.fcs[&#39;PROP.FCSSYNC.updated_at&#39;]}" />
+<tpbc:datagridview2column id="g_13" propertyName="last_duration_ms" title="#{rr.fcs[&#39;PROP.FCSSYNC.last_duration_ms&#39;]}" />
+</tdap:beangridwitheditor>
+</t:row>
+
+</t:layoutdefinition>

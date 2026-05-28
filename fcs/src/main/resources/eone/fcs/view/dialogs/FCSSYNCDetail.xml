@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<t:layoutdefinition xmlns:t="http://www.captaincasa.com/controllibrary/t" xmlns:tdap="http://www.captaincasa.com/controllibrary/tdap" >
+
+<t:beanprocessing id="g_1" beanbinding="#{d.FCSSYNCDetail}" />
+<t:row id="g_22" >
+<tdap:framedetaileditor id="g_24" pagebeanbinding="#{d.FCSSYNCDetail.frame}" shownullcontent="true" withCancel="false" withSave="false" >
+<tdap:framedetaileditorbody id="g_25" height="100%" rowdistance="#{ccstylevalue[&#39;@defaultrowdistance@&#39;]}" width="100%" >
+<tdap:rowareas id="g_26" >
+<tdap:containerarea id="g_27" text="Some title" >
+<t:row id="g_29" coldistance="#{ccstylevalue[&#39;@defaultcoldistance@&#39;]}" >
+<t:field id="g_2" adapterbinding="#{d.FCSSYNCDetail.adapters.entity}" />
+</t:row>
+<t:row id="g_3" coldistance="#{ccstylevalue[&#39;@defaultcoldistance@&#39;]}" >
+<t:formattedfield id="g_4" adapterbinding="#{d.FCSSYNCDetail.adapters.last_count}" />
+</t:row>
+<t:row id="g_5" coldistance="#{ccstylevalue[&#39;@defaultcoldistance@&#39;]}" >
+<t:textarea id="g_6" adapterbinding="#{d.FCSSYNCDetail.adapters.last_error}" />
+</t:row>
+<t:row id="g_7" coldistance="#{ccstylevalue[&#39;@defaultcoldistance@&#39;]}" >
+<t:field id="g_8" adapterbinding="#{d.FCSSYNCDetail.adapters.last_status}" />
+</t:row>
+<t:row id="g_9" coldistance="#{ccstylevalue[&#39;@defaultcoldistance@&#39;]}" >
+<t:calendarfield id="g_10" adapterbinding="#{d.FCSSYNCDetail.adapters.last_sync}" />
+</t:row>
+<t:row id="g_11" coldistance="#{ccstylevalue[&#39;@defaultcoldistance@&#39;]}" >
+<t:formattedfield id="g_12" adapterbinding="#{d.FCSSYNCDetail.adapters.last_upserted}" />
+</t:row>
+<t:row id="g_13" coldistance="#{ccstylevalue[&#39;@defaultcoldistance@&#39;]}" >
+<t:calendarfield id="g_14" adapterbinding="#{d.FCSSYNCDetail.adapters.next_sync_from}" />
+</t:row>
+<t:row id="g_15" coldistance="#{ccstylevalue[&#39;@defaultcoldistance@&#39;]}" >
+<t:calendarfield id="g_16" adapterbinding="#{d.FCSSYNCDetail.adapters.created_at}" />
+</t:row>
+<t:row id="g_17" coldistance="#{ccstylevalue[&#39;@defaultcoldistance@&#39;]}" >
+<t:calendarfield id="g_18" adapterbinding="#{d.FCSSYNCDetail.adapters.updated_at}" />
+</t:row>
+<t:row id="g_19" coldistance="#{ccstylevalue[&#39;@defaultcoldistance@&#39;]}" >
+<t:field id="g_20" adapterbinding="#{d.FCSSYNCDetail.adapters.last_duration_ms}" />
+</t:row>
+</tdap:containerarea>
+</tdap:rowareas>
+</tdap:framedetaileditorbody>
+</tdap:framedetaileditor>
+</t:row>
+
+</t:layoutdefinition>

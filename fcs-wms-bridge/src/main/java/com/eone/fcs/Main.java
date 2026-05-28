@@ -1,5 +1,6 @@
 package com.eone.fcs;
 
+import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -21,10 +22,11 @@ import com.eone.fcs.model.Fcst001;
 import com.eone.fcs.model.PesoMateriale;
 import com.eone.fcs.model.Product;
 import com.eone.fcs.model.Supplier;
+import com.eone.fcs.model.SyncRecord;
 import com.eone.fcs.model.Umcli;
 import com.eone.fcs.model.Umfor;
 import com.eone.fcs.repository.FcsRepository;
-import com.eone.fcs.service.EketEnricher;
+import com.eone.fcs.repository.SyncRepository;
 
 /**
  * Entry point dell'applicazione FCS WMS Bridge - Extractor.
@@ -34,13 +36,17 @@ import com.eone.fcs.service.EketEnricher;
  *
  * Modalità:
  *   all            → estrae tutto: prodotti, fornitori, clienti, EKET, VBEP (default)
- *   products       → solo prodotti
- *   suppliers      → solo fornitori
- *   customers      → solo clienti
- *   eket           → tutte le schedulazioni OdA aperte
+ *   products       → solo prodotti (full)
+ *   suppliers      → solo fornitori (full)
+ *   customers      → solo clienti (full)
+ *   eket           → tutte le schedulazioni OdA aperte (full)
  *   eket <EBELN>   → schedulazioni di un singolo OdA
- *   vbep           → tutte le schedulazioni OdV di reso aperte
+ *   vbep           → tutte le schedulazioni OdV di reso aperte (full)
  *   vbep <VBELN>   → schedulazioni di un singolo OdV di reso
+ *   delta          → sincronizzazione differenziale di tutte le entità
+ *                    (MARA, LFA1, KNA1, EKET, VBEP)
+ *   delta-trx      → sincronizzazione differenziale solo EKET + VBEP (ogni 5 min)
+ *   delta-ana      → sincronizzazione differenziale solo MARA + LFA1 + KNA1 (giornaliero)
  *
  * Exit code:
  *   0  = successo
@@ -108,10 +114,43 @@ public class Main {
                     extractVbepAll(config, repo);
                 }
 
+                // ---------------------------------------------------------------
+                // [DELTA] Sincronizzazione differenziale — tutte le entità
+                // ---------------------------------------------------------------
+                case "delta" -> {
+                    SyncRepository syncRepo = new SyncRepository(repo.getConnection(), config.dbTenant);
+                    deltaProducts (config, repo, syncRepo);
+                    deltaSuppliers(config, repo, syncRepo);
+                    deltaCustomers(config, repo, syncRepo);
+                    deltaEket     (config, repo, syncRepo);
+                    deltaVbep     (config, repo, syncRepo);
+                }
+
+                // ---------------------------------------------------------------
+                // [DELTA-TRX] Sincronizzazione differenziale — solo EKET + VBEP
+                // Schedulato ogni 5 minuti da DeltaSyncListener (Tomcat)
+                // ---------------------------------------------------------------
+                case "delta-trx" -> {
+                    SyncRepository syncRepo = new SyncRepository(repo.getConnection(), config.dbTenant);
+                    deltaEket(config, repo, syncRepo);
+                    deltaVbep(config, repo, syncRepo);
+                }
+
+                // ---------------------------------------------------------------
+                // [DELTA-ANA] Sincronizzazione differenziale — solo MARA + LFA1 + KNA1
+                // Schedulato una volta al giorno da DeltaSyncListener (Tomcat)
+                // ---------------------------------------------------------------
+                case "delta-ana" -> {
+                    SyncRepository syncRepo = new SyncRepository(repo.getConnection(), config.dbTenant);
+                    deltaProducts (config, repo, syncRepo);
+                    deltaSuppliers(config, repo, syncRepo);
+                    deltaCustomers(config, repo, syncRepo);
+                }
+
                 default -> {
                     log.error("Modalità non riconosciuta: '{}'. " +
                               "Usare: all, products, suppliers, customers, " +
-                              "eket [EBELN], vbep [VBELN]", mode);
+                              "eket [EBELN], vbep [VBELN], delta, delta-trx, delta-ana", mode);
                     System.exit(1);
                 }
             }
@@ -135,7 +174,7 @@ public class Main {
     }
 
     // =========================================================================
-    // Estrazione PRODOTTI
+    // Estrazione PRODOTTI (full - invariata)
     // =========================================================================
 
     private static void extractProducts(AppConfig config, FcsRepository repo) throws Exception {
@@ -147,7 +186,7 @@ public class Main {
     }
 
     // =========================================================================
-    // Estrazione FORNITORI
+    // Estrazione FORNITORI (full - invariata)
     // =========================================================================
 
     private static void extractSuppliers(AppConfig config, FcsRepository repo) throws Exception {
@@ -159,7 +198,7 @@ public class Main {
     }
 
     // =========================================================================
-    // Estrazione CLIENTI
+    // Estrazione CLIENTI (full - invariata)
     // =========================================================================
 
     private static void extractCustomers(AppConfig config, FcsRepository repo) throws Exception {
@@ -171,7 +210,7 @@ public class Main {
     }
 
     // =========================================================================
-    // Estrazione EKET - massiva
+    // Estrazione EKET - massiva (invariata)
     // =========================================================================
 
     private static void extractEketAll(AppConfig config, FcsRepository repo) throws Exception {
@@ -189,12 +228,11 @@ public class Main {
         Map<String, Fcst001> fcst001   = repo.loadFcst001();
         List<EketLine>       filtered  = filterByFcst001(withMtart, fcst001);
         List<EketLine>       enriched  = enrichLinesOda(filtered, repo);
-        // Passa kappl='ME': la DELETE preliminare tocca solo le righe EKET
         repo.syncEketLines(enriched, KAPPL_EKET);
     }
 
     // =========================================================================
-    // Estrazione EKET - puntuale
+    // Estrazione EKET - puntuale (invariata)
     // =========================================================================
 
     private static void extractEketByOrder(AppConfig config, FcsRepository repo,
@@ -214,12 +252,11 @@ public class Main {
         Map<String, Fcst001> fcst001   = repo.loadFcst001();
         List<EketLine>       filtered  = withMtart.isEmpty() ? List.of() : filterByFcst001(withMtart, fcst001);
         List<EketLine>       enriched  = filtered.isEmpty() ? List.of() : enrichLinesOda(filtered, repo);
-        // Passa kappl='ME': la DELETE tocca solo le righe EKET di questo OdA
         repo.syncEketLinesForOrder(ebeln, enriched, KAPPL_EKET);
     }
 
     // =========================================================================
-    // Estrazione VBEP - massiva
+    // Estrazione VBEP - massiva (invariata)
     // =========================================================================
 
     private static void extractVbepAll(AppConfig config, FcsRepository repo) throws Exception {
@@ -237,12 +274,11 @@ public class Main {
         Map<String, Fcst001> fcst001   = repo.loadFcst001();
         List<EketLine>       filtered  = filterByFcst001(withMtart, fcst001);
         List<EketLine>       enriched  = enrichLinesReso(filtered, repo);
-        // Passa kappl='V': la DELETE preliminare tocca solo le righe VBEP
         repo.syncEketLines(enriched, KAPPL_VBEP);
     }
 
     // =========================================================================
-    // Estrazione VBEP - puntuale
+    // Estrazione VBEP - puntuale (invariata)
     // =========================================================================
 
     private static void extractVbepByOrder(AppConfig config, FcsRepository repo,
@@ -262,27 +298,247 @@ public class Main {
         Map<String, Fcst001> fcst001   = repo.loadFcst001();
         List<EketLine>       filtered  = withMtart.isEmpty() ? List.of() : filterByFcst001(withMtart, fcst001);
         List<EketLine>       enriched  = filtered.isEmpty() ? List.of() : enrichLinesReso(filtered, repo);
-        // Passa kappl='V': la DELETE tocca solo le righe VBEP di questo OdV
         repo.syncEketLinesForOrder(vbeln, enriched, KAPPL_VBEP);
     }
 
     // =========================================================================
-    // Arricchimento mtart da API_PRODUCT_SRV
+    // [DELTA] Sincronizzazione differenziale PRODOTTI (MARA)
     // =========================================================================
 
-    /**
-     * Recupera il tipo materiale (mtart) per le righe che ce l'hanno vuoto,
-     * tramite una chiamata batch a API_PRODUCT_SRV (A_Product → ProductType).
-     *
-     * Questo passaggio è necessario perché A_PurchaseOrderItem e
-     * A_CustomerReturn non restituiscono MaterialType in modo affidabile.
-     *
-     * @param lines   righe già costruite dal client S/4H
-     * @param config  configurazione (per istanziare ProductClient)
-     * @return nuova lista con mtart valorizzato dove prima era null/blank
-     */
+    private static void deltaProducts(AppConfig config, FcsRepository repo,
+                                      SyncRepository syncRepo) throws Exception {
+        log.info("--- [delta] PRODOTTI (MARA) ---");
+        long start = System.currentTimeMillis();
+
+        SyncRecord rec = syncRepo.load("MARA");
+        syncRepo.markRunning("MARA");
+
+        try {
+            ProductClient client = new ProductClient(config);
+            List<Product> products;
+
+            if (rec.isFirstRun()) {
+                // Prima esecuzione: carico completo
+                log.info("[delta-MARA] Prima esecuzione — carico completo.");
+                products = client.fetchAllProducts();
+            } else {
+                products = client.fetchModifiedSince(rec.nextSyncFrom());
+            }
+
+            int upserted = 0;
+            if (!products.isEmpty()) {
+                upserted = repo.upsertProducts(products);
+            }
+
+            syncRepo.markOk("MARA", products.size(), upserted,
+                            System.currentTimeMillis() - start);
+
+        } catch (Exception e) {
+            syncRepo.markError("MARA", e.getMessage());
+            throw e;
+        }
+    }
+
+    // =========================================================================
+    // [DELTA] Sincronizzazione differenziale FORNITORI (LFA1)
+    // =========================================================================
+
+    private static void deltaSuppliers(AppConfig config, FcsRepository repo,
+                                       SyncRepository syncRepo) throws Exception {
+        log.info("--- [delta] FORNITORI (LFA1) ---");
+        long start = System.currentTimeMillis();
+
+        SyncRecord rec = syncRepo.load("LFA1");
+        syncRepo.markRunning("LFA1");
+
+        try {
+            BusinessPartnerClient client = new BusinessPartnerClient(config);
+            List<Supplier> suppliers;
+
+            if (rec.isFirstRun()) {
+                log.info("[delta-LFA1] Prima esecuzione — carico completo.");
+                suppliers = client.fetchAllSuppliers();
+            } else {
+                suppliers = client.fetchSuppliersModifiedSince(rec.nextSyncFrom());
+            }
+
+            int upserted = 0;
+            if (!suppliers.isEmpty()) {
+                upserted = repo.upsertSuppliers(suppliers);
+            }
+
+            syncRepo.markOk("LFA1", suppliers.size(), upserted,
+                            System.currentTimeMillis() - start);
+
+        } catch (Exception e) {
+            syncRepo.markError("LFA1", e.getMessage());
+            throw e;
+        }
+    }
+
+    // =========================================================================
+    // [DELTA] Sincronizzazione differenziale CLIENTI (KNA1)
+    // =========================================================================
+
+    private static void deltaCustomers(AppConfig config, FcsRepository repo,
+                                       SyncRepository syncRepo) throws Exception {
+        log.info("--- [delta] CLIENTI (KNA1) ---");
+        long start = System.currentTimeMillis();
+
+        SyncRecord rec = syncRepo.load("KNA1");
+        syncRepo.markRunning("KNA1");
+
+        try {
+            BusinessPartnerClient client = new BusinessPartnerClient(config);
+            List<Customer> customers;
+
+            if (rec.isFirstRun()) {
+                log.info("[delta-KNA1] Prima esecuzione — carico completo.");
+                customers = client.fetchAllCustomers();
+            } else {
+                customers = client.fetchCustomersModifiedSince(rec.nextSyncFrom());
+            }
+
+            int upserted = 0;
+            if (!customers.isEmpty()) {
+                upserted = repo.upsertCustomers(customers);
+            }
+
+            syncRepo.markOk("KNA1", customers.size(), upserted,
+                            System.currentTimeMillis() - start);
+
+        } catch (Exception e) {
+            syncRepo.markError("KNA1", e.getMessage());
+            throw e;
+        }
+    }
+
+    // =========================================================================
+    // [DELTA] Sincronizzazione differenziale SCHEDULAZIONI OdA (EKET)
+    // =========================================================================
+
+    private static void deltaEket(AppConfig config, FcsRepository repo,
+                                  SyncRepository syncRepo) throws Exception {
+        log.info("--- [delta] SCHEDULAZIONI OdA (EKET) ---");
+        long start = System.currentTimeMillis();
+
+        SyncRecord rec = syncRepo.load("EKET");
+        syncRepo.markRunning("EKET");
+
+        try {
+            if (rec.isFirstRun()) {
+                // Prima esecuzione: carico completo con il metodo massivo esistente
+                log.info("[delta-EKET] Prima esecuzione — carico completo.");
+                extractEketAll(config, repo);
+                syncRepo.markOk("EKET", -1, -1, System.currentTimeMillis() - start);
+                return;
+            }
+
+            PurchaseOrderClient client = new PurchaseOrderClient(config);
+            Map<String, List<EketLine>> byOrder =
+                    client.fetchModifiedOrdersSince(rec.nextSyncFrom());
+
+            if (byOrder.isEmpty()) {
+                log.info("[delta-EKET] Nessun OdA modificato.");
+                syncRepo.markOk("EKET", 0, 0, System.currentTimeMillis() - start);
+                return;
+            }
+
+            Map<String, Fcst001> fcst001 = repo.loadFcst001();
+            int totalFound    = 0;
+            int totalUpserted = 0;
+
+            for (Map.Entry<String, List<EketLine>> entry : byOrder.entrySet()) {
+                String         ebeln = entry.getKey();
+                List<EketLine> lines = entry.getValue();
+                totalFound += lines.size();
+
+                List<EketLine> withMtart = lines.isEmpty() ? List.of()
+                        : applyMaterialTypes(lines, config);
+                List<EketLine> filtered  = withMtart.isEmpty() ? List.of()
+                        : filterByFcst001(withMtart, fcst001);
+                List<EketLine> enriched  = filtered.isEmpty() ? List.of()
+                        : enrichLinesOda(filtered, repo);
+
+                // syncEketLinesForOrder: DELETE wmsst(0,3) per EBELN + INSERT nuove
+                // Se enriched è vuoto, rimuove solo le righe residue in attesa.
+                int inserted = repo.syncEketLinesForOrder(ebeln, enriched, KAPPL_EKET);
+                totalUpserted += inserted;
+            }
+
+            syncRepo.markOk("EKET", totalFound, totalUpserted,
+                            System.currentTimeMillis() - start);
+
+        } catch (Exception e) {
+            syncRepo.markError("EKET", e.getMessage());
+            throw e;
+        }
+    }
+
+    // =========================================================================
+    // [DELTA] Sincronizzazione differenziale SCHEDULAZIONI OdV RESO (VBEP)
+    // =========================================================================
+
+    private static void deltaVbep(AppConfig config, FcsRepository repo,
+                                  SyncRepository syncRepo) throws Exception {
+        log.info("--- [delta] SCHEDULAZIONI OdV RESO (VBEP) ---");
+        long start = System.currentTimeMillis();
+
+        SyncRecord rec = syncRepo.load("VBEP");
+        syncRepo.markRunning("VBEP");
+
+        try {
+            if (rec.isFirstRun()) {
+                log.info("[delta-VBEP] Prima esecuzione — carico completo.");
+                extractVbepAll(config, repo);
+                syncRepo.markOk("VBEP", -1, -1, System.currentTimeMillis() - start);
+                return;
+            }
+
+            SalesReturnClient client = new SalesReturnClient(config);
+            Map<String, List<EketLine>> byOrder =
+                    client.fetchModifiedReturnsSince(rec.nextSyncFrom());
+
+            if (byOrder.isEmpty()) {
+                log.info("[delta-VBEP] Nessun OdV reso modificato.");
+                syncRepo.markOk("VBEP", 0, 0, System.currentTimeMillis() - start);
+                return;
+            }
+
+            Map<String, Fcst001> fcst001 = repo.loadFcst001();
+            int totalFound    = 0;
+            int totalUpserted = 0;
+
+            for (Map.Entry<String, List<EketLine>> entry : byOrder.entrySet()) {
+                String         vbeln = entry.getKey();
+                List<EketLine> lines = entry.getValue();
+                totalFound += lines.size();
+
+                List<EketLine> withMtart = lines.isEmpty() ? List.of()
+                        : applyMaterialTypes(lines, config);
+                List<EketLine> filtered  = withMtart.isEmpty() ? List.of()
+                        : filterByFcst001(withMtart, fcst001);
+                List<EketLine> enriched  = filtered.isEmpty() ? List.of()
+                        : enrichLinesReso(filtered, repo);
+
+                int inserted = repo.syncEketLinesForOrder(vbeln, enriched, KAPPL_VBEP);
+                totalUpserted += inserted;
+            }
+
+            syncRepo.markOk("VBEP", totalFound, totalUpserted,
+                            System.currentTimeMillis() - start);
+
+        } catch (Exception e) {
+            syncRepo.markError("VBEP", e.getMessage());
+            throw e;
+        }
+    }
+
+    // =========================================================================
+    // Arricchimento mtart da API_PRODUCT_SRV (invariato)
+    // =========================================================================
+
     private static List<EketLine> applyMaterialTypes(List<EketLine> lines, AppConfig config) {
-        // Raccoglie i matnr con mtart ancora mancante
         java.util.Set<String> matnrsDaMappare = lines.stream()
                 .filter(l -> l.mtart() == null || l.mtart().isBlank())
                 .map(EketLine::matnr)
@@ -318,24 +574,9 @@ public class Main {
     }
 
     // =========================================================================
-    // Filtro per configurazione tabfcst001
+    // Filtro per configurazione tabfcst001 (invariato)
     // =========================================================================
 
-    /**
-     * Filtra le righe estratte da S/4H in base alla configurazione tabfcst001.
-     *
-     * Logica:
-     *   - Se tabfcst001 è vuota (nessuna configurazione) → nessun filtro,
-     *     tutte le righe passano (comportamento open / fail-safe).
-     *   - Altrimenti una riga è inclusa solo se esiste un record in tabfcst001
-     *     con la stessa combinazione (mtart, werks) e exp2fcs = true.
-     *   - Righe con mtart o werks null/blank vengono escluse quando la
-     *     configurazione è presente (non è possibile verificarne l'abilitazione).
-     *
-     * @param lines   righe estratte dopo il fetch S/4H (mtart già popolato)
-     * @param fcst001 Map caricata da {@code FcsRepository.loadFcst001()}
-     * @return lista filtrata
-     */
     private static List<EketLine> filterByFcst001(List<EketLine> lines,
                                                    Map<String, Fcst001> fcst001) {
         if (fcst001.isEmpty()) {
@@ -374,7 +615,7 @@ public class Main {
     }
 
     // =========================================================================
-    // Arricchimento OdA (UMFOR + pesi + nomi fornitori)
+    // Arricchimento OdA (invariato)
     // =========================================================================
 
     private static List<EketLine> enrichLinesOda(List<EketLine> lines,
@@ -396,15 +637,14 @@ public class Main {
         log.info("OdA — UMFOR: {} record, Pesi: {} record, Fornitori: {} record",
                  umforMap.size(), pesiMap.size(), nomiForni.size());
 
-        // Mappa UMCLI e nomiClienti vuote — non servono per gli OdA
-        return EketEnricher.enrich(lines,
+        return com.eone.fcs.service.EketEnricher.enrich(lines,
                 umforMap, java.util.Map.of(),
                 pesiMap,
                 nomiForni, java.util.Map.of());
     }
 
     // =========================================================================
-    // Arricchimento Resi (UMCLI + pesi + nomi clienti)
+    // Arricchimento Resi (invariato)
     // =========================================================================
 
     private static List<EketLine> enrichLinesReso(List<EketLine> lines,
@@ -414,7 +654,6 @@ public class Main {
                 .filter(m -> m != null && !m.isBlank())
                 .collect(Collectors.toSet());
 
-        // Per i resi lifnr = kunnr (cliente) per coerenza modello
         Set<String> kunnrs = lines.stream()
                 .map(EketLine::lifnr)
                 .filter(k -> k != null && !k.isBlank())
@@ -427,8 +666,7 @@ public class Main {
         log.info("Resi — UMCLI: {} record, Pesi: {} record, Clienti: {} record",
                  umcliMap.size(), pesiMap.size(), nomiCli.size());
 
-        // Mappa UMFOR e nomiFornitori vuote — non servono per i resi
-        return EketEnricher.enrich(lines,
+        return com.eone.fcs.service.EketEnricher.enrich(lines,
                 java.util.Map.of(), umcliMap,
                 pesiMap,
                 java.util.Map.of(), nomiCli);

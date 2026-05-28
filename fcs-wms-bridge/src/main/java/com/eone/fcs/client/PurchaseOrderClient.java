@@ -7,10 +7,15 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.time.LocalDate;
+import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * Client per API_PURCHASEORDER_PROCESS_SRV (OData V2) e API V4.
@@ -29,7 +34,12 @@ import java.util.Map;
  * Le posizioni con LOEKZ (cancellate) ed ELIKZ (consegna finale) vengono escluse
  * implicitamente: entrambi i flag azzerano OpenPurchaseOrderQuantity in S/4HANA,
  * quindi il filtro Java openQty <= 0 le scarta già a monte.
- * Non è necessario alcun filtro aggiuntivo sulla chiamata V2 A_PurchaseOrderItem.
+ *
+ * [DELTA] Aggiunto: fetchModifiedOrdersSince(OffsetDateTime)
+ *   Strategia: filtra gli OdA modificati dopo il timestamp via LastChangeDateTime
+ *   sul header A_PurchaseOrder (V2), poi riestrae le schedulazioni solo
+ *   per quegli OdA. Se le schedulazioni risultano tutte evase, le righe
+ *   vengono rimosse da tabfcseket tramite syncEketLinesForOrder (chiamante).
  */
 public class PurchaseOrderClient extends AbstractS4Client {
 
@@ -49,43 +59,111 @@ public class PurchaseOrderClient extends AbstractS4Client {
             "ScheduleLineDeliveryDate,ScheduleLineOrderQuantity," +
             "OpenPurchaseOrderQuantity,PurchaseOrderQuantityUnit";
 
-
     public PurchaseOrderClient(AppConfig config) {
         super(config);
     }
 
     // -------------------------------------------------------------------------
-    // API pubblica
+    // API pubblica - estrazione completa (invariata)
     // -------------------------------------------------------------------------
 
-    /**
-     * Recupera tutte le schedulazioni aperte e le arricchisce
-     * con i dati di posizione e testata OdA.
-     */
     public List<EketLine> fetchAllOpenScheduleLines() {
         return fetchScheduleLines(null, null);
     }
 
-    /**
-     * Recupera schedulazioni con filtro opzionale sulla data consegna.
-     *
-     * @param dateFrom    data consegna minima (null = nessun filtro)
-     * @param singleEbeln OdA specifico (null = tutti)
-     */
     public List<EketLine> fetchAllOpenScheduleLines(LocalDate dateFrom, String singleEbeln) {
         return fetchScheduleLines(dateFrom, singleEbeln);
     }
 
-    /**
-     * Recupera le schedulazioni di un singolo OdA.
-     */
     public List<EketLine> fetchByPurchaseOrder(String ebeln) {
         return fetchScheduleLines(null, ebeln);
     }
 
     // -------------------------------------------------------------------------
+    // [DELTA] API pubblica - estrazione differenziale
+    // -------------------------------------------------------------------------
+
+    /**
+     * Recupera le schedulazioni aperte degli OdA modificati dopo il timestamp indicato.
+     *
+     * Strategia in due step:
+     * 1. Recupera la lista di EBELN degli OdA con LastChangeDateTime gt {since}
+     *    tramite A_PurchaseOrder (V2) — campo disponibile e affidabile.
+     * 2. Per ciascun EBELN trovato, riestrae le schedulazioni via V4
+     *    (stesso meccanismo della modalità puntuale fetchByPurchaseOrder).
+     *
+     * Nota: il chiamante (Main.delta) deve poi invocare syncEketLinesForOrder
+     * per ciascun EBELN per aggiornare tabfcseket (delete+insert per OdA).
+     * Questo garantisce che:
+     *   - Le schedulazioni evase vengano rimosse
+     *   - Le schedulazioni in lavorazione (wmsst 1/2/E) non vengano toccate
+     *
+     * @param since timestamp UTC di riferimento (esclusivo)
+     * @return Map<EBELN, List<EketLine>> — può contenere liste vuote
+     *         (OdA modificato ma senza schedulazioni aperte → pulizia righe)
+     */
+    public Map<String, List<EketLine>> fetchModifiedOrdersSince(OffsetDateTime since) {
+        log.info("[delta-EKET] Avvio ricerca OdA modificati dopo: {}", since);
+
+        // Step 1: trova gli EBELN modificati
+        Set<String> modifiedOrders = fetchModifiedOrderNumbers(since);
+        log.info("[delta-EKET] OdA modificati trovati: {}", modifiedOrders.size());
+
+        if (modifiedOrders.isEmpty()) {
+            log.info("[delta-EKET] Nessun OdA modificato rilevato.");
+            return Map.of();
+        }
+
+        // Step 2: per ciascun EBELN recupera le schedulazioni aperte
+        Map<String, List<EketLine>> result = new HashMap<>();
+        int totalLines = 0;
+
+        for (String ebeln : modifiedOrders) {
+            log.debug("[delta-EKET] Estrazione schedulazioni per OdA: {}", ebeln);
+            List<EketLine> lines = fetchByPurchaseOrder(ebeln);
+            result.put(ebeln, lines);
+            totalLines += lines.size();
+
+            if (lines.isEmpty()) {
+                log.debug("[delta-EKET] OdA {} senza schedulazioni aperte → le righe residue in tabfcseket verranno rimosse.", ebeln);
+            }
+        }
+
+        log.info("[delta-EKET] Estrazione delta completata: {} OdA, {} righe totali",
+                 result.size(), totalLines);
+        return result;
+    }
+
+    // -------------------------------------------------------------------------
     // Implementazione interna
     // -------------------------------------------------------------------------
+
+    /**
+     * Recupera la lista degli EBELN degli OdA con LastChangeDateTime > since.
+     * Usa A_PurchaseOrder (V2) che espone LastChangeDateTime sull'header.
+     */
+    private Set<String> fetchModifiedOrderNumbers(OffsetDateTime since) {
+        // LastChangeDateTime su A_PurchaseOrder è Edm.DateTimeOffset:
+        // il filtro corretto è datetimeoffset'yyyy-MM-ddTHH:mm:ssZ' (non datetime'...')
+        String formatted = since.atZoneSameInstant(ZoneOffset.UTC)
+                               .format(DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss")) + "Z";
+
+        String url = buildUrl(SERVICE_PATH_V2, "A_PurchaseOrder") +
+                "?$select=" + enc("PurchaseOrder,LastChangeDateTime") +
+                "&$filter=" + enc("LastChangeDateTime gt datetimeoffset'" + formatted + "'") +
+                "&$top=" + config.s4PageSize;
+
+        log.debug("[delta-EKET] Filtro OData header: LastChangeDateTime gt datetimeoffset'{}'", formatted);
+
+        List<JsonNode> nodes = fetchAllPages(url);
+        Set<String> orders = nodes.stream()
+                .map(n -> str(n, "PurchaseOrder"))
+                .filter(po -> po != null && !po.isBlank())
+                .collect(Collectors.toSet());
+
+        log.debug("[delta-EKET] EBELN modificati: {}", orders);
+        return orders;
+    }
 
     private List<EketLine> fetchScheduleLines(LocalDate dateFrom, String singleEbeln) {
         log.info("Avvio estrazione schedulazioni OdA{}{}",
@@ -93,29 +171,25 @@ public class PurchaseOrderClient extends AbstractS4Client {
                 dateFrom    != null ? " da data: " + dateFrom    : "");
         log.debug("Filtri attivi: OpenQty>0, LOEKZ=false, ELIKZ=false");
 
-        // 1. Schedulazioni via API V4
         Map<String, Map<String, EketLine.Builder>> builders =
                 fetchScheduleLinesV4(singleEbeln, dateFrom);
         log.info("Schedulazioni aperte recuperate: {} OdA con righe", builders.size());
 
         if (builders.isEmpty()) return List.of();
 
-        // 2. Posizioni OdA via API V2
         fetchOrderItems(builders, singleEbeln);
         log.info("Posizioni OdA recuperate");
 
-        // 3. Header OdA via API V2 (fornitore)
         fetchOrderHeaders(builders, singleEbeln);
         log.info("Header OdA recuperati");
 
-        // 4. Build risultato
         List<EketLine> result = buildResult(builders);
         log.info("Estrazione completata: {} righe totali", result.size());
         return result;
     }
 
     // -------------------------------------------------------------------------
-    // Schedulazioni - OData V4
+    // Schedulazioni - OData V4 (invariato)
     // -------------------------------------------------------------------------
 
     private Map<String, Map<String, EketLine.Builder>> fetchScheduleLinesV4(
@@ -126,7 +200,6 @@ public class PurchaseOrderClient extends AbstractS4Client {
                 "?$select=" + SELECT_SCHEDLINE_V4 +
                 "&$top=" + config.s4PageSize);
 
-        // Filtri OData (solo quelli consentiti da S/4HC V4)
         List<String> filters = new ArrayList<>();
         if (singleEbeln != null) {
             filters.add("PurchaseOrder eq '" + singleEbeln + "'");
@@ -134,9 +207,6 @@ public class PurchaseOrderClient extends AbstractS4Client {
         if (dateFrom != null) {
             filters.add("ScheduleLineDeliveryDate ge " + dateFrom);
         }
-        // NOTA: NON filtriamo OpenPurchaseOrderQuantity gt 0 qui —
-        // S/4HC V4 non lo permette su campi quantità senza unità di misura.
-        // Il filtro viene applicato in Java sotto.
 
         if (!filters.isEmpty()) {
             url.append("&$filter=").append(enc(String.join(" and ", filters)));
@@ -154,10 +224,8 @@ public class PurchaseOrderClient extends AbstractS4Client {
             Double menge   = dbl(n, "ScheduleLineOrderQuantity");
             Double openQty = dbl(n, "OpenPurchaseOrderQuantity");
 
-            // Filtro in Java: salta schedulazioni completamente evase
             if (openQty != null && openQty <= 0) continue;
 
-            // Quantità ricevuta = schedulata - aperta
             Double wemng = (menge != null && openQty != null)
                            ? menge - openQty : null;
 
@@ -179,15 +247,12 @@ public class PurchaseOrderClient extends AbstractS4Client {
     }
 
     // -------------------------------------------------------------------------
-    // Posizioni - OData V2
+    // Posizioni - OData V2 (invariato)
     // -------------------------------------------------------------------------
 
     private void fetchOrderItems(
             Map<String, Map<String, EketLine.Builder>> builders, String singleEbeln) {
 
-        // Nessun filtro su LOEKZ/ELIKZ: le posizioni cancellate o con consegna finale
-        // hanno già OpenPurchaseOrderQuantity = 0 in S/4HANA e sono state escluse
-        // dal filtro Java nel passo V4. Qui servono solo per il join (matnr, werks, ecc.).
         StringBuilder url = new StringBuilder(
                 buildUrl(SERVICE_PATH_V2, "A_PurchaseOrderItem") +
                 "?$top=" + config.s4PageSize);
@@ -221,7 +286,7 @@ public class PurchaseOrderClient extends AbstractS4Client {
     }
 
     // -------------------------------------------------------------------------
-    // Header - OData V2
+    // Header - OData V2 (invariato)
     // -------------------------------------------------------------------------
 
     private void fetchOrderHeaders(
@@ -244,7 +309,6 @@ public class PurchaseOrderClient extends AbstractS4Client {
             }
             url.append("&$filter=").append(enc(filter.toString()));
         }
-        // Se > 20 OdA carichiamo tutti e filtriamo in memoria
 
         List<JsonNode> nodes = fetchAllPages(url.toString());
 
@@ -262,7 +326,7 @@ public class PurchaseOrderClient extends AbstractS4Client {
     }
 
     // -------------------------------------------------------------------------
-    // Build risultato
+    // Build risultato (invariato)
     // -------------------------------------------------------------------------
 
     private List<EketLine> buildResult(Map<String, Map<String, EketLine.Builder>> builders) {
@@ -276,17 +340,15 @@ public class PurchaseOrderClient extends AbstractS4Client {
     }
 
     // -------------------------------------------------------------------------
-    // Helper data V4 (formato ISO: "2024-03-15")
+    // Helper data V4 (invariato)
     // -------------------------------------------------------------------------
 
     private LocalDate localDateV4(JsonNode node, String field) {
         String raw = str(node, field);
         if (raw == null) return null;
         try {
-            // V4 restituisce date ISO: "2024-03-15"
             return LocalDate.parse(raw.substring(0, 10));
         } catch (Exception e) {
-            // Fallback formato V2: /Date(ms)/
             return odataDate(node, field);
         }
     }

@@ -6,10 +6,12 @@
     <dataType charMaxLength="3" className="String" id="BSTME" isPublic="false" text="UM dell'ordine d'acquisto"/>
     <dataType charMaxLength="3" className="String" id="BWART" isPublic="false" text="Tipo movimento"/>
     <dataType charMaxLength="10" className="String" id="CHARG_D" isPublic="false" text="Numero partita"/>
+    <dataType className="LocalDateTime" id="CREATED_AT" isPublic="false" text="Creato alle"/>
     <dataType className="LocalDate" id="DATUM" isPublic="false" text="Data"/>
     <dataType charMaxLength="10" className="String" id="EBELN" isPublic="false" text="Numero Ordine d'acquisto"/>
     <dataType charMaxLength="6" className="String" id="EBELP" isPublic="false" text="Numero Posizione Ordine d'acquisto"/>
     <dataType className="LocalDate" id="EINDT" isPublic="false" text="Data di consegna della posizione"/>
+    <dataType charMaxLength="30" className="String" id="ENTITY" isPublic="false" text="Entità"/>
     <dataType charMaxLength="12" className="String" id="ERNAM" isPublic="false" text="Creato da"/>
     <dataType charMaxLength="4" className="String" id="ETENR" isPublic="false" text="Numero schedulazione"/>
     <dataType className="Float" id="ETMEN" isPublic="false" numericPrecision="13" numericScale="3" text="Quantità schedulata"/>
@@ -18,6 +20,12 @@
     <dataType charMaxLength="2" className="String" id="KAPPL" isPublic="false" text="Applicazione"/>
     <dataType charMaxLength="10" className="String" id="KOSTL" isPublic="false" text="Centro di Costo"/>
     <dataType charMaxLength="10" className="String" id="KUNNR" isPublic="false" text="Codice Cliente"/>
+    <dataType className="Integer" id="LAST_COUNT" isPublic="false" text="ecord modificati trovati in S/4H nell'ultimo run"/>
+    <dataType className="long" id="LAST_DURATION_MS" isPublic="false" text="durata run in millisecondi"/>
+    <dataType charMaxLength="500" className="String" id="LAST_ERROR" isPublic="false" text="messaggio errore dell'ultimo run fallito (NULL se OK)"/>
+    <dataType charMaxLength="10" className="String" id="LAST_STATUS" isPublic="false" text="Stato"/>
+    <dataType className="LocalDateTime" id="LAST_SYNC" isPublic="false" text="ultimo run completato con successo (NULL = mai eseguito)"/>
+    <dataType className="Integer" id="LAST_UPSERTED" isPublic="false" text="record effettivamente scritti su Postgres"/>
     <dataType charMaxLength="4" className="String" id="LGORT_D" isPublic="false" text="Magazzino"/>
     <dataType charMaxLength="10" className="String" id="LIFNR" isPublic="false" text="Codice Fornitore"/>
     <dataType charMaxLength="40" className="String" id="MAKTX" isPublic="false" text="Testo breve materiale"/>
@@ -30,6 +38,7 @@
     <dataType charMaxLength="4" className="String" id="MTART" isPublic="false" text="Tipo materiale"/>
     <dataType charMaxLength="80" className="String" id="NAME1" isPublic="false" text="Nome"/>
     <dataType charMaxLength="80" className="String" id="NAME2" isPublic="false" text="Nome 2"/>
+    <dataType className="LocalDateTime" id="NEXT_SYNC_FROM" isPublic="false" text="valore da usare come filtro al prossimo run"/>
     <dataType charMaxLength="10" className="String" id="PRCTR" isPublic="false" text="Profit Center"/>
     <dataType charMaxLength="4" className="String" id="RESWK" isPublic="false" text="Devisione fornitrice dell'ordne di trasporto"/>
     <dataType charMaxLength="1" className="String" id="SOBKZ" isPublic="false" text="Cd. stock speciale"/>
@@ -38,6 +47,7 @@
     <dataType charMaxLength="20" className="String" id="STCEG" isPublic="false" text="Partita IVA CEE"/>
     <dataType charMaxLength="20" className="String" id="TRAID" isPublic="false" text="Identificazione trasporto"/>
     <dataType charMaxLength="12" className="String" id="UNAME" isPublic="false" text="Utente"/>
+    <dataType className="LocalDateTime" id="UPDATED_AT" isPublic="false" text="Aggiornato alle"/>
     <dataType className="Boolean" id="UPDFL" isPublic="false" text="Flag di aggiornamento"/>
     <dataType className="LocalTime" id="UZEIT" isPublic="false" text="Ora"/>
     <dataType className="Float" id="VOMNG" isPublic="false" numericPrecision="13" numericScale="3" text="Quantità precedente per schedulazioni"/>
@@ -308,6 +318,18 @@
         <property dataType="ccda_base.idString50" id="movid" mandatory="false" sequence="7" text="Id Mov"/>
         <property dataType="ccda_base.textLong500" id="query_string" mandatory="false" sequence="4" text="Query"/>
         <property dataType="ccda_base.textLong500" id="response" mandatory="false" sequence="5" text="Risposta"/>
+    </entity>
+    <entity id="FCSSYNC" isPublic="true" isTransient="false" text="Tabella di controllo sincronizzazione delta">
+        <property dataType="ENTITY" id="entity" key="true" mandatory="true" sequence="1" text="Entita"/>
+        <property dataType="LAST_COUNT" id="last_count" mandatory="false" sequence="4" text="record modificati trovati in S/4H nell'ultimo run"/>
+        <property dataType="LAST_ERROR" id="last_error" mandatory="false" sequence="8" text="messaggio errore dell'ultimo run fallito (NULL se OK)"/>
+        <property dataType="LAST_STATUS" id="last_status" mandatory="false" sequence="6" text="Ultimo stato"/>
+        <property dataType="LAST_SYNC" id="last_sync" mandatory="false" sequence="2" text="ultimo run completato con successo (NULL = mai eseguito)"/>
+        <property dataType="LAST_UPSERTED" id="last_upserted" mandatory="false" sequence="5" text="record effettivamente scritti su DB"/>
+        <property dataType="NEXT_SYNC_FROM" id="next_sync_from" mandatory="false" sequence="3" text="valore da usare come filtro al prossimo run"/>
+        <property dataType="CREATED_AT" id="created_at" mandatory="false" sequence="9" text="Creato il"/>
+        <property dataType="UPDATED_AT" id="updated_at" mandatory="false" sequence="10" text="Aggiornato il"/>
+        <property dataType="LAST_DURATION_MS" id="last_duration_ms" mandatory="false" sequence="7" text="durata run in millisecondi"/>
     </entity>
     <entity id="FCST001" isPublic="true" text="SAP-FCS:Parametrizzazoine per tipo materiale">
         <property dataType="MTART" id="mtart" key="true" mandatory="false" sequence="1" text="Tipo materiale"/>

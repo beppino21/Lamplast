@@ -737,6 +737,32 @@ public class FcsRepository implements AutoCloseable {
         return result;
     }
 
+ // =============================================================================
+ // PATCH da aggiungere a FcsRepository.java
+ // =============================================================================
+ // Aggiungere questo metodo alla classe FcsRepository, subito prima del
+ // blocco "// AutoCloseable".
+ //
+ // Serve a SyncRepository per condividere la stessa Connection JDBC
+ // senza aprirne una seconda (evita due transazioni parallele sullo stesso DB).
+ // =============================================================================
+
+     // -------------------------------------------------------------------------
+     // Accesso alla connessione (per SyncRepository)
+     // -------------------------------------------------------------------------
+
+     /**
+      * Restituisce la Connection JDBC attiva.
+      *
+      * Usato da {@link com.eone.fcs.repository.SyncRepository} per condividere
+      * la stessa connessione e lo stesso tenant senza aprirne una seconda.
+      *
+      * @return la Connection corrente (mai null finché il repository è aperto)
+      */
+     public java.sql.Connection getConnection() {
+         return conn;
+     }
+    
     // -------------------------------------------------------------------------
     // AutoCloseable
     // -------------------------------------------------------------------------
