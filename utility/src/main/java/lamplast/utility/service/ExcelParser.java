@@ -238,10 +238,18 @@ public class ExcelParser {
     }
 
     private String getCellValue(Cell cell, DataFormatter formatter) {
-        if (cell.getCellType() == CellType.NUMERIC
-                && org.apache.poi.ss.usermodel.DateUtil.isCellDateFormatted(cell)) {
-            LocalDate date = cell.getLocalDateTimeCellValue().toLocalDate();
-            return date.format(dateFormatter);
+        if (cell.getCellType() == CellType.NUMERIC) {
+            if (org.apache.poi.ss.usermodel.DateUtil.isCellDateFormatted(cell)) {
+                LocalDate date = cell.getLocalDateTimeCellValue().toLocalDate();
+                return date.format(dateFormatter);
+            }
+            // Legge il valore numerico grezzo evitando notazione scientifica
+            // o formattazioni Excel (separatori migliaia, ecc.)
+            double d = cell.getNumericCellValue();
+            if (d == Math.floor(d) && !Double.isInfinite(d)) {
+                return String.valueOf((long) d);
+            }
+            return String.valueOf(d);
         }
         return formatter.formatCellValue(cell);
     }

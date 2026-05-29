@@ -49,7 +49,7 @@ public class SapScheduleLineService {
         if (data.isInsert()) {
             return checkPositionExists(data, paddedItem);
         } else {
-            return checkScheduleLineExists(data.getOrderNumber(), paddedItem, paddedSched, data);
+            return checkScheduleLineExists(normalizeOrderNumber(data.getOrderNumber()), paddedItem, paddedSched, data);
         }
     }
 
@@ -61,7 +61,7 @@ public class SapScheduleLineService {
     private SapDryRunResult checkPositionExists(ScheduleLineData data,
                                                 String paddedItem) throws Exception {
         String url = config.getSalesOrderApiUrl()
-            + "A_SalesOrderItem(SalesOrder='" + data.getOrderNumber() + "'"
+            + "A_SalesOrderItem(SalesOrder='" + normalizeOrderNumber(data.getOrderNumber()) + "'"
             + ",SalesOrderItem='" + paddedItem + "')"
             + "?$select=SalesOrder,SalesOrderItem,Material"
             + "&sap-client=" + config.getClient();
@@ -323,7 +323,7 @@ public class SapScheduleLineService {
         String paddedItem = String.format("%06d", data.getItemNumber());
 
         String payload = "{"
-            + "\"SalesOrder\":\""                + data.getOrderNumber() + "\","
+            + "\"SalesOrder\":\""                + normalizeOrderNumber(data.getOrderNumber()) + "\","
             + "\"SalesOrderItem\":\""            + paddedItem            + "\","
             + "\"RequestedDeliveryDate\":\""     + sapDate               + "\","
             + "\"ScheduleLineOrderQuantity\":\"" + cleanQty              + "\""
@@ -364,7 +364,7 @@ public class SapScheduleLineService {
 
         String url = config.getSalesOrderApiUrl()
             + "A_SalesOrderScheduleLine("
-            + "SalesOrder='"     + data.getOrderNumber() + "',"
+            + "SalesOrder='"     + normalizeOrderNumber(data.getOrderNumber()) + "',"
             + "SalesOrderItem='" + paddedItem            + "',"
             + "ScheduleLine='"   + paddedSched           + "'"
             + ")?sap-client="    + config.getClient();
@@ -386,6 +386,10 @@ public class SapScheduleLineService {
     // -------------------------------------------------------
     // HTTP GET helper (per dry-run, senza CSRF)
     // -------------------------------------------------------
+
+    private String normalizeOrderNumber(String raw) {
+        return config.normalizeOrderNumber(raw);
+    }
 
     private HttpResponse<String> doGet(String url) throws Exception {
         HttpRequest request = HttpRequest.newBuilder()

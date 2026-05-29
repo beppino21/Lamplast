@@ -153,10 +153,11 @@ public class Xlsx2schedlinesUI extends PageBean implements Serializable {
         public void onRowExecute() { showOrderDetails(data.getOrderNumber()); }
 
         private void showOrderDetails(String orderNumber) {
+            String sapOrderNumber = sapConfig.normalizeOrderNumber(orderNumber);
             Statusbar.outputSuccess("Ordine selezionato: " + orderNumber);
-            m_salesOrderNumberVA03  = sapConfig.getFullUrlVa03(orderNumber);
+            m_salesOrderNumberVA03  = sapConfig.getFullUrlVa03(sapOrderNumber);
             m_enableVA03            = true;
-            m_salesOrderNumberFiori = sapConfig.getFullUrlFiori(orderNumber);
+            m_salesOrderNumberFiori = sapConfig.getFullUrlFiori(sapOrderNumber);
             m_enableFioriVA03       = true;
         }
 

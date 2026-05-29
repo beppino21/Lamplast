@@ -21,6 +21,10 @@ public class SapConfiguration {
     private final String urlVa03;
     private final String urlFiori;
 
+    // --- Normalizzazione numerazione OdV ---
+    private final String odvVirtualPrefix;
+    private final long   odvVirtualOffset;
+
     // --- Log stampa ---
     private final String logPrintFolder;
 
@@ -59,6 +63,11 @@ public class SapConfiguration {
                             "/sap/bc/ui2/flp#SalesOrder-manage?SalesOrder=");
         this.urlFiori = props.getProperty("sap.url.fiori",
                             "/sap/bc/ui2/flp#SalesOrder-displayFactSheet?SalesOrder=");
+
+        // Normalizzazione numerazione OdV
+        this.odvVirtualPrefix = props.getProperty("odv.virtual.prefix", "").trim();
+        String offsetStr = props.getProperty("odv.virtual.offset", "0").trim();
+        this.odvVirtualOffset = offsetStr.isEmpty() ? 0L : Long.parseLong(offsetStr);
 
         // Cartella log stampa
         this.logPrintFolder = props.getProperty("log.printFolder", "logprint");
@@ -144,6 +153,31 @@ public class SapConfiguration {
 
     public String getSalesOrderApiUrl() {
         return baseUrl + "/sap/opu/odata/SAP/API_SALES_ORDER_SRV/";
+    }
+
+    // -------------------------------------------------------
+    // GETTER — Normalizzazione numerazione OdV
+    // -------------------------------------------------------
+
+    public String getOdvVirtualPrefix() { return odvVirtualPrefix; }
+    public long   getOdvVirtualOffset() { return odvVirtualOffset; }
+
+    /**
+     * Se il numero d'ordine inizia con il prefisso virtuale configurato,
+     * sottrae l'offset per ottenere il numero reale SAP4.
+     * Es. "1130000042" con prefix="113" e offset=1130000000 → "42"
+     * Se il prefisso non è configurato, restituisce il valore invariato.
+     */
+    public String normalizeOrderNumber(String raw) {
+        if (raw == null || raw.isBlank() || odvVirtualPrefix.isEmpty()) return raw;
+        if (raw.startsWith(odvVirtualPrefix)) {
+            try {
+                long num    = Long.parseLong(raw.trim());
+                long result = num - odvVirtualOffset;
+                if (result > 0) return String.valueOf(result);
+            } catch (NumberFormatException ignored) {}
+        }
+        return raw;
     }
 
     // -------------------------------------------------------

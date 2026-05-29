@@ -146,7 +146,7 @@ public class GoodsReceiptClient {
      * SAP S/4HC richiede questo handshake per tutte le operazioni di scrittura.
      */
     private String fetchCsrfToken() {
-        String url = baseUrl + SERVICE_PATH + "/$metadata";
+        String url = baseUrl + SERVICE_PATH + "/$metadata";  // ← aggiunto
         try {
             HttpRequest req = HttpRequest.newBuilder()
                     .uri(URI.create(url))
