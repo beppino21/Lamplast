@@ -200,6 +200,22 @@
             <text>Sincronizzazione SAP -&gt; FCS Bridge</text>
             <folderOpened>false</folderOpened>
             <subNodes>
+                <text>Check Scheduled Synchronization</text>
+                <folderOpened>false</folderOpened>
+                <workpageStartInfo>
+                    <pageBeanName>eone.fcs.view.dialogs.FCSSYNCList</pageBeanName>
+                    <id>eone.fcs.view.dialogs.FCSSYNCList</id>
+                    <openMultipleInstances>false</openMultipleInstances>
+                    <decorated>true</decorated>
+                    <popupSupported>false</popupSupported>
+                    <closeSupported>true</closeSupported>
+                    <openAsPopupByDefault>false</openAsPopupByDefault>
+                    <excludeFromSavePerspective>false</excludeFromSavePerspective>
+                    <paramMap/>
+                    <sortIndex>-1</sortIndex>
+                </workpageStartInfo>
+            </subNodes>
+            <subNodes>
                 <text>Update Bridge Data</text>
                 <folderOpened>false</folderOpened>
                 <workpageStartInfo>
