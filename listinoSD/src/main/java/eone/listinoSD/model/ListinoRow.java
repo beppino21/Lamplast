@@ -18,6 +18,7 @@ public class ListinoRow {
     private LocalDate validFrom;
     private LocalDate validTo;
     private boolean   preferredZone;
+    private boolean   unitMismatch;   // true se UM PPR0 ≠ UM ZTRA
 
     public ListinoRow() {}
 
@@ -71,20 +72,12 @@ public class ListinoRow {
     public void      setValidTo(LocalDate v)             { this.validTo = v; }
     public boolean   isPreferredZone()                   { return preferredZone; }
     public void      setPreferredZone(boolean v)         { this.preferredZone = v; }
-
-    public double getPrice1() { return price[0]; }
-    public double getPrice2() { return price[1]; }
-    public double getPrice3() { return price[2]; }
-    public double getPrice4() { return price[3]; }
-    public double getPrice5() { return price[4]; }
-    public double getScaleQty1() { return scaleQty[0]; }
-    public double getScaleQty2() { return scaleQty[1]; }
-    public double getScaleQty3() { return scaleQty[2]; }
-    public double getScaleQty4() { return scaleQty[3]; }
-    public double getScaleQty5() { return scaleQty[4]; }
+    public boolean   isUnitMismatch()                    { return unitMismatch; }
+    public void      setUnitMismatch(boolean v)          { this.unitMismatch = v; }
 
     public boolean isCustomerRow()  { return rowType == RowType.CUSTOMER; }
     public boolean isMaterialRow()  { return rowType == RowType.MATERIAL; }
     public boolean isZoneRow()      { return rowType == RowType.ZONE; }
-    public boolean isHeaderRow()    { return rowType == RowType.HEADER_MAT || rowType == RowType.HEADER_ZONE; }
+    public boolean isHeaderRow()    { return rowType == RowType.HEADER_MAT
+                                          || rowType == RowType.HEADER_ZONE; }
 }
