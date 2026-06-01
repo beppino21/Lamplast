@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="utf-8"?>
+<t:layoutdefinition xmlns:t="http://www.captaincasa.com/controllibrary/t" >
+
+<t:beanprocessing id="g_1" beanbinding="#{d.ListinoBean}" />
+<t:rowtitlebar id="g_2" text="Listino Prezzi di Vendita" />
+<t:rowheader id="g_3" >
+<t:field id="g_10" labeltext="Cliente/i:" text="#{d.ListinoBean.customerInput}" tooltip="Es: 54  |  11 39 54  (spazi o virgole)" width="300" />
+<t:coldistance id="g_11" />
+<t:field id="g_12" labeltext="Materiale/i:" text="#{d.ListinoBean.materialInput}" tooltip="Codici materiale separati da spazio. Vuoto = tutti." width="200" />
+<t:coldistance id="g_13" />
+<t:calendarfield id="g_14" labeltext="Data rif.:" value="#{d.ListinoBean.referenceDateInput}" width="120" />
+<t:coldistance id="g_15" width="20" />
+<t:button id="g_16" actionListener="#{d.ListinoBean.onExtract}" stylevariant="ccbig" text="Estrai" width="80" />
+<t:coldistance id="g_17" />
+<t:button id="g_18" actionListener="#{d.ListinoBean.onReset}" text="Reset" width="80" />
+</t:rowheader>
+<t:row id="g_20" >
+<t:coldistance id="g_21" width="10" />
+<t:label id="g_22" font="weight:bold;#{d.ListinoBean.hasWarnings ? &#39;color:#cc6600&#39; : &#39;color:#007700&#39;}" text="#{d.ListinoBean.statusMessage}" />
+</t:row>
+<t:rowdistance id="g_23" height="6" />
+<t:rowbodypane id="g_30" >
+<t:row id="g_31" >
+<t:pane id="g_32" height="100%" width="100%" >
+<t:row id="g_33" >
+<t:coldistance id="g_34" width="100%" />
+<t:link id="g_35" actionListener="#{d.ListinoBean.gridListino.onEditColumnDetails}" text="Colonne..." />
+<t:coldistance id="g_36" />
+<t:link id="g_37" actionListener="#{d.ListinoBean.gridListino.onOpenGridExportFunctions}" text="Export" />
+</t:row>
+<t:row id="g_40" >
+<t:fixgrid id="g_41" height="100%" objectbinding="#{d.ListinoBean.gridListino}" sbvisibleamount="50" width="100%" >
+<t:gridcol id="g_50" text="Materiale / Zona" width="320" >
+<t:label id="g_51" font=".{rowFont}" text=".{description}" />
+</t:gridcol>
+<t:gridcol id="g_52" text="Scag. 1" width="110" >
+<t:label id="g_53" align="right" font=".{rowFont}" text=".{col1}" />
+</t:gridcol>
+<t:gridcol id="g_54" text="Scag. 2" width="110" >
+<t:label id="g_55" align="right" font=".{rowFont}" text=".{col2}" />
+</t:gridcol>
+<t:gridcol id="g_56" text="Scag. 3" width="110" >
+<t:label id="g_57" align="right" font=".{rowFont}" text=".{col3}" />
+</t:gridcol>
+<t:gridcol id="g_58" text="Scag. 4" width="110" >
+<t:label id="g_59" align="right" font=".{rowFont}" text=".{col4}" />
+</t:gridcol>
+<t:gridcol id="g_60" text="Scag. 5" width="110" >
+<t:label id="g_61" align="right" font=".{rowFont}" text=".{col5}" />
+</t:gridcol>
+<t:gridcol id="g_62" text="Div." width="45" >
+<t:label id="g_63" text=".{currency}" />
+</t:gridcol>
+<t:gridcol id="g_64" text="Per" width="45" >
+<t:label id="g_65" align="right" text=".{conditionQtyFormatted}" />
+</t:gridcol>
+<t:gridcol id="g_66" text="UM" width="55" >
+<t:label id="g_67" font=".{unitWarningFont}" text=".{conditionUnit}" />
+</t:gridcol>
+<t:gridcol id="g_68" text="Da" width="90" >
+<t:label id="g_69" text=".{validFromFormatted}" />
+</t:gridcol>
+<t:gridcol id="g_70" text="A" width="90" >
+<t:label id="g_71" text=".{validToFormatted}" />
+</t:gridcol>
+</t:fixgrid>
+</t:row>
+</t:pane>
+</t:row>
+</t:rowbodypane>
+
+</t:layoutdefinition>
