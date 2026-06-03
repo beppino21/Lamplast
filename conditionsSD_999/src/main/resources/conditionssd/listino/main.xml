@@ -4,9 +4,9 @@
 <t:beanprocessing id="g_1" beanbinding="#{d.ListinoBean}" />
 <t:rowtitlebar id="g_2" text="Listino Prezzi di Vendita" />
 <t:rowheader id="g_3" >
-<t:autocomplete id="g_10" autocompletetimer="200" labeltext="Cliente/i:" value="#{d.ListinoBean.customerInput}" valuesurl="#{d.ListinoBean.customerACURL}" width="300" />
+<t:field id="g_10" labeltext="Cliente/i:" text="#{d.ListinoBean.customerInput}" tooltip="Es: 54  |  11 39 54  (spazi o virgole)" width="300" />
 <t:coldistance id="g_11" />
-<t:autocomplete id="g_12" autocompletetimer="200" labeltext="Materiale/i:" value="#{d.ListinoBean.materialInput}" valuesurl="#{d.ListinoBean.materialACURL}" width="250" />
+<t:field id="g_12" labeltext="Materiale/i:" text="#{d.ListinoBean.materialInput}" tooltip="Codici materiale separati da spazio. Vuoto = tutti." width="200" />
 <t:coldistance id="g_13" />
 <t:calendarfield id="g_14" labeltext="Data rif.:" value="#{d.ListinoBean.referenceDateInput}" width="120" />
 <t:coldistance id="g_15" width="20" />

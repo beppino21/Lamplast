@@ -20,13 +20,6 @@ import eOne.conditionsSD.model.ExtractParams;
 import eOne.conditionsSD.model.ListinoRow;
 import eOne.conditionsSD.model.ListinoRow.RowType;
 import eOne.conditionsSD.s4client.S4Config;
-import eOne.conditionsSD.s4client.S4HttpClient;
-import eOne.conditionsSD.s4client.CustomerClient;
-import eOne.conditionsSD.s4client.MaterialClient;
-import java.util.LinkedHashMap;
-import java.util.Map;
-import org.eclnt.jsfserver.util.AutoCompleteMgr;
-import org.eclnt.jsfserver.util.DefaultAutoCompleteProvider;
 
 @CCGenClass(expressionBase = "#{d.ListinoBean}")
 public class ListinoBean extends PageBean implements Serializable {
@@ -130,10 +123,7 @@ public class ListinoBean extends PageBean implements Serializable {
 
         private String formatDelta(int n) {
             double v = row.getPrice()[n - 1];
-            if (row.isPreferredZone()) {
-                // Zona k*: mostra il prezzo assoluto del trasporto tra parentesi
-                return v == 0.0 ? "" : String.format("(%,.2f)", v);
-            }
+            if (row.isPreferredZone()) return v == 0.0 ? "—" : String.format("%+,.2f", v);
             return v != 0.0 ? String.format("%+,.2f", v) : "—";
         }
 
@@ -178,10 +168,7 @@ public class ListinoBean extends PageBean implements Serializable {
     // ═══════════════════════════════════════════════════════════════════════
     // PageBean
     // ═══════════════════════════════════════════════════════════════════════
-    public ListinoBean() {
-        AutoCompleteMgr.add(m_customerProvider);
-        AutoCompleteMgr.add(m_materialProvider);
-    }
+    public ListinoBean() {}
 
     @Override
     public String getPageName()                 { return "/conditionssd/listino/main.xml"; }
@@ -192,10 +179,8 @@ public class ListinoBean extends PageBean implements Serializable {
     // Azioni
     // ═══════════════════════════════════════════════════════════════════════
     public void onExtract(ActionEvent event) {
-        boolean noCustomer = m_customerInput == null || m_customerInput.isBlank();
-        boolean noMaterial = m_materialInput == null || m_materialInput.isBlank();
-        if (noCustomer && noMaterial) {
-            m_statusMessage = "Inserire almeno un codice cliente o un codice materiale.";
+        if (m_customerInput == null || m_customerInput.isBlank()) {
+            m_statusMessage = "Inserire almeno un codice cliente (es: 54  oppure  11 39 54).";
             m_hasWarnings   = true;
             return;
         }
@@ -273,106 +258,11 @@ public class ListinoBean extends PageBean implements Serializable {
     // ═══════════════════════════════════════════════════════════════════════
     public FIXGRIDListBinding<GridListinoItem> getGridListino() { return m_gridListino; }
     public String  getCustomerInput()              { return m_customerInput; }
-    public void    setCustomerInput(String v)       { m_customerInput = extractCode(v); }
+    public void    setCustomerInput(String v)       { m_customerInput = v; }
     public String  getMaterialInput()              { return m_materialInput; }
-    public void    setMaterialInput(String v)       { m_materialInput = extractCode(v); }
-
-    /** Estrae il codice dalla stringa "CODICE — Descrizione" selezionata dall autocomplete */
-    private String extractCode(String v) {
-        if (v == null) return "";
-        int sep = v.indexOf(" — ");
-        return sep > 0 ? v.substring(0, sep).trim() : v.trim();
-    }
+    public void    setMaterialInput(String v)       { m_materialInput = v; }
     public Date   getReferenceDateInput()          { return m_referenceDateInput; }
     public void   setReferenceDateInput(Date v)    { m_referenceDateInput = v; }
     public String  getStatusMessage()              { return m_statusMessage; }
     public boolean isHasWarnings()                 { return m_hasWarnings; }
-
-    // ═══════════════════════════════════════════════════════════════════════
-    // Autocomplete clienti
-    // ═══════════════════════════════════════════════════════════════════════
-
-    private final DefaultAutoCompleteProvider m_customerProvider =
-        new DefaultAutoCompleteProvider() {
-            private static final long serialVersionUID = 1L;
-            @Override
-            public List<String> getProposals(String searchString) {
-                List<String> proposals = new ArrayList<>();
-                if (searchString == null || searchString.trim().length() < 2) return proposals;
-                try {
-                    S4Config cfg = S4Config.fromCCConfig();
-                    S4HttpClient http = new S4HttpClient(cfg);
-                    String term = searchString.trim();
-                    String filter;
-                    if (term.contains("*")) {
-                        String t = term.replace("*", "");
-                        filter = "substringof('" + t + "',Customer)"
-                               + " or substringof('" + t + "',CustomerName)";
-                    } else {
-                        filter = "startswith(Customer,'" + term + "')"
-                               + " or substringof('" + term + "',CustomerName)";
-                    }
-                    String path = "/sap/opu/odata/sap/API_BUSINESS_PARTNER/A_Customer"
-                                + "?$filter=" + S4HttpClient.encode(filter)
-                                + "&$select=Customer,CustomerName"
-                                + "&$top=20&$format=json";
-                    com.fasterxml.jackson.databind.JsonNode root = http.getOData(path);
-                    com.fasterxml.jackson.databind.JsonNode results = root.path("d").path("results");
-                    if (results.isArray()) {
-                        for (com.fasterxml.jackson.databind.JsonNode n : results) {
-                            String code = n.path("Customer").asText("").strip();
-                            String name = n.path("CustomerName").asText("").strip();
-                            proposals.add(code + " — " + name);
-                        }
-                    }
-                } catch (Exception e) {
-                    System.err.println("Autocomplete clienti errore: " + e.getMessage());
-                }
-                return proposals;
-            }
-        };
-
-    public String getCustomerACURL() { return m_customerProvider.getURL(); }
-
-    // ═══════════════════════════════════════════════════════════════════════
-    // Autocomplete materiali
-    // ═══════════════════════════════════════════════════════════════════════
-
-    private final DefaultAutoCompleteProvider m_materialProvider =
-        new DefaultAutoCompleteProvider() {
-            private static final long serialVersionUID = 1L;
-            @Override
-            public List<String> getProposals(String searchString) {
-                List<String> proposals = new ArrayList<>();
-                if (searchString == null || searchString.trim().length() < 2) return proposals;
-                try {
-                    S4Config cfg = S4Config.fromCCConfig();
-                    S4HttpClient http = new S4HttpClient(cfg);
-                    String term = searchString.trim();
-                    String lang = cfg.getLanguage();
-                    String t = term.replace("*", "");
-                    String filter = "Language eq '" + lang + "'"
-                        + " and (substringof('" + t + "',Product)"
-                        + " or substringof('" + t + "',ProductDescription))";
-                    String path = "/sap/opu/odata/SAP/API_PRODUCT_SRV/A_ProductDescription"
-                                + "?$filter=" + S4HttpClient.encode(filter)
-                                + "&$select=Product,ProductDescription"
-                                + "&$top=20&$format=json";
-                    com.fasterxml.jackson.databind.JsonNode root = http.getOData(path);
-                    com.fasterxml.jackson.databind.JsonNode results = root.path("d").path("results");
-                    if (results.isArray()) {
-                        for (com.fasterxml.jackson.databind.JsonNode n : results) {
-                            String code = n.path("Product").asText("").strip();
-                            String desc = n.path("ProductDescription").asText("").strip();
-                            proposals.add(code + " — " + desc);
-                        }
-                    }
-                } catch (Exception e) {
-                    System.err.println("Autocomplete materiali errore: " + e.getMessage());
-                }
-                return proposals;
-            }
-        };
-
-    public String getMaterialACURL() { return m_materialProvider.getURL(); }
 }

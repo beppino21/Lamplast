@@ -95,20 +95,17 @@ public class ListinoBuilder {
             }
 
             // ── Blocco B: Zone alternative (scala = unione soglie ZTRA) ───
-            // Blocco zone: sempre emesso, zona k* sempre per prima
-            {
+            if (zoneMap.size() > 1) {
                 double[] ztraScale  = buildZoneScale(zoneMap);
                 int      ztraActive = countActive(ztraScale);
                 String   ztraUnit   = nvl(ztraKStar.getConditionUnit(), "");
 
                 rows.add(ListinoRow.headerZoneRow(custCode));
+                // Header scala zone (separato dall'header materiali)
                 rows.add(ListinoRow.headerScaleRow(custCode, ztraScale, ztraUnit, ztraActive));
 
-                // Zona k* sempre prima, poi le altre in ordine alfabetico
                 List<String> sortedZones = new ArrayList<>(zoneMap.keySet());
                 Collections.sort(sortedZones);
-                sortedZones.remove(kStar);
-                sortedZones.add(0, kStar);
                 for (String zone : sortedZones) {
                     rows.add(buildZoneRow(custCode, zone, zoneMap.get(zone),
                              ztraKStar, zone.equals(kStar), ztraScale, ztraActive));
@@ -335,22 +332,11 @@ public class ListinoBuilder {
         row.setActiveCols(activeCols);
 
         double[] delta = new double[5];
-        boolean ztraKFlat     = isFlat(ztraK.getScaleQty());
-        boolean ztraKStarFlat = isFlat(ztraKStar.getScaleQty());
-        boolean bothZtraFlat  = ztraKFlat && ztraKStarFlat;
-
-        if (bothZtraFlat) {
-            // Flat: prezzo assoluto ZTRA k* in slot 4
-            double pK = priceAt(ztraK.getScaleQty(), ztraK.getScalePrice(), ztraK.getScaleType(), 0);
-            delta[4] = pK;
-        } else {
-            for (int i = 0; i < activeCols; i++) {
-                double atQty = ztraQty[i];
-                double pK    = priceAt(ztraK.getScaleQty(), ztraK.getScalePrice(), ztraK.getScaleType(), atQty);
-                // Per zona preferenziale: prezzo assoluto; per le altre: delta
-                delta[i] = isPreferred ? pK
-                    : pK - priceAt(ztraKStar.getScaleQty(), ztraKStar.getScalePrice(), ztraKStar.getScaleType(), atQty);
-            }
+        for (int i = 0; i < activeCols; i++) {
+            double atQty  = ztraQty[i];
+            double pK     = priceAt(ztraK.getScaleQty(),     ztraK.getScalePrice(),     ztraK.getScaleType(),     atQty);
+            double pKStar = priceAt(ztraKStar.getScaleQty(), ztraKStar.getScalePrice(), ztraKStar.getScaleType(), atQty);
+            delta[i] = pK - pKStar;
         }
         row.setPrice(delta);
         row.setValidFrom(maxDate(ztraK.getValidFrom(), ztraKStar.getValidFrom()));
