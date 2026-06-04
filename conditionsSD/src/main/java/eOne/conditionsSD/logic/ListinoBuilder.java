@@ -1,5 +1,6 @@
 package eOne.conditionsSD.logic;
 
+import eOne.conditionsSD.model.ExtractMode;
 import eOne.conditionsSD.model.ExtractParams;
 import eOne.conditionsSD.model.ListinoRow;
 import eOne.conditionsSD.model.PricingRecord;
@@ -23,13 +24,15 @@ public class ListinoBuilder {
             List<PricingRecord>       ppr0List,
             List<PricingRecord>       ztraList,
             Map<String, String>       materialDescriptions,
+            Map<String, String>       zoneDescriptions,
             ExtractParams             params) {
 
         warnings.clear();
+        ExtractMode mode = params.getExtractMode();
         Map<String, Map<String, PricingRecord>> ppr0Index = index(ppr0List, true);
         Map<String, Map<String, PricingRecord>> ztraIndex = index(ztraList, false);
-        List<ListinoRow> rows    = new ArrayList<>();
-        List<ListinoRow> alerts  = new ArrayList<>(); // righe allarme in coda
+        List<ListinoRow> rows   = new ArrayList<>();
+        List<ListinoRow> alerts = new ArrayList<>();
 
         List<String> sortedCustomers = new ArrayList<>(customers.keySet());
         Collections.sort(sortedCustomers);
@@ -43,75 +46,97 @@ public class ListinoBuilder {
                 warnings.add("Cliente " + custCode + ": nessuna condizione PPR0/ZTRA — saltato.");
                 continue;
             }
+
             String kStar = info.getBzirk();
             if (kStar == null || kStar.trim().isEmpty()) {
                 warnings.add("Cliente " + custCode + ": BZIRK non valorizzato — saltato.");
                 continue;
             }
-            if (!zoneMap.containsKey(kStar)) {
+
+            // Per modalità FULL e PPR0 serve ztraKStar; per ZTRA puro non serve
+            PricingRecord ztraKStar = zoneMap.get(kStar);
+            if (mode != ExtractMode.ZTRA && ztraKStar == null) {
                 warnings.add("Cliente " + custCode + ": BZIRK='" + kStar
                     + "' non presente nelle condizioni ZTRA — saltato.");
                 continue;
             }
 
-            PricingRecord ztraKStar = zoneMap.get(kStar);
+            // Salta il cliente se non ha dati rilevanti per la modalità scelta
+            if (mode == ExtractMode.PPR0 && matMap.isEmpty()) continue;
+            if (mode == ExtractMode.ZTRA && zoneMap.isEmpty()) continue;
 
-            // ── Intestazione cliente ──────────────────────────────────────
-            rows.add(ListinoRow.customerRow(custCode, info.getName()));
+            // Intestazione cliente
+            String custHeader = custCode + " — " + info.getName();
+            if (info.hasPriceGroup()) custHeader += "  [Gruppo: " + info.getPriceGroup() + "]";
+            rows.add(ListinoRow.customerRow(custCode, custHeader));
 
-            // ── Blocco A: Prezzi materiale (scala = merge PPR0 + ZTRA k*) ─
-            Map<String, List<PricingRecord>> byScale   = new LinkedHashMap<>();
-            Map<String, double[]>            scaleQtyMap  = new LinkedHashMap<>();
-            Map<String, String>              scaleUnitMap = new LinkedHashMap<>();
+            // ── Blocco A: Prezzi materiale ────────────────────────────────
+            if (mode == ExtractMode.FULL || mode == ExtractMode.PPR0) {
+                Map<String, List<PricingRecord>> byScale   = new LinkedHashMap<>();
+                Map<String, double[]>            scaleQtyMap  = new LinkedHashMap<>();
+                Map<String, String>              scaleUnitMap = new LinkedHashMap<>();
 
-            List<String> sortedMat = new ArrayList<>(matMap.keySet());
-            Collections.sort(sortedMat);
+                List<String> sortedMat = new ArrayList<>(matMap.keySet());
+                Collections.sort(sortedMat);
 
-            for (String mat : sortedMat) {
-                PricingRecord ppr0 = matMap.get(mat);
-                double[] mergedQty = mergeScaleQty(
-                    ppr0.getScaleQty(), ppr0.getScaleType(),
-                    ztraKStar.getScaleQty(), ztraKStar.getScaleType());
-                String key = Arrays.toString(mergedQty);
-                byScale.computeIfAbsent(key, k -> new ArrayList<>()).add(ppr0);
-                scaleQtyMap.put(key, mergedQty);
-                String unit = nvl(ppr0.getConditionUnit(), ztraKStar.getConditionUnit());
-                scaleUnitMap.put(key, unit);
+                for (String mat : sortedMat) {
+                    PricingRecord ppr0 = matMap.get(mat);
+                    double[] mergedQty;
+                    if (mode == ExtractMode.FULL) {
+                        mergedQty = mergeScaleQty(
+                            ppr0.getScaleQty(), ppr0.getScaleType(),
+                            ztraKStar.getScaleQty(), ztraKStar.getScaleType());
+                        if (hasScaleConflict(ppr0, ztraKStar))
+                            alerts.add(buildAlertRow(custCode, info.getName(), mat, ppr0, ztraKStar));
+                    } else {
+                        // PPR0 puro: scala solo PPR0
+                        mergedQty = ppr0.getScaleQty();
+                    }
+                    String key = Arrays.toString(mergedQty);
+                    byScale.computeIfAbsent(key, k -> new ArrayList<>()).add(ppr0);
+                    scaleQtyMap.put(key, mergedQty);
+                    String unit = mode == ExtractMode.FULL
+                        ? nvl(ppr0.getConditionUnit(), ztraKStar.getConditionUnit())
+                        : nvl(ppr0.getConditionUnit(), "");
+                    scaleUnitMap.put(key, unit);
+                }
 
-                // Verifica allineamento soglie PPR0 vs ZTRA k*
-                if (hasScaleConflict(ppr0, ztraKStar)) {
-                    alerts.add(buildAlertRow(custCode, info.getName(), mat, ppr0, ztraKStar));
+                for (String key : byScale.keySet()) {
+                    double[] mergedQty  = scaleQtyMap.get(key);
+                    String   scaleUnit  = scaleUnitMap.get(key);
+                    int      activeCols = countActive(mergedQty);
+                    rows.add(ListinoRow.headerScaleRow(custCode, mergedQty, scaleUnit, activeCols));
+                    for (PricingRecord ppr0 : byScale.get(key))
+                        rows.add(mode == ExtractMode.FULL
+                            ? buildMaterialRow(custCode, ppr0, ztraKStar,
+                                mergedQty, activeCols, materialDescriptions)
+                            : buildPPR0OnlyRow(custCode, ppr0,
+                                mergedQty, activeCols, materialDescriptions));
                 }
             }
 
-            for (String key : byScale.keySet()) {
-                double[] mergedQty  = scaleQtyMap.get(key);
-                String   scaleUnit  = scaleUnitMap.get(key);
-                int      activeCols = countActive(mergedQty);
-                rows.add(ListinoRow.headerScaleRow(custCode, mergedQty, scaleUnit, activeCols));
-                for (PricingRecord ppr0 : byScale.get(key))
-                    rows.add(buildMaterialRow(custCode, ppr0, ztraKStar,
-                             mergedQty, activeCols, materialDescriptions));
-            }
-
-            // ── Blocco B: Zone alternative (scala = unione soglie ZTRA) ───
-            // Blocco zone: sempre emesso, zona k* sempre per prima
-            {
+            // ── Blocco B: Zone ────────────────────────────────────────────
+            if (mode == ExtractMode.FULL || mode == ExtractMode.ZTRA) {
                 double[] ztraScale  = buildZoneScale(zoneMap);
                 int      ztraActive = countActive(ztraScale);
-                String   ztraUnit   = nvl(ztraKStar.getConditionUnit(), "");
+                String   ztraUnit   = nvl(zoneMap.values().iterator().next().getConditionUnit(), "");
 
                 rows.add(ListinoRow.headerZoneRow(custCode));
                 rows.add(ListinoRow.headerScaleRow(custCode, ztraScale, ztraUnit, ztraActive));
 
-                // Zona k* sempre prima, poi le altre in ordine alfabetico
                 List<String> sortedZones = new ArrayList<>(zoneMap.keySet());
                 Collections.sort(sortedZones);
-                sortedZones.remove(kStar);
-                sortedZones.add(0, kStar);
+                if (zoneMap.containsKey(kStar)) {
+                    sortedZones.remove(kStar);
+                    sortedZones.add(0, kStar);
+                }
                 for (String zone : sortedZones) {
-                    rows.add(buildZoneRow(custCode, zone, zoneMap.get(zone),
-                             ztraKStar, zone.equals(kStar), ztraScale, ztraActive));
+                    boolean isPref = zone.equals(kStar);
+                    rows.add(mode == ExtractMode.FULL
+                        ? buildZoneRow(custCode, zone, zoneMap.get(zone),
+                            ztraKStar, isPref, ztraScale, ztraActive, zoneDescriptions)
+                        : buildZTRAAbsoluteRow(custCode, zone, zoneMap.get(zone),
+                            isPref, ztraScale, ztraActive, zoneDescriptions));
                 }
             }
         }
@@ -267,6 +292,73 @@ public class ListinoBuilder {
     // ═══════════════════════════════════════════════════════════════════════
     // Costruzione righe
     // ═══════════════════════════════════════════════════════════════════════
+    // ── Riga materiale PPR0 puro (senza aggiunta ZTRA) ───────────────────
+    // ═══════════════════════════════════════════════════════════════════════
+
+    private ListinoRow buildPPR0OnlyRow(String custCode, PricingRecord ppr0,
+                                        double[] scaleQty, int activeCols,
+                                        Map<String, String> materialDescriptions) {
+        ListinoRow row = new ListinoRow();
+        row.setRowType(ListinoRow.RowType.MATERIAL);
+        row.setCustomerCode(custCode);
+        String mat  = ppr0.getMaterial();
+        String desc = materialDescriptions != null ? materialDescriptions.get(mat) : null;
+        row.setDescription(desc != null && !desc.trim().isEmpty()
+            ? mat + " — " + desc : mat);
+
+        double[] price = new double[5];
+        boolean flat = isFlat(ppr0.getScaleQty());
+        if (flat) {
+            price[4] = priceAt(ppr0.getScaleQty(), ppr0.getScalePrice(), ppr0.getScaleType(), 0);
+        } else {
+            for (int i = 0; i < activeCols; i++)
+                price[i] = priceAt(ppr0.getScaleQty(), ppr0.getScalePrice(),
+                    ppr0.getScaleType(), scaleQty[i]);
+        }
+        row.setPrice(price);
+        row.setActiveCols(activeCols);
+        row.setCurrency(ppr0.getCurrency());
+        row.setConditionQty(ppr0.getConditionQty());
+        row.setConditionUnit(ppr0.getConditionUnit());
+        row.setValidFrom(ppr0.getValidFrom());
+        row.setValidTo(ppr0.getValidTo());
+        return row;
+    }
+
+    // ── Riga zona ZTRA con prezzo assoluto (non delta) ───────────────────
+    private ListinoRow buildZTRAAbsoluteRow(String custCode, String zone,
+                                            PricingRecord ztra, boolean isPreferred,
+                                            double[] ztraQty, int activeCols,
+                                            Map<String, String> zoneDescriptions) {
+        ListinoRow row = new ListinoRow();
+        row.setRowType(ListinoRow.RowType.ZONE);
+        row.setCustomerCode(custCode);
+        String desc = zoneDescriptions != null ? zoneDescriptions.get(zone) : null;
+        row.setDescription(desc != null && !desc.trim().isEmpty()
+            ? zone + " — " + desc : zone);
+        row.setPreferredZone(isPreferred);
+        row.setAbsolutePrice(true);
+
+        double[] price = new double[5];
+        boolean flat = isFlat(ztra.getScaleQty());
+        if (flat) {
+            price[4] = priceAt(ztra.getScaleQty(), ztra.getScalePrice(), ztra.getScaleType(), 0);
+        } else {
+            for (int i = 0; i < activeCols; i++)
+                price[i] = priceAt(ztra.getScaleQty(), ztra.getScalePrice(),
+                    ztra.getScaleType(), ztraQty[i]);
+        }
+        row.setPrice(price);
+        row.setActiveCols(activeCols);
+        row.setCurrency(ztra.getCurrency());
+        row.setConditionQty(ztra.getConditionQty());
+        row.setConditionUnit(ztra.getConditionUnit());
+        row.setValidFrom(ztra.getValidFrom());
+        row.setValidTo(ztra.getValidTo());
+        return row;
+    }
+
+    // ═══════════════════════════════════════════════════════════════════════
 
     private ListinoRow buildMaterialRow(String custCode, PricingRecord ppr0,
                                         PricingRecord ztraKStar,
@@ -322,11 +414,16 @@ public class ListinoBuilder {
     private ListinoRow buildZoneRow(String custCode, String zone,
                                     PricingRecord ztraK, PricingRecord ztraKStar,
                                     boolean isPreferred,
-                                    double[] ztraQty, int activeCols) {
+                                    double[] ztraQty, int activeCols,
+                                    Map<String, String> zoneDescriptions) {
         ListinoRow row = new ListinoRow();
         row.setRowType(ListinoRow.RowType.ZONE);
         row.setCustomerCode(custCode);
-        row.setDescription(zone);
+        // Descrizione: "IT36 — Nome zona" se disponibile, solo codice altrimenti
+        String desc = zoneDescriptions != null ? zoneDescriptions.get(zone) : null;
+        row.setDescription(desc != null && !desc.trim().isEmpty()
+            ? zone + " — " + desc
+            : zone);
         row.setCurrency(ztraK.getCurrency());
         row.setConditionQty(ztraK.getConditionQty());
         row.setConditionUnit(ztraK.getConditionUnit());
@@ -340,9 +437,9 @@ public class ListinoBuilder {
         boolean bothZtraFlat  = ztraKFlat && ztraKStarFlat;
 
         if (bothZtraFlat) {
-            // Flat: prezzo assoluto ZTRA k* in slot 4
-            double pK = priceAt(ztraK.getScaleQty(), ztraK.getScalePrice(), ztraK.getScaleType(), 0);
-            delta[4] = pK;
+            double pK     = priceAt(ztraK.getScaleQty(),     ztraK.getScalePrice(),     ztraK.getScaleType(),     0);
+            double pKStar = priceAt(ztraKStar.getScaleQty(), ztraKStar.getScalePrice(), ztraKStar.getScaleType(), 0);
+            delta[4] = isPreferred ? pK : pK - pKStar;
         } else {
             for (int i = 0; i < activeCols; i++) {
                 double atQty = ztraQty[i];

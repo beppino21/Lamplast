@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="utf-8"?>
+<t:layoutdefinition xmlns:t="http://www.captaincasa.com/controllibrary/t" >
+
+<t:beanprocessing id="g_1" beanbinding="#{d.ExtractorBean}" />
+<t:rowtitlebar id="g_2" text="Estrazione Condizioni S/4HC" />
+<t:rowheader id="g_3" >
+<t:button id="g_03" actionListener="#{d.ExtractorBean.onExtractPPR0}" stylevariant="ccbig" text="PPR0 — Prezzi materiale" width="200" />
+<t:coldistance id="g_04" />
+<t:button id="g_05" actionListener="#{d.ExtractorBean.onExtractZTRA}" stylevariant="ccbig" text="ZTRA — Costi trasporto" width="200" />
+<t:coldistance id="g_06" />
+<t:calendarfield id="g_07" labeltext="Data rif.:" value="#{d.ExtractorBean.referenceDateInput}" width="120" />
+<t:coldistance id="g_08" />
+<t:button id="g_09" actionListener="#{d.ExtractorBean.onReset}" text="Reset" width="80" />
+<t:coldistance id="g_10b" />
+</t:rowheader>
+<t:rowheader id="g_11" >
+<t:label id="g_13" font="weight:bold" text="#{d.ExtractorBean.statusMessage}" />
+</t:rowheader>
+<t:rowbodypane id="g_20" >
+<t:row id="g_4" >
+<t:coldistance id="g_5" width="100%" />
+<t:link id="g_51" actionListener="#{d.ExtractorBean.grid.onOpenGridExportFunctions}" text="Export" />
+</t:row>
+<t:fixgrid id="g_21" height="100%" objectbinding="#{d.ExtractorBean.grid}" sbvisibleamount="50" width="100%" >
+<t:gridcol id="g_22" text="Tipo" width="60" >
+<t:label id="g_23" text=".{conditionType}" />
+</t:gridcol>
+<t:gridcol id="g_24" text="Cliente" width="70" >
+<t:label id="g_25" text=".{customer}" />
+</t:gridcol>
+<t:gridcol id="g_26" text="Materiale" width="100" >
+<t:label id="g_27" text=".{material}" />
+</t:gridcol>
+<t:gridcol id="g_28" text="Zona" width="70" >
+<t:label id="g_29" text=".{salesDistrict}" />
+</t:gridcol>
+<t:gridcol id="g_30" text="Scag. Da" width="90" >
+<t:label id="g_31" align="right" text=".{scaleQtyFrom}" />
+</t:gridcol>
+<t:gridcol id="g_32" text="Scag. A" width="90" >
+<t:label id="g_33" align="right" text=".{scaleQtyTo}" />
+</t:gridcol>
+<t:gridcol id="g_34" text="UM Scag." width="70" >
+<t:label id="g_35" text=".{scaleUnit}" />
+</t:gridcol>
+<t:gridcol id="g_36" text="Prezzo" width="100" >
+<t:label id="g_37" align="right" text=".{price}" />
+</t:gridcol>
+<t:gridcol id="g_38" text="Div." width="50" >
+<t:label id="g_39" text=".{currency}" />
+</t:gridcol>
+<t:gridcol id="g_40" text="Per" width="60" >
+<t:label id="g_41" align="right" text=".{conditionQty}" />
+</t:gridcol>
+<t:gridcol id="g_42" text="UM" width="60" >
+<t:label id="g_43" text=".{conditionUnit}" />
+</t:gridcol>
+<t:gridcol id="g_44" text="Tipo Sc." width="60" >
+<t:label id="g_45" text=".{scaleType}" />
+</t:gridcol>
+<t:gridcol id="g_46" text="Valido Dal" width="90" >
+<t:label id="g_47" text=".{validFrom}" />
+</t:gridcol>
+<t:gridcol id="g_48" text="Valido Al" width="90" >
+<t:label id="g_49" text=".{validTo}" />
+</t:gridcol>
+</t:fixgrid>
+</t:rowbodypane>
+
+</t:layoutdefinition>

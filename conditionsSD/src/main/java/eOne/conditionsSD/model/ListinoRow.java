@@ -34,6 +34,7 @@ public class ListinoRow {
     private LocalDate validFrom;
     private LocalDate validTo;
     private boolean   preferredZone;
+    private boolean   absolutePrice; // true per ZTRA puro: prezzo assoluto, non delta
     private boolean   unitMismatch;
 
     public ListinoRow() {}
@@ -108,6 +109,8 @@ public class ListinoRow {
     public void      setValidTo(LocalDate v)             { this.validTo = v; }
     public boolean   isPreferredZone()                   { return preferredZone; }
     public void      setPreferredZone(boolean v)         { this.preferredZone = v; }
+    public boolean   isAbsolutePrice()                   { return absolutePrice; }
+    public void      setAbsolutePrice(boolean v)         { this.absolutePrice = v; }
     public boolean   isUnitMismatch()                    { return unitMismatch; }
     public void      setUnitMismatch(boolean v)          { this.unitMismatch = v; }
 

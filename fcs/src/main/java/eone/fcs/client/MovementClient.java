@@ -112,24 +112,45 @@ public class MovementClient {
 
     private MovementResult postRettificaQuantita(MovsapRiga r) {
         if (isEmpty(r.werks) || isEmpty(r.lgort) || isEmpty(r.matnr)) {
-            throw new MovementException("Campi obbligatori mancanti per rettifica quantità (werks/lgort/matnr)");
+            throw new MovementException(
+                    "Campi obbligatori mancanti per rettifica quantità (werks/lgort/matnr)");
         }
 
-        // Default a zero se non comunicato
         float menge   = r.menge    != null ? r.menge    : 0f;
         float mengeTo = r.menge_to != null ? r.menge_to : 0f;
 
-        // Errore solo se entrambi sono assenti/zero
-        if (menge == 0f && mengeTo == 0f) {
-            throw new MovementException("menge e menge_to sono entrambi assenti o zero: impossibile calcolare delta");
+        // Validazione coerenza bwart / direzione della rettifica
+        // 551 (scarico rott.) e 562 (storno carico inv.): la giacenza DIMINUISCE → menge_to < menge
+        // 552 (storno scarico rott.) e 561 (carico inv.): la giacenza AUMENTA   → menge_to > menge
+        switch (r.bwart) {
+            case "551":
+            case "562":
+                if (mengeTo >= menge) {
+                    throw new MovementException(
+                            "bwart " + r.bwart + " richiede menge_to < menge " +
+                            "(giacenza deve diminuire), ma menge=" + menge + " menge_to=" + mengeTo);
+                }
+                break;
+            case "552":
+            case "561":
+                if (mengeTo <= menge) {
+                    throw new MovementException(
+                            "bwart " + r.bwart + " richiede menge_to > menge " +
+                            "(giacenza deve aumentare), ma menge=" + menge + " menge_to=" + mengeTo);
+                }
+                break;
         }
 
-        // Il segno è implicito nel bwart: usiamo solo il valore assoluto della differenza
+        // Delta sempre positivo: il segno è già implicito nel bwart
         float delta = Math.abs(menge - mengeTo);
 
-        // bwart viene usato così com'è: la distinzione 551/552/561/562
-        // indica già se è scarico o carico, rottamazione o rettifica inventario
-        long nowMillis   = java.time.Instant.now().toEpochMilli();
+        if (delta == 0f) {
+            throw new MovementException(
+                    "Delta quantità è zero per bwart " + r.bwart +
+                    ": menge=" + menge + " menge_to=" + mengeTo);
+        }
+
+        long nowMillis   = Instant.now().toEpochMilli();
         String odataDate = "/Date(" + nowMillis + ")/";
         String headerText = "";
         String refDoc    = "ID:" + (r.movid != null ? r.movid.substring(0, 10) : "");
@@ -145,7 +166,6 @@ public class MovementClient {
 
         return callSap(payload);
     }
-
     // -----------------------------------------------------------------------
     // HTTP: CSRF fetch + POST
     // -----------------------------------------------------------------------

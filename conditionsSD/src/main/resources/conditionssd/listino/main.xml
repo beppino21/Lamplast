@@ -4,19 +4,29 @@
 <t:beanprocessing id="g_1" beanbinding="#{d.ListinoBean}" />
 <t:rowtitlebar id="g_2" text="Listino Prezzi di Vendita" />
 <t:rowheader id="g_3" >
+<t:autocomplete id="g_09" autocompletetimer="200" labeltext="Price Group:" value="#{d.ListinoBean.priceGroupInput}" valuesurl="#{d.ListinoBean.priceGroupACURL}" width="100" />
+<t:coldistance id="g_09b" />
 <t:autocomplete id="g_10" autocompletetimer="200" labeltext="Cliente/i:" value="#{d.ListinoBean.customerInput}" valuesurl="#{d.ListinoBean.customerACURL}" width="300" />
 <t:coldistance id="g_11" />
 <t:autocomplete id="g_12" autocompletetimer="200" labeltext="Materiale/i:" value="#{d.ListinoBean.materialInput}" valuesurl="#{d.ListinoBean.materialACURL}" width="250" />
 <t:coldistance id="g_13" />
 <t:calendarfield id="g_14" labeltext="Data rif.:" value="#{d.ListinoBean.referenceDateInput}" width="120" />
 <t:coldistance id="g_15" width="20" />
-<t:button id="g_16" actionListener="#{d.ListinoBean.onExtract}" stylevariant="ccbig" text="Estrai" width="80" />
+<t:button id="g_16" actionListener="#{d.ListinoBean.onExtract}"     stylevariant="ccbig" text="Estrai"             width="80"  />
 <t:coldistance id="g_17" />
-<t:button id="g_18" actionListener="#{d.ListinoBean.onReset}" text="Reset" width="80" />
+<t:button id="g_30" actionListener="#{d.ListinoBean.onExtractPPR0}" stylevariant="ccbig" text="Listino materiali"  width="140" />
+<t:coldistance id="g_31" />
+<t:button id="g_32" actionListener="#{d.ListinoBean.onExtractZTRA}" stylevariant="ccbig" text="Listino trasporti"  width="140" />
+<t:coldistance id="g_33" />
+<t:button id="g_18" actionListener="#{d.ListinoBean.onReset}"       text="Reset"             width="80"  />
 </t:rowheader>
 <t:row id="g_20" >
 <t:coldistance id="g_21" width="10" />
 <t:label id="g_22" font="weight:bold;#{d.ListinoBean.hasWarnings ? &#39;color:#cc6600&#39; : &#39;color:#007700&#39;}" text="#{d.ListinoBean.statusMessage}" />
+</t:row>
+<t:row id="g_24" rendered="#{d.ListinoBean.awaitingConfirm}" >
+<t:coldistance id="g_25" width="10" />
+<t:button id="g_26" actionListener="#{d.ListinoBean.onConfirm}" stylevariant="ccbig" text="Conferma estrazione" width="160" visiblebinding="#{d.ListinoBean.awaitingConfirm}" />
 </t:row>
 <t:rowdistance id="g_23" height="6" />
 <t:rowbodypane id="g_30" >
