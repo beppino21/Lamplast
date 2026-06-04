@@ -25,6 +25,7 @@ public class ListinoBuilder {
             List<PricingRecord>       ztraList,
             Map<String, String>       materialDescriptions,
             Map<String, String>       zoneDescriptions,
+            Map<String, String>       materialByCustomer,
             ExtractParams             params) {
 
         warnings.clear();
@@ -109,9 +110,9 @@ public class ListinoBuilder {
                     for (PricingRecord ppr0 : byScale.get(key))
                         rows.add(mode == ExtractMode.FULL
                             ? buildMaterialRow(custCode, ppr0, ztraKStar,
-                                mergedQty, activeCols, materialDescriptions)
+                                mergedQty, activeCols, materialDescriptions, materialByCustomer)
                             : buildPPR0OnlyRow(custCode, ppr0,
-                                mergedQty, activeCols, materialDescriptions));
+                                mergedQty, activeCols, materialDescriptions, materialByCustomer));
                 }
             }
 
@@ -297,7 +298,8 @@ public class ListinoBuilder {
 
     private ListinoRow buildPPR0OnlyRow(String custCode, PricingRecord ppr0,
                                         double[] scaleQty, int activeCols,
-                                        Map<String, String> materialDescriptions) {
+                                        Map<String, String> materialDescriptions,
+                                        Map<String, String> materialByCustomer) {
         ListinoRow row = new ListinoRow();
         row.setRowType(ListinoRow.RowType.MATERIAL);
         row.setCustomerCode(custCode);
@@ -305,6 +307,11 @@ public class ListinoBuilder {
         String desc = materialDescriptions != null ? materialDescriptions.get(mat) : null;
         row.setDescription(desc != null && !desc.trim().isEmpty()
             ? mat + " — " + desc : mat);
+        // Codice materiale cliente
+        if (materialByCustomer != null) {
+            String matByCust = materialByCustomer.get(custCode + "|" + mat);
+            row.setCustomerMaterialCode(matByCust != null ? matByCust : "");
+        }
 
         double[] price = new double[5];
         boolean flat = isFlat(ppr0.getScaleQty());
@@ -363,16 +370,21 @@ public class ListinoBuilder {
     private ListinoRow buildMaterialRow(String custCode, PricingRecord ppr0,
                                         PricingRecord ztraKStar,
                                         double[] mergedQty, int activeCols,
-                                        Map<String, String> materialDescriptions) {
+                                        Map<String, String> materialDescriptions,
+                                        Map<String, String> materialByCustomer) {
         ListinoRow row = new ListinoRow();
         row.setRowType(ListinoRow.RowType.MATERIAL);
         row.setCustomerCode(custCode);
-        // Descrizione: "codice — testo" se disponibile, solo codice altrimenti
         String mat  = ppr0.getMaterial();
         String desc = materialDescriptions != null ? materialDescriptions.get(mat) : null;
         row.setDescription(desc != null && !desc.trim().isEmpty()
             ? mat + " — " + desc
             : mat);
+        // Codice materiale cliente
+        if (materialByCustomer != null) {
+            String matByCust = materialByCustomer.get(custCode + "|" + mat);
+            row.setCustomerMaterialCode(matByCust != null ? matByCust : "");
+        }
         row.setCurrency(ppr0.getCurrency());
         row.setConditionQty(ppr0.getConditionQty());
         row.setConditionUnit(ppr0.getConditionUnit());

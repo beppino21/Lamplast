@@ -35,6 +35,8 @@ public class S4HttpClient {
             .encodeToString(credentials.getBytes(StandardCharsets.UTF_8));
     }
 
+    public S4Config getConfig() { return config; }
+
     /**
      * Esegue una GET OData e restituisce il JsonNode radice della risposta.
      * Il path è relativo al baseUrl, es.:

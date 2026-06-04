@@ -102,7 +102,60 @@ public class PricingExtractClient extends S4HttpClient {
         return result;
     }
 
-    /** Legge A_SlsPrcgConditionRecord in blocchi da 50 (OR filter) */
+    /**
+     * Estrae le condizioni TTX1 (determinazione IVA vendite) valide alla data.
+     * Nessuno scaglione — una riga per condizione.
+     */
+    public List<eOne.s4hpceExtractor.model.TaxRecord> extractTTX1(LocalDate referenceDate)
+            throws IOException, InterruptedException {
+
+        String dateStr = referenceDate.format(SAP_DATE);
+
+        String filter = "ConditionType eq 'TTX1'"
+            + " and ConditionValidityStartDate le datetime'" + dateStr + "T00:00:00'"
+            + " and ConditionValidityEndDate   ge datetime'" + dateStr + "T00:00:00'";
+
+        String path = VALIDITY
+            + "?$filter=" + encode(filter)
+            + "&$select=ConditionRecord,ConditionType,DepartureCountry,DestinationCountry,"
+            +   "CustomerTaxClassification1,ProductTaxClassification1,"
+            +   "ConditionValidityStartDate,ConditionValidityEndDate"
+            + "&$top=" + getPageSize()
+            + "&$format=json";
+
+        List<JsonNode> nodes = fetchAllPages(path);
+        System.out.println("[TTX1] Validity records: " + nodes.size());
+
+        // Legge il codice IVA da A_SlsPrcgConditionRecord in batch
+        List<String> ids = new ArrayList<>();
+        java.util.Map<String, JsonNode> validityById = new java.util.HashMap<>();
+        for (JsonNode n : nodes) {
+            String id = str(n, "ConditionRecord");
+            if (id != null && !id.isBlank()) { ids.add(id); validityById.put(id, n); }
+        }
+        java.util.Map<String, JsonNode> condRecById = fetchConditionRecords(ids);
+
+        List<eOne.s4hpceExtractor.model.TaxRecord> result = new ArrayList<>();
+        for (String id : ids) {
+            JsonNode validity = validityById.get(id);
+            JsonNode condRec  = condRecById.get(id);
+            if (condRec != null && condRec.path("ConditionIsDeleted").asBoolean(false)) continue;
+
+            eOne.s4hpceExtractor.model.TaxRecord rec = new eOne.s4hpceExtractor.model.TaxRecord();
+            rec.setConditionType("TTX1");
+            rec.setDepartureCountry(str(validity, "DepartureCountry"));
+            rec.setDestinationCountry(str(validity, "DestinationCountry"));
+            rec.setCustomerTaxClass(str(validity, "CustomerTaxClassification1"));
+            rec.setProductTaxClass(str(validity, "ProductTaxClassification1"));
+            rec.setTaxCode(condRec != null ? str(condRec, "ConditionRateValue") : "");
+            rec.setValidFrom(formatDate(str(validity, "ConditionValidityStartDate")));
+            rec.setValidTo(formatDate(str(validity, "ConditionValidityEndDate")));
+            result.add(rec);
+        }
+
+        System.out.println("[TTX1] Righe totali: " + result.size());
+        return result;
+    }
     private Map<String, JsonNode> fetchConditionRecords(List<String> ids)
             throws IOException, InterruptedException {
         Map<String, JsonNode> map = new HashMap<>();

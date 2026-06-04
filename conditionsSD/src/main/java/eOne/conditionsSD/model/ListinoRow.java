@@ -34,7 +34,8 @@ public class ListinoRow {
     private LocalDate validFrom;
     private LocalDate validTo;
     private boolean   preferredZone;
-    private boolean   absolutePrice; // true per ZTRA puro: prezzo assoluto, non delta
+    private boolean   absolutePrice;
+    private String    customerMaterialCode = ""; // true per ZTRA puro: prezzo assoluto, non delta
     private boolean   unitMismatch;
 
     public ListinoRow() {}
@@ -111,6 +112,8 @@ public class ListinoRow {
     public void      setPreferredZone(boolean v)         { this.preferredZone = v; }
     public boolean   isAbsolutePrice()                   { return absolutePrice; }
     public void      setAbsolutePrice(boolean v)         { this.absolutePrice = v; }
+    public String    getCustomerMaterialCode()           { return customerMaterialCode != null ? customerMaterialCode : ""; }
+    public void      setCustomerMaterialCode(String v)   { this.customerMaterialCode = v != null ? v : ""; }
     public boolean   isUnitMismatch()                    { return unitMismatch; }
     public void      setUnitMismatch(boolean v)          { this.unitMismatch = v; }
 

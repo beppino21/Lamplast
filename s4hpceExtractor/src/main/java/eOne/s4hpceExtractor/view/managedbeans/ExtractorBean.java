@@ -1,6 +1,7 @@
 package eOne.s4hpceExtractor.view.managedbeans;
 
 import eOne.s4hpceExtractor.model.ConditionRecord;
+import eOne.s4hpceExtractor.model.TaxRecord;
 import eOne.s4hpceExtractor.s4client.PricingExtractClient;
 import eOne.s4hpceExtractor.s4client.S4Config;
 
@@ -26,12 +27,13 @@ public class ExtractorBean extends PageBean implements Serializable {
     // Campi m_
     // ═══════════════════════════════════════════════════════════════════════
     private FIXGRIDListBinding<GridConditionItem> m_grid;
+    private FIXGRIDListBinding<GridTaxItem>       m_gridTax;
     private Date    m_referenceDateInput;
     private String  m_statusMessage;
     private boolean m_hasWarnings;
 
     // ═══════════════════════════════════════════════════════════════════════
-    // Inner class griglia
+    // Inner class griglia PPR0/ZTRA
     // ═══════════════════════════════════════════════════════════════════════
     public class GridConditionItem extends FIXGRIDItem implements Serializable {
         private static final long serialVersionUID = 1L;
@@ -54,10 +56,8 @@ public class ExtractorBean extends PageBean implements Serializable {
         public String getValidFrom()      { return nvl(rec.getValidFrom()); }
         public String getValidTo()        { return nvl(rec.getValidTo()); }
 
-        private String nvl(String s)       { return s != null ? s : ""; }
-        private String formatPrice(double v) {
-            return v != 0.0 ? String.format("%,.2f", v) : "";
-        }
+        private String nvl(String s)             { return s != null ? s : ""; }
+        private String formatPrice(double v)     { return v != 0.0 ? String.format("%,.2f", v) : ""; }
         private String formatQty(double v) {
             if (v == 0.0) return "";
             return v == Math.floor(v)
@@ -67,10 +67,32 @@ public class ExtractorBean extends PageBean implements Serializable {
     }
 
     // ═══════════════════════════════════════════════════════════════════════
+    // Inner class griglia TTX1
+    // ═══════════════════════════════════════════════════════════════════════
+    public class GridTaxItem extends FIXGRIDItem implements Serializable {
+        private static final long serialVersionUID = 1L;
+        private final TaxRecord rec;
+
+        public GridTaxItem(TaxRecord rec) { this.rec = rec; }
+
+        public String getConditionType()      { return nvl(rec.getConditionType()); }
+        public String getDepartureCountry()   { return nvl(rec.getDepartureCountry()); }
+        public String getDestinationCountry() { return nvl(rec.getDestinationCountry()); }
+        public String getCustomerTaxClass()   { return nvl(rec.getCustomerTaxClass()); }
+        public String getProductTaxClass()    { return nvl(rec.getProductTaxClass()); }
+        public String getTaxCode()            { return nvl(rec.getTaxCode()); }
+        public String getValidFrom()          { return nvl(rec.getValidFrom()); }
+        public String getValidTo()            { return nvl(rec.getValidTo()); }
+
+        private String nvl(String s) { return s != null ? s : ""; }
+    }
+
+    // ═══════════════════════════════════════════════════════════════════════
     // Costruttore
     // ═══════════════════════════════════════════════════════════════════════
     public ExtractorBean() {
         m_grid               = new FIXGRIDListBinding<>();
+        m_gridTax            = new FIXGRIDListBinding<>();
         m_referenceDateInput = new Date();
         m_statusMessage      = "";
         m_hasWarnings        = false;
@@ -86,9 +108,11 @@ public class ExtractorBean extends PageBean implements Serializable {
     // ═══════════════════════════════════════════════════════════════════════
     public void onExtractPPR0(ActionEvent event) { doExtract("PPR0"); }
     public void onExtractZTRA(ActionEvent event) { doExtract("ZTRA"); }
+    public void onExtractTTX1(ActionEvent event) { doExtractTax(); }
 
     public void onReset(ActionEvent event) {
         m_grid.getItems().clear();
+        m_gridTax.getItems().clear();
         m_referenceDateInput = new Date();
         m_statusMessage      = "";
         m_hasWarnings        = false;
@@ -99,13 +123,13 @@ public class ExtractorBean extends PageBean implements Serializable {
             m_statusMessage = "";
             m_hasWarnings   = false;
             m_grid.getItems().clear();
+            m_gridTax.getItems().clear();
 
             LocalDate refDate = toLocalDate(m_referenceDateInput);
             S4Config cfg = S4Config.fromCCConfig();
             PricingExtractClient client = new PricingExtractClient(cfg);
 
             List<ConditionRecord> records = client.extract(conditionType, refDate);
-
             for (ConditionRecord rec : records)
                 m_grid.getItems().add(new GridConditionItem(rec));
 
@@ -115,6 +139,32 @@ public class ExtractorBean extends PageBean implements Serializable {
 
         } catch (Exception e) {
             m_statusMessage = "Errore estrazione: " + e.getMessage();
+            m_hasWarnings   = true;
+            e.printStackTrace();
+        }
+    }
+
+    private void doExtractTax() {
+        try {
+            m_statusMessage = "";
+            m_hasWarnings   = false;
+            m_grid.getItems().clear();
+            m_gridTax.getItems().clear();
+
+            LocalDate refDate = toLocalDate(m_referenceDateInput);
+            S4Config cfg = S4Config.fromCCConfig();
+            PricingExtractClient client = new PricingExtractClient(cfg);
+
+            List<TaxRecord> records = client.extractTTX1(refDate);
+            for (TaxRecord rec : records)
+                m_gridTax.getItems().add(new GridTaxItem(rec));
+
+            m_statusMessage = "TTX1: estratte " + records.size()
+                + " righe (data rif. " + refDate.format(FMT) + ")";
+            m_hasWarnings = records.isEmpty();
+
+        } catch (Exception e) {
+            m_statusMessage = "Errore estrazione TTX1: " + e.getMessage();
             m_hasWarnings   = true;
             e.printStackTrace();
         }
@@ -133,7 +183,8 @@ public class ExtractorBean extends PageBean implements Serializable {
     // ═══════════════════════════════════════════════════════════════════════
     // Getters / Setters
     // ═══════════════════════════════════════════════════════════════════════
-    public FIXGRIDListBinding<GridConditionItem> getGrid() { return m_grid; }
+    public FIXGRIDListBinding<GridConditionItem> getGrid()    { return m_grid; }
+    public FIXGRIDListBinding<GridTaxItem>       getGridTax() { return m_gridTax; }
 
     public Date    getReferenceDateInput()       { return m_referenceDateInput; }
     public void    setReferenceDateInput(Date v) { m_referenceDateInput = v; }

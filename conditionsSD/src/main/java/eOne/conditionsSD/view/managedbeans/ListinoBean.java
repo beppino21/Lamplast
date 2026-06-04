@@ -282,6 +282,11 @@ public class ListinoBean extends PageBean implements Serializable {
             return row.getValidTo() != null ? row.getValidTo().format(FMT_DATE) : "";
         }
 
+        public String getCustomerMaterialCode() {
+            if (!row.isMaterialRow()) return "";
+            return row.getCustomerMaterialCode();
+        }
+
         private String nvl(String s) { return s != null ? s : ""; }
         private String nvl(String a, String b) {
             return (a != null && !a.isBlank()) ? a : (b != null ? b : "");

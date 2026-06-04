@@ -73,6 +73,9 @@
 <t:gridcol id="g_70" text="A" width="90" >
 <t:label id="g_71" text=".{validToFormatted}" />
 </t:gridcol>
+<t:gridcol id="g_72" text="Cod. cliente" width="130" >
+<t:label id="g_73" text=".{customerMaterialCode}" />
+</t:gridcol>
 </t:fixgrid>
 </t:row>
 </t:pane>
