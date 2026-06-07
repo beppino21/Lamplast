@@ -20,6 +20,7 @@ public class ConditionRecord {
     private String scaleType;          // PricingScaleType (A/B)
     private String validFrom;          // ValidityStartDate
     private String validTo;            // ValidityEndDate
+    private boolean deleted;           // ConditionIsDeleted
 
     // Getters e Setters
     public String getConditionType()    { return conditionType; }
@@ -63,4 +64,6 @@ public class ConditionRecord {
 
     public String getValidTo()          { return validTo; }
     public void   setValidTo(String v)  { this.validTo = v; }
+    public boolean isDeleted()          { return deleted; }
+    public void    setDeleted(boolean v){ this.deleted = v; }
 }

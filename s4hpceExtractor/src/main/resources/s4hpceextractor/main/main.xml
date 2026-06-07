@@ -36,6 +36,7 @@
     <t:gridcol id="g_44" text="Tipo Sc."   width="60"  ><t:label id="g_45" text=".{scaleType}" /></t:gridcol>
     <t:gridcol id="g_46" text="Valido Dal" width="90"  ><t:label id="g_47" text=".{validFrom}" /></t:gridcol>
     <t:gridcol id="g_48" text="Valido Al"  width="90"  ><t:label id="g_49" text=".{validTo}" /></t:gridcol>
+    <t:gridcol id="g_48c" text="Canc." width="50" ><t:label id="g_49c" align="center" text=".{deleted}" /></t:gridcol>
     </t:fixgrid>
     </t:rowbodypane>
   </t:tabbedpanetab>
@@ -62,6 +63,7 @@
     <t:gridcol id="g_44b" text="Tipo Sc."   width="60"  ><t:label id="g_45b" text=".{scaleType}" /></t:gridcol>
     <t:gridcol id="g_46b" text="Valido Dal" width="90"  ><t:label id="g_47b" text=".{validFrom}" /></t:gridcol>
     <t:gridcol id="g_48b" text="Valido Al"  width="90"  ><t:label id="g_49b" text=".{validTo}" /></t:gridcol>
+    <t:gridcol id="g_48d" text="Canc." width="50" ><t:label id="g_49d" align="center" text=".{deleted}" /></t:gridcol>
     </t:fixgrid>
     </t:rowbodypane>
   </t:tabbedpanetab>
@@ -79,9 +81,11 @@
     <t:gridcol id="g_65" text="P.za dest."    width="80"  ><t:label id="g_66" text=".{destinationCountry}" /></t:gridcol>
     <t:gridcol id="g_67" text="Cl.fisc.clie." width="110" ><t:label id="g_68" text=".{customerTaxClass}" /></t:gridcol>
     <t:gridcol id="g_69" text="Cl.fisc.mat."  width="110" ><t:label id="g_70" text=".{productTaxClass}" /></t:gridcol>
-    <t:gridcol id="g_71" text="Cod.IVA"       width="80"  ><t:label id="g_72" text=".{taxCode}" /></t:gridcol>
+    <t:gridcol id="g_71" text="Cod.IVA"     width="80"  ><t:label id="g_72"  text=".{conditionTaxCode}" /></t:gridcol>
+    <t:gridcol id="g_71b" text="Aliquota %" width="90"  ><t:label id="g_72b" align="right" text=".{taxRate}" /></t:gridcol>
     <t:gridcol id="g_73" text="Valido Dal"    width="90"  ><t:label id="g_74" text=".{validFrom}" /></t:gridcol>
     <t:gridcol id="g_75" text="Valido Al"     width="90"  ><t:label id="g_76" text=".{validTo}" /></t:gridcol>
+    <t:gridcol id="g_75c" text="Canc." width="50" ><t:label id="g_76c" align="center" text=".{deleted}" /></t:gridcol>
     </t:fixgrid>
     </t:rowbodypane>
   </t:tabbedpanetab>

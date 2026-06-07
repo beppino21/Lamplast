@@ -10,9 +10,11 @@ public class TaxRecord {
     private String destinationCountry;     // DestinationCountry
     private String customerTaxClass;       // CustomerTaxClassification1
     private String productTaxClass;        // ProductTaxClassification1
-    private String taxCode;               // da A_SlsPrcgConditionRecord
+    private String conditionTaxCode;    // ConditionTaxCode (codice IVA es. A1, V1)
+    private String taxRate;             // ConditionRateValue (aliquota %)
     private String validFrom;
     private String validTo;
+    private boolean deleted;
 
     public String getConditionType()      { return conditionType; }
     public void   setConditionType(String v)  { this.conditionType = v; }
@@ -29,12 +31,17 @@ public class TaxRecord {
     public String getProductTaxClass()    { return productTaxClass; }
     public void   setProductTaxClass(String v) { this.productTaxClass = v; }
 
-    public String getTaxCode()            { return taxCode; }
-    public void   setTaxCode(String v)    { this.taxCode = v; }
+    public String getConditionTaxCode()      { return conditionTaxCode; }
+    public void   setConditionTaxCode(String v) { this.conditionTaxCode = v; }
+
+    public String getTaxRate()               { return taxRate; }
+    public void   setTaxRate(String v)       { this.taxRate = v; }
 
     public String getValidFrom()          { return validFrom; }
     public void   setValidFrom(String v)  { this.validFrom = v; }
 
     public String getValidTo()            { return validTo; }
     public void   setValidTo(String v)    { this.validTo = v; }
+    public boolean isDeleted()            { return deleted; }
+    public void    setDeleted(boolean v)  { this.deleted = v; }
 }

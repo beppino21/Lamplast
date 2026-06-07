@@ -67,14 +67,13 @@ public class PricingExtractClient extends S4HttpClient {
             JsonNode validity = validityById.get(id);
             JsonNode condRec  = condRecById.get(id);
 
-            // Salta cancellati
-            if (condRec != null && condRec.path("ConditionIsDeleted").asBoolean(false)) continue;
-
+            boolean isDeleted = condRec != null && condRec.path("ConditionIsDeleted").asBoolean(false);
             String scaleType = condRec != null ? str(condRec, "PricingScaleType") : "";
             List<ScaleRow> scales = fetchScales(id);
 
             if (scales.isEmpty()) {
                 ConditionRecord rec = buildRecord(id, validity, condRec, conditionType);
+                rec.setDeleted(isDeleted);
                 rec.setScaleQtyFrom(0);
                 rec.setScaleQtyTo(0);
                 rec.setScaleUnit(null);
@@ -84,6 +83,7 @@ public class PricingExtractClient extends S4HttpClient {
                 for (int i = 0; i < scales.size(); i++) {
                     ScaleRow scale = scales.get(i);
                     ConditionRecord rec = buildRecord(id, validity, condRec, conditionType);
+                    rec.setDeleted(isDeleted);
                     if ("B".equals(scaleType)) {
                         rec.setScaleQtyFrom(i == 0 ? 0 : scales.get(i - 1).qty);
                         rec.setScaleQtyTo(scale.qty);
@@ -139,15 +139,15 @@ public class PricingExtractClient extends S4HttpClient {
         for (String id : ids) {
             JsonNode validity = validityById.get(id);
             JsonNode condRec  = condRecById.get(id);
-            if (condRec != null && condRec.path("ConditionIsDeleted").asBoolean(false)) continue;
-
             eOne.s4hpceExtractor.model.TaxRecord rec = new eOne.s4hpceExtractor.model.TaxRecord();
+            rec.setDeleted(condRec != null && condRec.path("ConditionIsDeleted").asBoolean(false));
             rec.setConditionType("TTX1");
             rec.setDepartureCountry(str(validity, "DepartureCountry"));
             rec.setDestinationCountry(str(validity, "DestinationCountry"));
             rec.setCustomerTaxClass(str(validity, "CustomerTaxClassification1"));
             rec.setProductTaxClass(str(validity, "ProductTaxClassification1"));
-            rec.setTaxCode(condRec != null ? str(condRec, "ConditionRateValue") : "");
+            rec.setConditionTaxCode(condRec != null ? str(condRec, "ConditionTaxCode") : "");
+            rec.setTaxRate(condRec != null ? String.format("%,.2f", dbl(condRec, "ConditionRateValue")) : "");
             rec.setValidFrom(formatDate(str(validity, "ConditionValidityStartDate")));
             rec.setValidTo(formatDate(str(validity, "ConditionValidityEndDate")));
             result.add(rec);
@@ -170,7 +170,7 @@ public class PricingExtractClient extends S4HttpClient {
             String path = COND_REC
                 + "?$filter=" + encode(filter.toString())
                 + "&$select=ConditionRecord,ConditionRateValue,ConditionRateValueUnit,"
-                +   "ConditionQuantity,ConditionQuantityUnit,PricingScaleType,ConditionIsDeleted"
+                +   "ConditionQuantity,ConditionQuantityUnit,PricingScaleType,ConditionIsDeleted,ConditionTaxCode"
                 + "&$format=json";
             try {
                 JsonNode root = getOData(path);

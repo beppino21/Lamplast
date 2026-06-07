@@ -49,18 +49,41 @@ public class S4HttpClient {
         return MAPPER.readTree(resp.body());
     }
 
-    /** Legge tutte le pagine OData con $skiptoken */
+    /** Legge tutte le pagine OData con $skiptoken o $skip come fallback */
     public List<JsonNode> fetchAllPages(String firstUrl) throws IOException, InterruptedException {
         List<JsonNode> all = new ArrayList<>();
         String url = firstUrl;
+        int skip = 0;
         while (url != null) {
-            JsonNode root = getOData(url.startsWith("http") ? url.substring(config.getBaseUrl().length()) : url);
+            String relUrl = url.startsWith("http") ? url.substring(config.getBaseUrl().length()) : url;
+            JsonNode root = getOData(relUrl);
             JsonNode results = root.path("d").path("results");
-            if (results.isArray()) results.forEach(all::add);
+            int count = 0;
+            if (results.isArray()) {
+                results.forEach(all::add);
+                count = results.size();
+            }
             JsonNode next = root.path("d").path("__next");
-            url = (!next.isMissingNode() && !next.asText().isBlank()) ? next.asText() : null;
+            if (!next.isMissingNode() && !next.asText().isBlank()) {
+                // SAP fornisce __next — lo usiamo direttamente
+                url = next.asText();
+                skip = 0;
+            } else if (count == PAGE_SIZE) {
+                // Nessun __next ma pagina piena: prova con $skip
+                skip += PAGE_SIZE;
+                url = addOrReplaceSkip(firstUrl, skip);
+            } else {
+                url = null;
+            }
         }
         return all;
+    }
+
+    private String addOrReplaceSkip(String baseUrl, int skip) {
+        // Rimuove eventuale $skip esistente e aggiunge il nuovo
+        String url = baseUrl.replaceAll("[&?]\\$skip=\\d+", "");
+        String sep = url.contains("?") ? "&" : "?";
+        return url + sep + "$skip=" + skip;
     }
 
     public int getPageSize() { return PAGE_SIZE; }

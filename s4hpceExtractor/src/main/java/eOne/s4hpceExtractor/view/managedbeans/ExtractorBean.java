@@ -55,6 +55,7 @@ public class ExtractorBean extends PageBean implements Serializable {
         public String getScaleType()      { return nvl(rec.getScaleType()); }
         public String getValidFrom()      { return nvl(rec.getValidFrom()); }
         public String getValidTo()        { return nvl(rec.getValidTo()); }
+        public String getDeleted()        { return rec.isDeleted() ? "X" : ""; }
 
         private String nvl(String s)             { return s != null ? s : ""; }
         private String formatPrice(double v)     { return v != 0.0 ? String.format("%,.2f", v) : ""; }
@@ -80,9 +81,11 @@ public class ExtractorBean extends PageBean implements Serializable {
         public String getDestinationCountry() { return nvl(rec.getDestinationCountry()); }
         public String getCustomerTaxClass()   { return nvl(rec.getCustomerTaxClass()); }
         public String getProductTaxClass()    { return nvl(rec.getProductTaxClass()); }
-        public String getTaxCode()            { return nvl(rec.getTaxCode()); }
+        public String getConditionTaxCode()   { return nvl(rec.getConditionTaxCode()); }
+        public String getTaxRate()             { return nvl(rec.getTaxRate()); }
         public String getValidFrom()          { return nvl(rec.getValidFrom()); }
         public String getValidTo()            { return nvl(rec.getValidTo()); }
+        public String getDeleted()            { return rec.isDeleted() ? "X" : ""; }
 
         private String nvl(String s) { return s != null ? s : ""; }
     }
