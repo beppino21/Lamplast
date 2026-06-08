@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:sfin="http://sap.com/xi/SAPSCORE/SFIN">
+  <soapenv:Header/>
+  <soapenv:Body>
+    <sfin:JournalEntryBulkCreateRequest>
+      <MessageHeader>
+        <ID>COGS-D1AA9C9E</ID>
+        <CreationDateTime>2026-06-08T14:39:03.741404800Z</CreationDateTime>
+      </MessageHeader>
+      <JournalEntryCreateRequest>
+        <MessageHeader>
+          <ID>COGS-D1AA9C9E-1</ID>
+          <CreationDateTime>2026-06-08T14:39:03.742403400Z</CreationDateTime>
+        </MessageHeader>
+        <JournalEntry>
+          <OriginalReferenceDocumentType>BKPFF</OriginalReferenceDocumentType>
+          <BusinessTransactionType>RFBU</BusinessTransactionType>
+          <AccountingDocumentType>UE</AccountingDocumentType>
+          <CompanyCode>S001</CompanyCode>
+          <DocumentDate>2026-04-28</DocumentDate>
+          <PostingDate>2026-06-08</PostingDate>
+          <DocumentReferenceID>20260000240258</DocumentReferenceID>
+          <DocumentHeaderText>MIGR.CGS 20260000240258</DocumentHeaderText>
+          <CreatedByUser>CC0000000002</CreatedByUser>
+          <DebtorItem>
+            <ReferenceDocumentItem>1</ReferenceDocumentItem>
+            <Debtor>0000000013</Debtor>
+            <AmountInTransactionCurrency currencyCode="EUR">9154.88</AmountInTransactionCurrency>
+            <AmountInCompanyCodeCurrency currencyCode="EUR">9154.88</AmountInCompanyCodeCurrency>
+            <AssignmentReference>00002402582026</AssignmentReference>
+            <PaymentDetails>
+              <PaymentMethod>R</PaymentMethod>
+            </PaymentDetails>
+          </DebtorItem>
+          <Item>
+            <GLAccount>0099999999</GLAccount>
+            <AmountInTransactionCurrency currencyCode="EUR">-9154.88</AmountInTransactionCurrency>
+            <AmountInCompanyCodeCurrency currencyCode="EUR">-9154.88</AmountInCompanyCodeCurrency>
+            <DocumentItemText>MIGR.CGS 20260000240258</DocumentItemText>
+          </Item>
+        </JournalEntry>
+      </JournalEntryCreateRequest>
+    </sfin:JournalEntryBulkCreateRequest>
+  </soapenv:Body>
+</soapenv:Envelope>
