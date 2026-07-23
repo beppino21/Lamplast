@@ -22,12 +22,29 @@ public class SapAuthenticationService {
     }
     
     /**
-     * Recupera token CSRF e cookie di sessione
+     * Recupera token CSRF e cookie di sessione dal servizio Sales Order
+     * standard (API_SALES_ORDER_SRV). Mantenuto per compatibilità.
      */
     public SapAuthToken fetchCsrfToken() throws Exception {
-        
-        String url = config.getSalesOrderApiUrl() 
-            + "A_SalesOrderItem?$top=1&sap-client=" + config.getClient();
+        return fetchCsrfToken(config.getSalesOrderApiUrl(), "A_SalesOrderItem");
+    }
+
+    /**
+     * Recupera token CSRF e cookie di sessione da un servizio OData
+     * specifico. Ogni servizio OData ha una propria sessione CSRF: il
+     * token ottenuto da API_SALES_ORDER_SRV NON è valido per chiamate a
+     * API_SALES_ORDER_WITHOUT_CHARGE_SRV (o viceversa) — va richiesto un
+     * token per ciascun servizio realmente usato.
+     *
+     * @param serviceBaseUrl base URL del servizio OData (con "/" finale)
+     * @param probeEntitySet entity set leggero su cui fare la GET di probe
+     *                       (es. "A_SalesOrderItem" oppure
+     *                       "A_SalesOrderWithoutChargeItem")
+     */
+    public SapAuthToken fetchCsrfToken(String serviceBaseUrl, String probeEntitySet) throws Exception {
+
+        String url = serviceBaseUrl
+            + probeEntitySet + "?$top=1&sap-client=" + config.getClient();
         
         System.out.println("URL--> " + url);
         

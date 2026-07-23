@@ -155,6 +155,17 @@ public class SapConfiguration {
         return baseUrl + "/sap/opu/odata/SAP/API_SALES_ORDER_SRV/";
     }
 
+    /**
+     * Servizio OData dedicato agli ordini "senza addebito" (SDDocumentCategory
+     * = VBTYP = 'I', es. tipo ordine CBFD). API_SALES_ORDER_SRV NON copre
+     * questa categoria documento (per progettazione SAP — vedi KBA 3621002 /
+     * 2752419): serve questo servizio separato, comunication scenario
+     * SAP_COM_0334.
+     */
+    public String getSalesOrderWithoutChargeApiUrl() {
+        return baseUrl + "/sap/opu/odata/SAP/API_SALES_ORDER_WITHOUT_CHARGE_SRV/";
+    }
+
     // -------------------------------------------------------
     // GETTER — Normalizzazione numerazione OdV
     // -------------------------------------------------------

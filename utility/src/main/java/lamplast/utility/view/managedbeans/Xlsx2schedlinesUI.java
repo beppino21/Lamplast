@@ -321,6 +321,24 @@ public class Xlsx2schedlinesUI extends PageBean implements Serializable {
 
         Runnable longOperation = new Runnable() {
             public void run() {
+
+                // Risolve una volta per tutte, per ogni ordine distinto nel
+                // file, se è categoria standard o "senza addebito" — prima
+                // di elaborare le singole righe, cosi' il messaggio corretto
+                // compare fin dalla prima riga di ciascun ordine.
+                try {
+                    java.util.List<String> orderNumbers = new ArrayList<>();
+                    for (ScheduleLineData d : lines) orderNumbers.add(d.getOrderNumber());
+                    sapService.resolveOrderVariants(orderNumbers, msg -> {
+                        observer.addMessage(msg);
+                        System.out.println("[Xlsx2schedlines] " + msg);
+                    });
+                } catch (Exception e) {
+                    observer.addMessage("⚠️ Risoluzione tipo ordine fallita: " + e.getMessage()
+                        + " — si procede comunque riga per riga");
+                    System.out.println("[Xlsx2schedlines] Risoluzione tipo ordine fallita: " + e.getMessage());
+                }
+
                 for (int i = 0; i < totale; i++) {
                     ScheduleLineData data     = lines.get(i);
                     int              rigaExcel = items.get(i).getRowIndex();
@@ -335,6 +353,11 @@ public class Xlsx2schedlinesUI extends PageBean implements Serializable {
                         } else if ("EVASA".equals(dettaglio)) {
                             data.setDryRunResult("📦 Schedulazione già evasa (qtà open = 0) — verrà saltata");
                             data.setProcessingResult("📦 Già evasa");
+                            data.setCreatedScheduleLine("0");
+                        } else if (dettaglio != null && dettaglio.startsWith("NON_GESTIBILE:")) {
+                            String motivo = dettaglio.substring("NON_GESTIBILE:".length());
+                            data.setDryRunResult("🚫 Non gestibile — " + motivo);
+                            data.setProcessingResult("🚫 Non gestibile");
                             data.setCreatedScheduleLine("0");
                         } else if (dettaglio != null && dettaglio.startsWith("BLOCCATA:")) {
                             String motivo;
@@ -490,6 +513,7 @@ public class Xlsx2schedlinesUI extends PageBean implements Serializable {
                                 procResult.contains("Nessuna modifica")
                              || procResult.contains("Già evasa")
                              || procResult.contains("Non modificabile")
+                             || procResult.contains("Non gestibile")
                              || procResult.contains("Errore dry-run"))) {
 
                             log.append("  ⏭️ Saltata (dry-run): ")

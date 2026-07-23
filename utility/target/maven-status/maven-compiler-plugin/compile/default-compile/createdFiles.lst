@@ -1,12 +1,15 @@
 lamplast\utility\service\SapResponse.class
 lamplast\utility\service\SapAuthenticationService.class
 lamplast\utility\view\managedbeans\Xlsx2schedlinesUI$GridJSONdataItem.class
+lamplast\utility\service\SapScheduleLineService$SapErrorInfo.class
+lamplast\utility\service\SapScheduleLineService$VariantProbe.class
 lamplast\utility\view\managedbeans\Dispatcher.class
 lamplast\utility\service\SapAuthenticationService$SapAuthToken.class
 lamplast\utility\view\managedbeans\Xlsx2schedlinesUI.class
 lamplast\utility\model\ScheduleLineData.class
 lamplast\utility\service\SapScheduleLineService.class
-lamplast\utility\view\managedbeans\SapResponse.class
 lamplast\utility\service\ExcelParser.class
+lamplast\utility\service\SapScheduleLineService$HttpCall.class
 lamplast\utility\service\ExcelParser$ColumnMapping.class
 lamplast\utility\config\SapConfiguration.class
+lamplast\utility\service\SalesOrderApiVariant.class

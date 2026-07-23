@@ -1,178 +1,132 @@
 <?xml version="1.0" encoding="utf-8"?>
-<t:layoutdefinition
-	xmlns:t="http://www.captaincasa.com/controllibrary/t">
+<t:layoutdefinition xmlns:t="http://www.captaincasa.com/controllibrary/t" >
 
-	<t:beanprocessing id="g_1"
-		beanbinding="#{d.Xlsx2schedlinesUI}" />
-	<t:rowtitlebar id="g_48"
-		text="Aggiorna schedulazioni OdV da file XLSX/XLS" />
-	<t:rowheader id="g_3">
-		<t:coldistance id="g_10" />
-		<t:fileuploadbutton id="g_42"
-			actionListener="#{d.Xlsx2schedlinesUI.onLoadXLSX}"
-			fileextensions="xlsx;xls" text="Load XLSX/XLS" width="100+" />
-		<t:coldistance id="g_71" width="20" />
-		<t:button id="g_308"
-			actionListener="#{d.Xlsx2schedlinesUI.onDryRun}"
-			text="Verifica (Dry-run)" width="120+" />
-		<t:coldistance id="g_309" width="20" />
-		<t:button id="g_253"
-			actionListener="#{d.Xlsx2schedlinesUI.onUpdSchedLine}"
-			text="Aggiorna Ordini" width="100+" />
-	</t:rowheader>
-	<t:rowdistance id="g_67" />
-	<t:row id="g_65" />
-	<t:rowdistance id="g_69" height="25" />
-	<t:row id="g_5" />
-	<t:rowbodypane id="g_24">
-		<t:rowdistance id="g_46" height="25" />
-		<t:row id="g_31">
-			<t:tabbedpane id="g_32" height="100%" width="100%">
-				<t:tabbedpanetab id="g_33" text="Dati da file XLSX">
-					<t:row id="g_121">
-						<t:pane id="g_138" height="100%" width="100%">
-							<t:row id="g_141">
-								<t:coldistance id="g_4" width="100%" />
-								<t:hyperlink id="g_201"
-									enabled="#{d.Xlsx2schedlinesUI.enableFioriVA03}"
-									text="Visualizza Ordine"
-									url="#{d.Xlsx2schedlinesUI.salesOrderNumberFiori}" />
-								<t:coldistance id="g_255" width="60" />
-								<t:link id="g_143"
-									actionListener="#{d.Xlsx2schedlinesUI.gridJSONdata.onEditColumnDetails}"
-									text="Colonne..." />
-								<t:coldistance id="g_149" />
-								<t:link id="g_145"
-									actionListener="#{d.Xlsx2schedlinesUI.gridJSONdata.onOpenGridExportFunctions}"
-									text="Export" />
-							</t:row>
-							<t:row id="g_139">
-								<t:rowarea id="banner"
-									visible="#{d.Xlsx2schedlinesUI.bannerVisible}"
-									stylevariant="#{d.Xlsx2schedlinesUI.bannerStylevariant}">
-									<t:row id="bannerRow">
-										<t:label id="bannerLabel"
-											text="#{d.Xlsx2schedlinesUI.bannerText}" width="100%" />
-									</t:row>
-								</t:rowarea>
-								<t:fixgrid id="g_122" height="100%"
-									objectbinding="#{d.Xlsx2schedlinesUI.gridJSONdata}"
-									width="100%">
-									<t:gridcol id="g_rigaexcel" text="Riga Excel"
-										width="60">
-										<t:label id="g_rigaexcel_lbl" align="right"
-											text=".{rowIndex}" />
-									</t:gridcol>
-									<t:gridcol id="g_123" text="Ordine" width="150">
-										<t:label id="g_124" align="right" stylevariant="ccbig"
-											text=".{orderNumber}" />
-									</t:gridcol>
-									<t:gridcol id="g_125" text="Pos." width="50">
-										<t:label id="g_126" align="right" text=".{itemNumber}" />
-									</t:gridcol>
-									<t:gridcol id="g_127" text="Sch." width="50">
-										<t:label id="g_128" align="right" text=".{schedLine}" />
-									</t:gridcol>
-									<t:gridcol id="g_129" text="Materiale" width="150">
-										<t:label id="g_130" text=".{material}" />
-									</t:gridcol>
-									<t:gridcol id="g_153" text="Text" width="250">
-										<t:label id="g_154" text=".{materialText}" />
-									</t:gridcol>
-									<t:gridcol id="g_131" text="Qtà" width="100">
-										<t:label id="g_132" align="right" stylevariant="ccbig"
-											text=".{quantity}" />
-									</t:gridcol>
-									<t:gridcol id="g_133" text="Data prod." width="150">
-										<t:label id="g_151" align="right" stylevariant="ccbig"
-											text=".{schedDate}" />
-									</t:gridcol>
-									<t:gridcol id="g_310" text="Azione" width="120">
-										<t:label id="g_311" text=".{azione}" />
-									</t:gridcol>
-									<t:gridcol id="g_320" text="N° Sch. creata"
-										width="110">
-										<t:label id="g_321" align="right" stylevariant="ccbig"
-											text=".{createdScheduleLine}" />
-									</t:gridcol>
-									<t:gridcol id="g_314" text="Verifica (Dry-run)"
-										width="100%;250">
-										<t:label id="g_315" text=".{dryRunEsito}" />
-									</t:gridcol>
-									<t:gridcol id="g_312" text="Esito elaborazione"
-										width="150">
-										<t:label id="g_313" text=".{esito}" />
-									</t:gridcol>
-									<t:gridcol id="g_178" text="Messaggio SAP"
-										width="100%;200">
-										<t:label id="g_179" text=".{errorMessage}" />
-									</t:gridcol>
-								</t:fixgrid>
-							</t:row>
-						</t:pane>
-					</t:row>
-				</t:tabbedpanetab>
-				<t:tabbedpanetab id="g_114" text="Log">
-					<t:row id="g_115">
-						<t:textarea id="g_116" flush="true" height="100%"
-							text="#{d.Xlsx2schedlinesUI.logText}" width="100%"
-							readonly="true" />
-					</t:row>
-				</t:tabbedpanetab>
-				<t:tabbedpanetab id="g_181" text="Parametri">
-					<t:row id="g_236">
-						<t:foldablepane id="g_400" opened="true"
-							rowdistance="0" text="Visualizzazione risultati" width="100%">
-							<t:row id="g_401">
-								<t:coldistance id="g_402" width="10" />
-								<t:button id="g_403"
-									actionListener="#{d.Xlsx2schedlinesUI.onToggleViewMode}"
-									text="#{d.Xlsx2schedlinesUI.viewModeButtonLabel}" width="250+" />
-								<t:coldistance id="g_409" width="10" />
-								<t:label id="g_407" stylevariant="ccsmalldesc"
-									text="In modalità sintetica il Log continua a registrare tutte le righe elaborate." />
-							</t:row>
-						</t:foldablepane>
-						<t:rowdistance id="g_408" height="12" />
-						<t:foldablepane id="g_237" opened="false"
-							rowdistance="0" text="Label Excel" width="100%">
-							<t:row id="g_260">
-								<t:field id="g_261" labeltext="Foglio"
-									text="#{d.Xlsx2schedlinesUI.sheetName}" width="100" />
-							</t:row>
-							<t:row id="g_238">
-								<t:field id="g_239" labeltext="Ordine"
-									text="#{d.Xlsx2schedlinesUI.lblOrdine}" width="100" />
-							</t:row>
-							<t:row id="g_240">
-								<t:field id="g_241" labeltext="Pos."
-									text="#{d.Xlsx2schedlinesUI.lblPosizione}" width="100" />
-							</t:row>
-							<t:row id="g_242">
-								<t:field id="g_243" labeltext="Sch."
-									text="#{d.Xlsx2schedlinesUI.lblSchedulazione}" width="100" />
-							</t:row>
-							<t:row id="g_244">
-								<t:field id="g_245" labeltext="Materiale"
-									text="#{d.Xlsx2schedlinesUI.lblMateriale}" width="100" />
-							</t:row>
-							<t:row id="g_246">
-								<t:field id="g_247" labeltext="Text"
-									text="#{d.Xlsx2schedlinesUI.lblMaterialeText}" width="100" />
-							</t:row>
-							<t:row id="g_248">
-								<t:field id="g_249" labeltext="Qtà"
-									text="#{d.Xlsx2schedlinesUI.lblQuantita}" width="100" />
-							</t:row>
-							<t:row id="g_250">
-								<t:field id="g_251" labeltext="Data prod."
-									text="#{d.Xlsx2schedlinesUI.lblDataProd}" width="100" />
-							</t:row>
-						</t:foldablepane>
-					</t:row>
-				</t:tabbedpanetab>
-			</t:tabbedpane>
-		</t:row>
-	</t:rowbodypane>
+<t:beanprocessing id="g_1" beanbinding="#{d.Xlsx2schedlinesUI}" />
+<t:rowtitlebar id="g_48" text="Aggiorna schedulazioni OdV da file XLSX/XLS" />
+<t:rowheader id="g_3" >
+<t:coldistance id="g_10" />
+<t:fileuploadbutton id="g_42" actionListener="#{d.Xlsx2schedlinesUI.onLoadXLSX}" fileextensions="xlsx;xls" text="Load XLSX/XLS" width="100+" />
+<t:coldistance id="g_71" width="20" />
+<t:button id="g_308" actionListener="#{d.Xlsx2schedlinesUI.onDryRun}" text="Verifica (Dry-run)" width="120+" />
+<t:coldistance id="g_309" width="20" />
+<t:button id="g_253" actionListener="#{d.Xlsx2schedlinesUI.onUpdSchedLine}" text="Aggiorna Ordini" width="100+" />
+</t:rowheader>
+<t:rowdistance id="g_67" />
+<t:row id="g_65" />
+<t:rowdistance id="g_69" height="25" />
+<t:row id="g_5" />
+<t:rowbodypane id="g_24" >
+<t:rowdistance id="g_46" height="25" />
+<t:row id="g_31" >
+<t:tabbedpane id="g_32" height="100%" width="100%" >
+<t:tabbedpanetab id="g_33" text="Dati da file XLSX" >
+<t:row id="g_121" >
+<t:pane id="g_138" height="100%" width="100%" >
+<t:row id="g_141" >
+<t:coldistance id="g_4" width="100%" />
+<t:hyperlink id="g_201" enabled="#{d.Xlsx2schedlinesUI.enableFioriVA03}" text="Visualizza Ordine" url="#{d.Xlsx2schedlinesUI.salesOrderNumberFiori}" />
+<t:coldistance id="g_255" width="60" />
+<t:link id="g_143" actionListener="#{d.Xlsx2schedlinesUI.gridJSONdata.onEditColumnDetails}" text="Colonne..." />
+<t:coldistance id="g_149" />
+<t:link id="g_145" actionListener="#{d.Xlsx2schedlinesUI.gridJSONdata.onOpenGridExportFunctions}" text="Export" />
+</t:row>
+<t:row id="g_139" >
+<t:rowarea id="banner" visible="#{d.Xlsx2schedlinesUI.bannerVisible}" stylevariant="#{d.Xlsx2schedlinesUI.bannerStylevariant}" >
+<t:row id="bannerRow" >
+<t:label id="bannerLabel" text="#{d.Xlsx2schedlinesUI.bannerText}" width="100%" />
+</t:row>
+</t:rowarea>
+<t:fixgrid id="g_122" height="100%" objectbinding="#{d.Xlsx2schedlinesUI.gridJSONdata}" width="100%" >
+<t:gridcol id="g_rigaexcel" text="Riga Excel" width="60" >
+<t:label id="g_rigaexcel_lbl" align="right" text=".{rowIndex}" />
+</t:gridcol>
+<t:gridcol id="g_123" text="Ordine" width="150" >
+<t:label id="g_124" align="right" stylevariant="ccbig" text=".{orderNumber}" />
+</t:gridcol>
+<t:gridcol id="g_125" text="Pos." width="50" >
+<t:label id="g_126" align="right" text=".{itemNumber}" />
+</t:gridcol>
+<t:gridcol id="g_127" text="Sch." width="50" >
+<t:label id="g_128" align="right" text=".{schedLine}" />
+</t:gridcol>
+<t:gridcol id="g_129" text="Materiale" width="150" >
+<t:label id="g_130" text=".{material}" />
+</t:gridcol>
+<t:gridcol id="g_153" text="Text" width="250" >
+<t:label id="g_154" text=".{materialText}" />
+</t:gridcol>
+<t:gridcol id="g_131" text="Qtà" width="100" >
+<t:label id="g_132" align="right" stylevariant="ccbig" text=".{quantity}" />
+</t:gridcol>
+<t:gridcol id="g_133" text="Data prod." width="150" >
+<t:label id="g_151" align="right" stylevariant="ccbig" text=".{schedDate}" />
+</t:gridcol>
+<t:gridcol id="g_310" text="Azione" width="120" >
+<t:label id="g_311" text=".{azione}" />
+</t:gridcol>
+<t:gridcol id="g_320" text="N° Sch. creata" width="110" >
+<t:label id="g_321" align="right" stylevariant="ccbig" text=".{createdScheduleLine}" />
+</t:gridcol>
+<t:gridcol id="g_314" text="Verifica (Dry-run)" width="100%;250" >
+<t:label id="g_315" text=".{dryRunEsito}" />
+</t:gridcol>
+<t:gridcol id="g_312" text="Esito elaborazione" width="150" >
+<t:label id="g_313" text=".{esito}" />
+</t:gridcol>
+<t:gridcol id="g_178" text="Messaggio SAP" width="100%;200" >
+<t:label id="g_179" text=".{errorMessage}" />
+</t:gridcol>
+</t:fixgrid>
+</t:row>
+</t:pane>
+</t:row>
+</t:tabbedpanetab>
+<t:tabbedpanetab id="g_114" text="Log" >
+<t:row id="g_115" >
+<t:textarea id="g_116" flush="true" height="100%" text="#{d.Xlsx2schedlinesUI.logText}" width="100%" readonly="true" />
+</t:row>
+</t:tabbedpanetab>
+<t:tabbedpanetab id="g_181" text="Parametri" >
+<t:row id="g_236" >
+<t:foldablepane id="g_400" opened="true" rowdistance="0" text="Visualizzazione risultati" width="100%" >
+<t:row id="g_401" >
+<t:coldistance id="g_402" width="10" />
+<t:button id="g_403" actionListener="#{d.Xlsx2schedlinesUI.onToggleViewMode}" text="#{d.Xlsx2schedlinesUI.viewModeButtonLabel}" width="250+" />
+<t:coldistance id="g_409" width="10" />
+<t:label id="g_407" stylevariant="ccsmalldesc" text="In modalità sintetica il Log continua a registrare tutte le righe elaborate." />
+</t:row>
+</t:foldablepane>
+<t:rowdistance id="g_408" height="12" />
+<t:foldablepane id="g_237" opened="false" rowdistance="0" text="Label Excel" width="100%" >
+<t:row id="g_260" >
+<t:field id="g_261" labeltext="Foglio" text="#{d.Xlsx2schedlinesUI.sheetName}" width="100" />
+</t:row>
+<t:row id="g_238" >
+<t:field id="g_239" labeltext="Ordine" text="#{d.Xlsx2schedlinesUI.lblOrdine}" width="100" />
+</t:row>
+<t:row id="g_240" >
+<t:field id="g_241" labeltext="Pos." text="#{d.Xlsx2schedlinesUI.lblPosizione}" width="100" />
+</t:row>
+<t:row id="g_242" >
+<t:field id="g_243" labeltext="Sch." text="#{d.Xlsx2schedlinesUI.lblSchedulazione}" width="100" />
+</t:row>
+<t:row id="g_244" >
+<t:field id="g_245" labeltext="Materiale" text="#{d.Xlsx2schedlinesUI.lblMateriale}" width="100" />
+</t:row>
+<t:row id="g_246" >
+<t:field id="g_247" labeltext="Text" text="#{d.Xlsx2schedlinesUI.lblMaterialeText}" width="100" />
+</t:row>
+<t:row id="g_248" >
+<t:field id="g_249" labeltext="Qtà" text="#{d.Xlsx2schedlinesUI.lblQuantita}" width="100" />
+</t:row>
+<t:row id="g_250" >
+<t:field id="g_251" labeltext="Data prod." text="#{d.Xlsx2schedlinesUI.lblDataProd}" width="100" />
+</t:row>
+</t:foldablepane>
+</t:row>
+</t:tabbedpanetab>
+</t:tabbedpane>
+</t:row>
+</t:rowbodypane>
 
 </t:layoutdefinition>
