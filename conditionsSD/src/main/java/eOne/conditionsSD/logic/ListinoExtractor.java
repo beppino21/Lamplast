@@ -77,8 +77,8 @@ public class ListinoExtractor {
             ? Map.of()
             : materialClient.fetchDescriptions(materialCodes);
 
-        // 4. Codifiche cliente-materiale (MaterialByCustomer) — solo per PPR0
-        Map<String, String> materialByCustomer = Map.of();
+        // 4. Codifiche cliente-materiale (MaterialByCustomer, lotto minimo) — solo per PPR0
+        Map<String, CustomerMaterialClient.CustomerMaterialInfo> materialByCustomer = Map.of();
         if (!ppr0.isEmpty()) {
             List<String[]> pairs = new ArrayList<>();
             for (PricingRecord r : ppr0) {
@@ -91,8 +91,15 @@ public class ListinoExtractor {
                 materialByCustomer = customerMaterialClient.loadMaterialByCustomer(pairs);
         }
 
-        // 5. Descrizioni zone ZTRA — API non ancora disponibile su questo tenant
-        Map<String, String> zoneDescriptions = Map.of();
+        // 5. Descrizioni zone ZTRA
+        Set<String> zoneCodes = ztra.stream()
+            .map(PricingRecord::getZone)
+            .filter(z -> z != null && !z.trim().isEmpty())
+            .collect(Collectors.toCollection(LinkedHashSet::new));
+
+        Map<String, String> zoneDescriptions = zoneCodes.isEmpty()
+            ? Map.of()
+            : districtClient.fetchDescriptions(zoneCodes);
 
         // 6. Build righe listino
         List<ListinoRow> rows = builder.build(

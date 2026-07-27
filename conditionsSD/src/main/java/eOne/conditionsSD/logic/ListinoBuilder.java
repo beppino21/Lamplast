@@ -5,6 +5,7 @@ import eOne.conditionsSD.model.ExtractParams;
 import eOne.conditionsSD.model.ListinoRow;
 import eOne.conditionsSD.model.PricingRecord;
 import eOne.conditionsSD.s4client.CustomerClient.CustomerInfo;
+import eOne.conditionsSD.s4client.CustomerMaterialClient.CustomerMaterialInfo;
 
 import java.time.LocalDate;
 import java.util.*;
@@ -25,7 +26,7 @@ public class ListinoBuilder {
             List<PricingRecord>       ztraList,
             Map<String, String>       materialDescriptions,
             Map<String, String>       zoneDescriptions,
-            Map<String, String>       materialByCustomer,
+            Map<String, CustomerMaterialInfo> materialByCustomer,
             ExtractParams             params) {
 
         warnings.clear();
@@ -69,7 +70,9 @@ public class ListinoBuilder {
             // Intestazione cliente
             String custHeader = custCode + " — " + info.getName();
             if (info.hasPriceGroup()) custHeader += "  [Gruppo: " + info.getPriceGroup() + "]";
-            rows.add(ListinoRow.customerRow(custCode, custHeader));
+            rows.add(ListinoRow.customerRow(custCode, custHeader, info.getLanguage())
+                .withPaymentTerms(info.getPaymentTerms())
+                .withIncoterms(info.getIncotermsClassification(), info.getIncotermsLocation()));
 
             // ── Blocco A: Prezzi materiale ────────────────────────────────
             if (mode == ExtractMode.FULL || mode == ExtractMode.PPR0) {
@@ -299,7 +302,7 @@ public class ListinoBuilder {
     private ListinoRow buildPPR0OnlyRow(String custCode, PricingRecord ppr0,
                                         double[] scaleQty, int activeCols,
                                         Map<String, String> materialDescriptions,
-                                        Map<String, String> materialByCustomer) {
+                                        Map<String, CustomerMaterialInfo> materialByCustomer) {
         ListinoRow row = new ListinoRow();
         row.setRowType(ListinoRow.RowType.MATERIAL);
         row.setCustomerCode(custCode);
@@ -307,10 +310,15 @@ public class ListinoBuilder {
         String desc = materialDescriptions != null ? materialDescriptions.get(mat) : null;
         row.setDescription(desc != null && !desc.trim().isEmpty()
             ? mat + " — " + desc : mat);
-        // Codice materiale cliente
+        // Codice materiale cliente + lotto minimo + imballo preferenziale
         if (materialByCustomer != null) {
-            String matByCust = materialByCustomer.get(custCode + "|" + mat);
-            row.setCustomerMaterialCode(matByCust != null ? matByCust : "");
+            CustomerMaterialInfo info = materialByCustomer.get(custCode + "|" + mat);
+            if (info != null) {
+                row.setCustomerMaterialCode(info.getMaterialByCustomer());
+                row.setMinDeliveryQuantity(info.getMinDeliveryQuantity());
+                row.setPackagingNoteIT(info.getPackagingNoteIT());
+                row.setPackagingNoteEN(info.getPackagingNoteEN());
+            }
         }
 
         double[] price = new double[5];
@@ -371,7 +379,7 @@ public class ListinoBuilder {
                                         PricingRecord ztraKStar,
                                         double[] mergedQty, int activeCols,
                                         Map<String, String> materialDescriptions,
-                                        Map<String, String> materialByCustomer) {
+                                        Map<String, CustomerMaterialInfo> materialByCustomer) {
         ListinoRow row = new ListinoRow();
         row.setRowType(ListinoRow.RowType.MATERIAL);
         row.setCustomerCode(custCode);
@@ -380,10 +388,15 @@ public class ListinoBuilder {
         row.setDescription(desc != null && !desc.trim().isEmpty()
             ? mat + " — " + desc
             : mat);
-        // Codice materiale cliente
+        // Codice materiale cliente + lotto minimo + imballo preferenziale
         if (materialByCustomer != null) {
-            String matByCust = materialByCustomer.get(custCode + "|" + mat);
-            row.setCustomerMaterialCode(matByCust != null ? matByCust : "");
+            CustomerMaterialInfo info = materialByCustomer.get(custCode + "|" + mat);
+            if (info != null) {
+                row.setCustomerMaterialCode(info.getMaterialByCustomer());
+                row.setMinDeliveryQuantity(info.getMinDeliveryQuantity());
+                row.setPackagingNoteIT(info.getPackagingNoteIT());
+                row.setPackagingNoteEN(info.getPackagingNoteEN());
+            }
         }
         row.setCurrency(ppr0.getCurrency());
         row.setConditionQty(ppr0.getConditionQty());

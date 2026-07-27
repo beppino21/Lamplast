@@ -37,17 +37,29 @@ public class ListinoRow {
     private boolean   absolutePrice;
     private String    customerMaterialCode = ""; // true per ZTRA puro: prezzo assoluto, non delta
     private boolean   unitMismatch;
+    private String    language = "IT";   // lingua cliente (CUSTOMER row) per la stampa
+    private double    minDeliveryQuantity;        // MATERIAL: lotto minimo (Customer-Material Info Record)
+    private String    packagingNoteIT = "";        // MATERIAL: imballo preferenziale, testo IT
+    private String    packagingNoteEN = "";        // MATERIAL: imballo preferenziale, testo EN
+    private String    paymentTerms = "";              // CUSTOMER: condizioni di pagamento (anagrafica)
+    private String    incotermsClassification = "";   // CUSTOMER: Incoterms (codice, es. "FCA")
+    private String    incotermsLocation = "";          // CUSTOMER: Incoterms (località)
 
     public ListinoRow() {}
 
     // ── Factory methods ───────────────────────────────────────────────────
 
     public static ListinoRow customerRow(String code, String name) {
+        return customerRow(code, name, "IT");
+    }
+
+    public static ListinoRow customerRow(String code, String name, String language) {
         ListinoRow r = new ListinoRow();
         r.rowType      = RowType.CUSTOMER;
         r.customerCode = code;
         r.customerName = name;
         r.description  = code + "  —  " + name;
+        r.language      = (language != null && !language.trim().isEmpty()) ? language : "IT";
         return r;
     }
 
@@ -110,6 +122,28 @@ public class ListinoRow {
     public void      setValidTo(LocalDate v)             { this.validTo = v; }
     public boolean   isPreferredZone()                   { return preferredZone; }
     public void      setPreferredZone(boolean v)         { this.preferredZone = v; }
+    public String    getLanguage()                       { return language; }
+    public void      setLanguage(String v)                { this.language = (v != null && !v.trim().isEmpty()) ? v : "IT"; }
+    public double    getMinDeliveryQuantity()            { return minDeliveryQuantity; }
+    public void      setMinDeliveryQuantity(double v)    { this.minDeliveryQuantity = v; }
+    public String    getPackagingNoteIT()                { return packagingNoteIT; }
+    public void      setPackagingNoteIT(String v)        { this.packagingNoteIT = v != null ? v : ""; }
+    public String    getPackagingNoteEN()                { return packagingNoteEN; }
+    public void      setPackagingNoteEN(String v)        { this.packagingNoteEN = v != null ? v : ""; }
+    public String    getPaymentTerms()                   { return paymentTerms; }
+    public void      setPaymentTerms(String v)           { this.paymentTerms = v != null ? v : ""; }
+    public String    getIncotermsClassification()        { return incotermsClassification; }
+    public void      setIncotermsClassification(String v) { this.incotermsClassification = v != null ? v : ""; }
+    public String    getIncotermsLocation()              { return incotermsLocation; }
+    public void      setIncotermsLocation(String v)       { this.incotermsLocation = v != null ? v : ""; }
+
+    /** Setter fluente, comodo in fase di costruzione della riga cliente. */
+    public ListinoRow withPaymentTerms(String v) { setPaymentTerms(v); return this; }
+    public ListinoRow withIncoterms(String classification, String location) {
+        setIncotermsClassification(classification);
+        setIncotermsLocation(location);
+        return this;
+    }
     public boolean   isAbsolutePrice()                   { return absolutePrice; }
     public void      setAbsolutePrice(boolean v)         { this.absolutePrice = v; }
     public String    getCustomerMaterialCode()           { return customerMaterialCode != null ? customerMaterialCode : ""; }

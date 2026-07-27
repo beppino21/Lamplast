@@ -35,6 +35,11 @@ import eOne.conditionsSD.model.ListinoRow;
  * Usa OpenPDF (com.lowagie.text.*), già presente in classpath come
  * dipendenza transitiva di eclntjsfserverRISC_jakarta (è la stessa libreria
  * usata internamente da FIXGRIDPDFExporter).
+ *
+ * I testi "di struttura" del documento (titolo, etichette colonne, ecc.)
+ * sono localizzati in base alla lingua del cliente (ListinoRow.getLanguage()).
+ * Le descrizioni materiali/zone NON vengono mai tradotte (sono dati SAP).
+ * Il piè di pagina con i dati legali aziendali resta sempre in italiano.
  */
 public class ListinoPdfBuilder {
 
@@ -59,8 +64,6 @@ public class ListinoPdfBuilder {
         "C.F. 02660370152 - Part. IVA - EORI IT00736790965 - Registrazione REX: ITREXIT00736790965"
     };
 
-    private static final String DOCUMENT_TITLE = "Listino Prezzi di Vendita";
-
     // ═══════════════════════════════════════════════════════════════════════
     // Font / colori
     // ═══════════════════════════════════════════════════════════════════════
@@ -68,9 +71,10 @@ public class ListinoPdfBuilder {
     private static final Font F_TITLE     = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 16, Color.BLACK);
     private static final Font F_SUBTITLE  = FontFactory.getFont(FontFactory.HELVETICA, 9, Color.DARK_GRAY);
     private static final Font F_CUSTOMER  = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 13, new Color(0x15, 0x65, 0xC0));
-    private static final Font F_SCALE_HDR = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 8, new Color(0x15, 0x65, 0xC0));
+    private static final Font F_CUSTOMER_EXTRA = FontFactory.getFont(FontFactory.HELVETICA, 8.5f, Color.DARK_GRAY);
     private static final Font F_ZONE_HDR  = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 8, new Color(0x55, 0x55, 0x55));
     private static final Font F_MATERIAL  = FontFactory.getFont(FontFactory.HELVETICA, 8, Color.BLACK);
+    private static final Font F_MATERIAL_NOTE = FontFactory.getFont(FontFactory.HELVETICA_OBLIQUE, 6.5f, Color.DARK_GRAY);
     private static final Font F_ZONE_REF  = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 8, new Color(0x00, 0x77, 0x00));
     private static final Font F_ZONE      = FontFactory.getFont(FontFactory.HELVETICA, 8, new Color(0x88, 0x88, 0x88));
     private static final Font F_UM_WARN   = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 8, new Color(0xCC, 0x00, 0x00));
@@ -91,6 +95,77 @@ public class ListinoPdfBuilder {
     private byte[] logoBytes;
 
     // ═══════════════════════════════════════════════════════════════════════
+    // Localizzazione (IT/EN) dei testi di struttura del documento
+    // ═══════════════════════════════════════════════════════════════════════
+
+    private static final class Labels {
+        boolean english;
+        String title, refDate, emissionDate, colMaterial, colZone, colCodCliente,
+               colDiv, colPer, colUM, colDa, colA, zoneAlternative, standardDelivery,
+               qualsiasi, finoA, page, minLot, packaging, paymentTerms, incoterms;
+
+        static Labels it() {
+            Labels l = new Labels();
+            l.english          = false;
+            l.title            = "Listino Prezzi di Vendita";
+            l.refDate          = "Data di riferimento condizioni:";
+            l.emissionDate     = "Data emissione:";
+            l.colMaterial      = "Materiale";
+            l.colZone          = "Zona";
+            l.colCodCliente    = "Cod. cliente";
+            l.colDiv           = "Div.";
+            l.colPer           = "Per";
+            l.colUM            = "UM";
+            l.colDa            = "Da";
+            l.colA             = "A";
+            l.zoneAlternative  = "Zone alternative";
+            l.standardDelivery = "consegna standard";
+            l.qualsiasi        = "Qualsiasi";
+            l.finoA            = "fino a";
+            l.page             = "Pag.";
+            l.minLot           = "Lotto minimo:";
+            l.packaging        = "Imballo preferenziale:";
+            l.paymentTerms     = "Condizioni di pagamento:";
+            l.incoterms        = "Incoterms:";
+            return l;
+        }
+
+        static Labels en() {
+            Labels l = new Labels();
+            l.english          = true;
+            l.title            = "Sales Price List";
+            l.refDate          = "Conditions reference date:";
+            l.emissionDate     = "Issue date:";
+            l.colMaterial      = "Material";
+            l.colZone          = "Zone";
+            l.colCodCliente    = "Customer mat. code";
+            l.colDiv           = "Cur.";
+            l.colPer           = "Per";
+            l.colUM            = "UoM";
+            l.colDa            = "From";
+            l.colA             = "To";
+            l.zoneAlternative  = "Alternative zones";
+            l.standardDelivery = "standard delivery";
+            l.qualsiasi        = "Any";
+            l.finoA            = "up to";
+            l.page             = "Page";
+            l.minLot           = "Minimum lot:";
+            l.packaging        = "Preferred packaging:";
+            l.paymentTerms     = "Payment terms:";
+            l.incoterms        = "Incoterms:";
+            return l;
+        }
+
+        static Labels forLanguage(String lang) {
+            if (lang != null) {
+                String l = lang.trim().toUpperCase();
+                if (l.equals("EN") || l.equals("E")) return en();
+            }
+            return it(); // default italiano
+        }
+    }
+
+    // ═══════════════════════════════════════════════════════════════════════
     // Entry point
     // ═══════════════════════════════════════════════════════════════════════
 
@@ -98,7 +173,8 @@ public class ListinoPdfBuilder {
      * Genera il PDF: raggruppa le righe per cliente e produce, per ciascun
      * cliente, un'unica PdfPTable con header colonne ripetuto su ogni
      * pagina (setHeaderRows), separata da un salto pagina dal cliente
-     * successivo.
+     * successivo. Titolo, sottotitolo ed etichette colonna sono localizzati
+     * per lingua del singolo cliente (ListinoRow.getLanguage()).
      *
      * @param rows          righe del listino, nell'ordine già preparato da ListinoBuilder
      *                      (CUSTOMER, HEADER_SCALE, MATERIAL/HEADER_ZONE/ZONE, ALERT...)
@@ -114,23 +190,13 @@ public class ListinoPdfBuilder {
         writer.setPageEvent(new LetterheadPageEvent());
         document.open();
 
-        Paragraph title = new Paragraph(DOCUMENT_TITLE, F_TITLE);
-        title.setSpacingAfter(2f);
-        document.add(title);
-
-        String sub = "Data di riferimento condizioni: " + (referenceDate != null ? referenceDate.format(FMT_DATE) : "-")
-                   + "        Data emissione: " + LocalDateTime.now().format(FMT_DATETIME);
-        Paragraph subtitle = new Paragraph(sub, F_SUBTITLE);
-        subtitle.setSpacingAfter(14f);
-        document.add(subtitle);
-
         List<List<ListinoRow>> blocks = splitByCustomer(rows);
         boolean firstBlock = true;
         for (List<ListinoRow> block : blocks) {
             if (block.isEmpty()) continue;
             if (!firstBlock) document.newPage();
             firstBlock = false;
-            renderCustomerBlock(document, block);
+            renderCustomerBlock(document, block, referenceDate);
         }
 
         document.close();
@@ -154,40 +220,80 @@ public class ListinoPdfBuilder {
         return blocks;
     }
 
-    private void renderCustomerBlock(Document document, List<ListinoRow> block) throws DocumentException {
+    private void renderCustomerBlock(Document document, List<ListinoRow> block, LocalDate referenceDate)
+            throws DocumentException {
+
         ListinoRow customerRow = block.get(0);
+        Labels labels = Labels.forLanguage(customerRow.isCustomerRow() ? customerRow.getLanguage() : null);
+
+        // ── Titolo documento (localizzato per il cliente di questa pagina) ──
+        Paragraph title = new Paragraph(labels.title, F_TITLE);
+        title.setSpacingAfter(2f);
+        document.add(title);
+
+        String sub = labels.refDate + " " + (referenceDate != null ? referenceDate.format(FMT_DATE) : "-")
+                   + "        " + labels.emissionDate + " " + LocalDateTime.now().format(FMT_DATETIME);
+        Paragraph subtitle = new Paragraph(sub, F_SUBTITLE);
+        subtitle.setSpacingAfter(14f);
+        document.add(subtitle);
+
         if (customerRow.isCustomerRow()) {
-            Paragraph custTitle = new Paragraph(nvl(customerRow.getCustomerName()), F_CUSTOMER);
+            Paragraph custTitle = new Paragraph();
+            custTitle.add(new Chunk(nvl(customerRow.getCustomerName()), F_CUSTOMER));
+
+            StringBuilder extra = new StringBuilder();
+            if (!nvl(customerRow.getPaymentTerms()).isBlank()) {
+                extra.append("   ").append(labels.paymentTerms).append(' ').append(customerRow.getPaymentTerms());
+            }
+            String incoterms = (nvl(customerRow.getIncotermsClassification())
+                + (nvl(customerRow.getIncotermsLocation()).isBlank() ? "" : " " + customerRow.getIncotermsLocation())).trim();
+            if (!incoterms.isBlank()) {
+                extra.append("   ").append(labels.incoterms).append(' ').append(incoterms);
+            }
+            if (extra.length() > 0) custTitle.add(new Chunk(extra.toString(), F_CUSTOMER_EXTRA));
+
             custTitle.setSpacingAfter(8f);
             document.add(custTitle);
         }
 
         PdfPTable table = null;
+        boolean zoneSection = false;
         List<String> alertLines = new ArrayList<>();
 
         for (ListinoRow row : block) {
             if (row.isCustomerRow()) continue;
 
             if (row.isHeaderScaleRow()) {
-                if (table != null) { document.add(table); document.add(Chunk.NEWLINE); }
+                if (table != null) {
+                    document.add(table);
+                    addHorizontalRule(document);
+                }
+                if (zoneSection) {
+                    Paragraph zoneLabel = new Paragraph(labels.zoneAlternative, F_ZONE_HDR);
+                    zoneLabel.setSpacingBefore(6f);
+                    zoneLabel.setSpacingAfter(2f);
+                    document.add(zoneLabel);
+                }
                 table = newListinoTable();
-                addTableHeader(table, row);
+                addTableHeader(table, row, labels, zoneSection);
                 continue;
             }
 
             if (row.isMaterialRow()) {
-                if (table == null) { table = newListinoTable(); addPlainHeader(table); }
+                if (table == null) { table = newListinoTable(); addPlainHeader(table, labels, zoneSection); }
                 addMaterialRow(table, row);
+                addMaterialNoteRow(table, row, labels);
                 continue;
             }
 
             if (row.isHeaderZoneRow()) {
-                if (table != null) addFullWidthRow(table, "Zone alternative", F_ZONE_HDR, null);
+                zoneSection = true; // la prossima HEADER_SCALE apre la tabella "zone";
+                                     // l'etichetta viene stampata attaccata a quella tabella (vedi sopra)
                 continue;
             }
 
             if (row.isZoneRow()) {
-                if (table != null) addZoneRow(table, row);
+                if (table != null) addZoneRow(table, row, labels);
                 continue;
             }
 
@@ -215,15 +321,23 @@ public class ListinoPdfBuilder {
 
     // ═══════════════════════════════════════════════════════════════════════
     // Tabella listino — costruzione colonne
+    //
+    // Ordine colonne: [0] Materiale/Zona (dinamica)  [1] Cod. cliente
+    //                 [2..6] Scag. 1-5   [7] Div.  [8] Per  [9] UM  [10] Da  [11] A
     // ═══════════════════════════════════════════════════════════════════════
 
-    private static final String[] COL_TITLES = {
-        "Materiale / Zona", "Scag. 1", "Scag. 2", "Scag. 3", "Scag. 4", "Scag. 5",
-        "Div.", "Per", "UM", "Da", "A", "Cod. cliente"
-    };
     private static final float[] COL_WIDTHS = {
-        22f, 8f, 8f, 8f, 8f, 8f, 4f, 4f, 5f, 8f, 8f, 9f
+        20f, 9f, 8f, 8f, 8f, 8f, 8f, 4f, 4f, 5f, 9f, 9f
     };
+
+    private String[] colTitles(Labels labels, boolean zoneSection) {
+        return new String[] {
+            zoneSection ? labels.colZone : labels.colMaterial,
+            labels.colCodCliente,
+            "Scag. 1", "Scag. 2", "Scag. 3", "Scag. 4", "Scag. 5",
+            labels.colDiv, labels.colPer, labels.colUM, labels.colDa, labels.colA
+        };
+    }
 
     private PdfPTable newListinoTable() throws DocumentException {
         PdfPTable table = new PdfPTable(COL_WIDTHS.length);
@@ -234,22 +348,31 @@ public class ListinoPdfBuilder {
         return table;
     }
 
-    private void addPlainHeader(PdfPTable table) {
-        for (String t : COL_TITLES) {
-            PdfPCell cell = headerCell(t);
-            table.addCell(cell);
+    private void addPlainHeader(PdfPTable table, Labels labels, boolean zoneSection) {
+        String[] titles = colTitles(labels, zoneSection);
+        PdfPCell firstCell = headerCell(titles[0]);
+        if (zoneSection) firstCell.setColspan(2);
+        table.addCell(firstCell);
+        int start = zoneSection ? 2 : 1;
+        for (int i = start; i < titles.length; i++) {
+            table.addCell(headerCell(titles[i]));
         }
     }
 
-    /** Header con le soglie di scaglione effettive (sostituisce i titoli generici "Scag. N"). */
-    private void addTableHeader(PdfPTable table, ListinoRow headerScaleRow) {
-        table.addCell(headerCell(COL_TITLES[0]));
+    /** Header con le soglie di scaglione effettive. Se una colonna non ha soglia reale
+     *  (materiale non scaglionato su quella posizione), l'intestazione resta vuota
+     *  ma la colonna viene comunque mantenuta per allineamento. */
+    private void addTableHeader(PdfPTable table, ListinoRow headerScaleRow, Labels labels, boolean zoneSection) {
+        String[] titles = colTitles(labels, zoneSection);
+        PdfPCell firstCell = headerCell(titles[0]);
+        if (zoneSection) firstCell.setColspan(2);
+        table.addCell(firstCell);
+        if (!zoneSection) table.addCell(headerCell(titles[1]));   // Cod. cliente: solo tabella materiali
         for (int n = 1; n <= 5; n++) {
-            String label = formatScaleHeader(headerScaleRow, n);
-            table.addCell(headerCell(label.isEmpty() ? COL_TITLES[n] : label));
+            table.addCell(headerCell(formatScaleHeader(headerScaleRow, n, labels)));
         }
-        for (int i = 6; i < COL_TITLES.length; i++) {
-            table.addCell(headerCell(COL_TITLES[i]));
+        for (int i = 7; i < titles.length; i++) {
+            table.addCell(headerCell(titles[i]));
         }
     }
 
@@ -267,6 +390,7 @@ public class ListinoPdfBuilder {
         Color bg = ((rowToggle++ % 2) == 0) ? Color.WHITE : COLOR_ROW_ALT_BG;
 
         table.addCell(dataCell(nvl(row.getDescription()), F_MATERIAL, Element.ALIGN_LEFT, bg));
+        table.addCell(dataCell(nvl(row.getCustomerMaterialCode()), F_MATERIAL, Element.ALIGN_LEFT, bg));
         for (int n = 1; n <= 5; n++) {
             String v = n > row.getActiveCols() ? "" : formatPrice(row, n);
             table.addCell(dataCell(v, F_MATERIAL, Element.ALIGN_RIGHT, bg));
@@ -280,28 +404,79 @@ public class ListinoPdfBuilder {
             F_MATERIAL, Element.ALIGN_CENTER, bg));
         table.addCell(dataCell(row.getValidTo() != null ? row.getValidTo().format(FMT_DATE) : "",
             F_MATERIAL, Element.ALIGN_CENTER, bg));
-        table.addCell(dataCell(row.getCustomerMaterialCode(), F_MATERIAL, Element.ALIGN_LEFT, bg));
     }
 
-    private void addZoneRow(PdfPTable table, ListinoRow row) {
+    /**
+     * Seconda riga, subito sotto il materiale, con lotto minimo e/o imballo
+     * preferenziale (Customer-Material Info Record) — solo se almeno una
+     * delle due informazioni è presente. Occupa la colonna unificata
+     * Materiale + Cod. cliente (colspan 2), il resto della riga resta vuoto.
+     */
+    private void addMaterialNoteRow(PdfPTable table, ListinoRow row, Labels labels) {
+        String packaging = labels.english ? row.getPackagingNoteEN() : row.getPackagingNoteIT();
+        boolean hasMinQty = row.getMinDeliveryQuantity() > 0d;
+        boolean hasPackaging = packaging != null && !packaging.isBlank();
+        if (!hasMinQty && !hasPackaging) return;
+
+        StringBuilder sb = new StringBuilder("   ");
+        if (hasMinQty) {
+            sb.append(labels.minLot).append(' ').append(formatQty(row.getMinDeliveryQuantity()));
+            if (!nvl(row.getConditionUnit()).isBlank()) sb.append(' ').append(row.getConditionUnit());
+        }
+        if (hasPackaging) {
+            if (hasMinQty) sb.append("   —   ");
+            sb.append(labels.packaging).append(' ').append(packaging.trim());
+        }
+
+        // stessa alternanza colore della riga materiale appena scritta (rowToggle già incrementato)
+        Color bg = (((rowToggle - 1) % 2) == 0) ? Color.WHITE : COLOR_ROW_ALT_BG;
+
+        PdfPCell noteCell = dataCell(sb.toString(), F_MATERIAL_NOTE, Element.ALIGN_LEFT, bg);
+        noteCell.setColspan(2);
+        noteCell.setPaddingTop(0f);
+        table.addCell(noteCell);
+        for (int i = 0; i < 10; i++) table.addCell(dataCell("", F_MATERIAL_NOTE, Element.ALIGN_CENTER, bg));
+    }
+
+    private void addZoneRow(PdfPTable table, ListinoRow row, Labels labels) {
         Color bg = ((rowToggle++ % 2) == 0) ? Color.WHITE : COLOR_ROW_ALT_BG;
         Font font = row.isPreferredZone() ? F_ZONE_REF : F_ZONE;
 
-        table.addCell(dataCell("   " + nvl(row.getDescription()), font, Element.ALIGN_LEFT, bg));
+        String desc = "   " + nvl(row.getDescription());
+        if (row.isPreferredZone()) desc += "  (" + labels.standardDelivery + ")";
+        PdfPCell descCell = dataCell(desc, font, Element.ALIGN_LEFT, bg);
+        descCell.setColspan(2); // estende la colonna descrizione al posto di "Cod. cliente", non pertinente per le zone
+        table.addCell(descCell);
+
         for (int n = 1; n <= 5; n++) {
-            String v = n > row.getActiveCols() ? "" : formatDelta(row, n);
+            // La zona di default (inclusa nel prezzo di vendita) non riporta alcun prezzo/delta
+            String v = (row.isPreferredZone() || n > row.getActiveCols()) ? "" : formatDelta(row, n);
             table.addCell(dataCell(v, font, Element.ALIGN_RIGHT, bg));
         }
-        // colonne rimanenti vuote per le righe zona
-        for (int i = 0; i < 6; i++) table.addCell(dataCell("", font, Element.ALIGN_CENTER, bg));
+        table.addCell(dataCell(nvl(row.getCurrency()), font, Element.ALIGN_CENTER, bg));
+        table.addCell(dataCell(row.getConditionQty() > 0 ? String.format("%.0f", row.getConditionQty()) : "",
+            font, Element.ALIGN_RIGHT, bg));
+        table.addCell(dataCell(nvl(row.getConditionUnit()), font, Element.ALIGN_CENTER, bg));
+        table.addCell(dataCell(row.getValidFrom() != null ? row.getValidFrom().format(FMT_DATE) : "",
+            font, Element.ALIGN_CENTER, bg));
+        table.addCell(dataCell(row.getValidTo() != null ? row.getValidTo().format(FMT_DATE) : "",
+            font, Element.ALIGN_CENTER, bg));
     }
 
-    private void addFullWidthRow(PdfPTable table, String text, Font font, Color bg) {
-        PdfPCell cell = new PdfPCell(new Phrase(text, font));
-        cell.setColspan(COL_TITLES.length);
-        cell.setPadding(3f);
-        if (bg != null) cell.setBackgroundColor(bg);
-        table.addCell(cell);
+    /** Riga orizzontale di chiusura, usata per separare la tabella prezzi dalla sezione zone. */
+    private void addHorizontalRule(Document document) throws DocumentException {
+        PdfPTable rule = new PdfPTable(1);
+        rule.setWidthPercentage(100f);
+        rule.setSpacingBefore(1f);
+        rule.setSpacingAfter(0f);
+        PdfPCell cell = new PdfPCell();
+        cell.setFixedHeight(1.2f);
+        cell.setBorder(Rectangle.BOTTOM);
+        cell.setBorderWidth(1.2f);
+        cell.setBorderColor(new Color(0x15, 0x65, 0xC0));
+        cell.setPadding(0f);
+        rule.addCell(cell);
+        document.add(rule);
     }
 
     private PdfPCell dataCell(String text, Font font, int align, Color bg) {
@@ -317,17 +492,17 @@ public class ListinoPdfBuilder {
     // Formattazione valori — replica la logica di ListinoBean.GridListinoItem
     // ═══════════════════════════════════════════════════════════════════════
 
-    private String formatScaleHeader(ListinoRow row, int n) {
+    private String formatScaleHeader(ListinoRow row, int n, Labels labels) {
         double q = row.getScaleQty()[n - 1];
         String unit = nvl(row.getScaleUnit());
         if (q <= 0) {
-            if (n == 5) return unit.trim().isEmpty() ? "Qualsiasi" : "Qualsiasi (" + unit + ")";
+            if (n == 5) return unit.trim().isEmpty() ? labels.qualsiasi : labels.qualsiasi + " (" + unit + ")";
             return "";
         }
         String qty = q == Math.floor(q)
             ? String.format("%.0f", q)
             : String.format("%.3f", q).replaceAll("0+$", "");
-        return "fino a " + qty + (unit.trim().isEmpty() ? "" : " " + unit);
+        return labels.finoA + " " + qty + (unit.trim().isEmpty() ? "" : " " + unit);
     }
 
     private String formatPrice(ListinoRow row, int n) {
@@ -340,10 +515,13 @@ public class ListinoPdfBuilder {
         if (row.isAbsolutePrice()) {
             return v != 0.0 ? String.format("%,.2f", v) : "—";
         }
-        if (row.isPreferredZone()) {
-            return v == 0.0 ? "" : String.format("(%,.2f)", v);
-        }
         return v != 0.0 ? String.format("%+,.2f", v) : "—";
+    }
+
+    private String formatQty(double q) {
+        return q == Math.floor(q)
+            ? String.format("%.0f", q)
+            : String.format("%.3f", q).replaceAll("0+$", "");
     }
 
     private String nvl(String s) { return s != null ? s : ""; }
@@ -417,7 +595,7 @@ public class ListinoPdfBuilder {
                 cb.lineTo(right, headerBottom);
                 cb.stroke();
 
-                // ── Piede pagina ─────────────────────────────────────────
+                // ── Piè di pagina (sempre in italiano: dati legali aziendali) ──
                 float footerTop = document.bottomMargin() - 10f;
                 ColumnText ctf = new ColumnText(cb);
                 ctf.setSimpleColumn(left, 8f, right, footerTop);
