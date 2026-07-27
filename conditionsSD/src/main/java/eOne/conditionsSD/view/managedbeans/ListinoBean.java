@@ -15,11 +15,13 @@ import org.eclnt.jsfserver.elements.impl.FIXGRIDListBinding;
 import org.eclnt.jsfserver.pagebean.PageBean;
 import org.eclnt.jsfserver.util.AutoCompleteMgr;
 import org.eclnt.jsfserver.util.DefaultAutoCompleteProvider;
+import org.eclnt.util.valuemgmt.ValueManager;
 
 import com.fasterxml.jackson.databind.JsonNode;
 
 import eOne.conditionsSD.model.ExtractMode;
 import eOne.conditionsSD.logic.ListinoExtractor;
+import eOne.conditionsSD.logic.ListinoPdfBuilder;
 import eOne.conditionsSD.model.ExtractParams;
 import eOne.conditionsSD.model.ListinoRow;
 import eOne.conditionsSD.model.ListinoRow.RowType;
@@ -60,6 +62,11 @@ public class ListinoBean extends PageBean implements Serializable {
     private boolean m_awaitingConfirm;
     private List<CustomerClient.CustomerInfo> m_pendingCustomers;
     private ExtractMode m_pendingExtractMode;
+
+    // Righe dell'ultima estrazione (per la generazione del PDF di stampa)
+    private List<ListinoRow> m_lastRows;
+    private String  m_pdfHex;
+    private boolean m_pdfVisible;
 
     private DefaultAutoCompleteProvider m_priceGroupProvider;
     private DefaultAutoCompleteProvider m_customerProvider;
@@ -307,6 +314,9 @@ public class ListinoBean extends PageBean implements Serializable {
         m_awaitingConfirm    = false;
         m_pendingCustomers   = new ArrayList<>();
         m_pendingExtractMode = ExtractMode.FULL;
+        m_lastRows           = new ArrayList<>();
+        m_pdfHex             = "";
+        m_pdfVisible         = false;
 
         m_priceGroupProvider = new PriceGroupACProvider();
         m_customerProvider   = new CustomerACProvider();
@@ -412,7 +422,38 @@ public class ListinoBean extends PageBean implements Serializable {
         m_awaitingConfirm    = false;
         m_pendingCustomers   = new ArrayList<>();
         m_pendingExtractMode = ExtractMode.FULL;
+        m_lastRows           = new ArrayList<>();
+        m_pdfHex             = "";
+        m_pdfVisible         = false;
         m_gridListino.getItems().clear();
+    }
+
+    /**
+     * Genera il PDF "carta intestata" del listino attualmente estratto
+     * e ne apre l'anteprima inline (t:pdfrenderer).
+     */
+    public void onStampa(ActionEvent event) {
+        if (m_lastRows == null || m_lastRows.isEmpty()) {
+            m_statusMessage = "Nessun listino estratto da stampare.";
+            m_hasWarnings   = true;
+            return;
+        }
+        try {
+            ListinoPdfBuilder pdfBuilder = new ListinoPdfBuilder();
+            byte[] pdfBytes = pdfBuilder.buildDocument(m_lastRows, toLocalDate(m_referenceDateInput));
+            m_pdfHex     = ValueManager.encodeHexString(pdfBytes);
+            m_pdfVisible = true;
+        } catch (Exception e) {
+            m_statusMessage = "Errore generazione PDF: " + e.getMessage();
+            m_hasWarnings   = true;
+            e.printStackTrace();
+        }
+    }
+
+    /** Chiude l'anteprima PDF e torna alla griglia. */
+    public void onChiudiAnteprima(ActionEvent event) {
+        m_pdfVisible = false;
+        m_pdfHex     = "";
     }
 
     private void doExtract() {
@@ -441,6 +482,10 @@ public class ListinoBean extends PageBean implements Serializable {
             ListinoExtractor extr = new ListinoExtractor(S4Config.fromCCConfig());
             List<ListinoRow> rows = extr.extract(params);
             List<String> warnings = extr.getLastWarnings();
+
+            m_lastRows = rows;
+            m_pdfVisible = false;
+            m_pdfHex = "";
 
             for (ListinoRow row : rows)
                 m_gridListino.getItems().add(new GridListinoItem(row));
@@ -515,4 +560,8 @@ public class ListinoBean extends PageBean implements Serializable {
     public String  getPriceGroupACURL()         { return m_priceGroupProvider.getURL(); }
     public String  getCustomerACURL()           { return m_customerProvider.getURL(); }
     public String  getMaterialACURL()           { return m_materialProvider.getURL(); }
+
+    public String  getPdf()                     { return m_pdfHex; }
+    public void    setPdf(String v)              { m_pdfHex = v; }
+    public boolean isPdfVisible()               { return m_pdfVisible; }
 }

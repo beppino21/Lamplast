@@ -32,13 +32,21 @@
 <t:rowbodypane id="g_30" >
 <t:row id="g_31" >
 <t:pane id="g_32" height="100%" width="100%" >
-<t:row id="g_33" >
+<t:row id="g_33" rendered="#{!d.ListinoBean.pdfVisible}" >
 <t:coldistance id="g_34" width="100%" />
 <t:link id="g_35" actionListener="#{d.ListinoBean.gridListino.onEditColumnDetails}" text="Colonne..." />
 <t:coldistance id="g_36" />
 <t:link id="g_37" actionListener="#{d.ListinoBean.gridListino.onOpenGridExportFunctions}" text="Export" />
+<t:coldistance id="g_38" />
+<t:link id="g_39" actionListener="#{d.ListinoBean.onStampa}" text="Stampa" />
 </t:row>
-<t:row id="g_40" >
+<t:row id="g_80" rendered="#{d.ListinoBean.pdfVisible}" >
+<t:button id="g_81" actionListener="#{d.ListinoBean.onChiudiAnteprima}" text="&#171; Torna al listino" width="140" />
+</t:row>
+<t:row id="g_82" height="100%" rendered="#{d.ListinoBean.pdfVisible}" >
+<t:pdfrenderer id="g_83" height="100%" pdf="#{d.ListinoBean.pdf}" width="100%" withprintdialog="true" />
+</t:row>
+<t:row id="g_40" rendered="#{!d.ListinoBean.pdfVisible}" >
 <t:fixgrid id="g_41" height="100%" objectbinding="#{d.ListinoBean.gridListino}" sbvisibleamount="50" width="100%" >
 <t:gridcol id="g_50" text="Materiale / Zona" width="320" >
 <t:label id="g_51" font=".{rowFont}" text=".{description}" />
