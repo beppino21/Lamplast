@@ -39,11 +39,12 @@ public class ListinoRow {
     private boolean   unitMismatch;
     private String    language = "IT";   // lingua cliente (CUSTOMER row) per la stampa
     private double    minDeliveryQuantity;        // MATERIAL: lotto minimo (Customer-Material Info Record)
-    private String    packagingNoteIT = "";        // MATERIAL: imballo preferenziale, testo IT
-    private String    packagingNoteEN = "";        // MATERIAL: imballo preferenziale, testo EN
+    private String    minDeliveryQuantityUnit = ""; // MATERIAL: UM del lotto minimo (BaseUnit, non l'UM di prezzo)
+    private String    packagingNote = "";           // MATERIAL: imballo di default (Materiale Cliente Supplementare "IMBALLO"), non tradotto
     private String    paymentTerms = "";              // CUSTOMER: condizioni di pagamento (anagrafica)
     private String    incotermsClassification = "";   // CUSTOMER: Incoterms (codice, es. "FCA")
     private String    incotermsLocation = "";          // CUSTOMER: Incoterms (località)
+    private String    paymentTermsText = "";            // CUSTOMER: testo descrittivo condizione di pagamento (custom OData)
 
     public ListinoRow() {}
 
@@ -126,16 +127,21 @@ public class ListinoRow {
     public void      setLanguage(String v)                { this.language = (v != null && !v.trim().isEmpty()) ? v : "IT"; }
     public double    getMinDeliveryQuantity()            { return minDeliveryQuantity; }
     public void      setMinDeliveryQuantity(double v)    { this.minDeliveryQuantity = v; }
-    public String    getPackagingNoteIT()                { return packagingNoteIT; }
-    public void      setPackagingNoteIT(String v)        { this.packagingNoteIT = v != null ? v : ""; }
-    public String    getPackagingNoteEN()                { return packagingNoteEN; }
-    public void      setPackagingNoteEN(String v)        { this.packagingNoteEN = v != null ? v : ""; }
+    public String    getMinDeliveryQuantityUnit()        { return minDeliveryQuantityUnit; }
+    public void      setMinDeliveryQuantityUnit(String v) { this.minDeliveryQuantityUnit = v != null ? v : ""; }
+    public String    getPackagingNote()                  { return packagingNote; }
+    public void      setPackagingNote(String v)          { this.packagingNote = v != null ? v : ""; }
     public String    getPaymentTerms()                   { return paymentTerms; }
     public void      setPaymentTerms(String v)           { this.paymentTerms = v != null ? v : ""; }
     public String    getIncotermsClassification()        { return incotermsClassification; }
     public void      setIncotermsClassification(String v) { this.incotermsClassification = v != null ? v : ""; }
     public String    getIncotermsLocation()              { return incotermsLocation; }
     public void      setIncotermsLocation(String v)       { this.incotermsLocation = v != null ? v : ""; }
+    public String    getPaymentTermsText()                { return paymentTermsText; }
+    public void      setPaymentTermsText(String v)        { this.paymentTermsText = v != null ? v : ""; }
+
+    /** Setter fluente, comodo in fase di costruzione della riga cliente. */
+    public ListinoRow withPaymentTermsText(String v) { setPaymentTermsText(v); return this; }
 
     /** Setter fluente, comodo in fase di costruzione della riga cliente. */
     public ListinoRow withPaymentTerms(String v) { setPaymentTerms(v); return this; }

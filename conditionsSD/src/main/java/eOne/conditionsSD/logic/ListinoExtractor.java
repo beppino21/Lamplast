@@ -7,6 +7,7 @@ import eOne.conditionsSD.s4client.CustomerClient;
 import eOne.conditionsSD.s4client.CustomerClient.CustomerInfo;
 import eOne.conditionsSD.s4client.CustomerMaterialClient;
 import eOne.conditionsSD.s4client.MaterialClient;
+import eOne.conditionsSD.s4client.PaymentTermsTextClient;
 import eOne.conditionsSD.s4client.PricingClient;
 import eOne.conditionsSD.s4client.S4Config;
 import eOne.conditionsSD.s4client.S4HttpClient;
@@ -24,6 +25,7 @@ public class ListinoExtractor {
     private final CustomerMaterialClient customerMaterialClient;
     private final MaterialClient      materialClient;
     private final SalesDistrictClient districtClient;
+    private final PaymentTermsTextClient paymentTermsTextClient;
     private final ListinoBuilder      builder;
 
     private List<String> lastWarnings = List.of();
@@ -35,6 +37,7 @@ public class ListinoExtractor {
         this.customerMaterialClient = new CustomerMaterialClient(httpClient);
         this.materialClient         = new MaterialClient(httpClient, config.getLanguage());
         this.districtClient         = new SalesDistrictClient(httpClient, config.getLanguage());
+        this.paymentTermsTextClient = new PaymentTermsTextClient(httpClient);
         this.builder                = new ListinoBuilder();
     }
 
@@ -101,10 +104,27 @@ public class ListinoExtractor {
             ? Map.of()
             : districtClient.fetchDescriptions(zoneCodes);
 
-        // 6. Build righe listino
+        // 6. Testo condizioni di pagamento (servizio OData V4 custom, per lingua cliente)
+        Map<String, String> paymentTermsTexts = new HashMap<>(); // chiave: "CODICE|IT" o "CODICE|EN"
+        Map<String, Set<String>> codesByLanguage = new HashMap<>();
+        for (CustomerInfo info : customers.values()) {
+            String pt = info.getPaymentTerms();
+            if (pt == null || pt.isBlank()) continue;
+            codesByLanguage.computeIfAbsent(info.getLanguage(), k -> new LinkedHashSet<>()).add(pt);
+        }
+        for (Map.Entry<String, Set<String>> e : codesByLanguage.entrySet()) {
+            String docLanguage = e.getKey(); // "IT"/"EN"
+            String sapLanguage = "EN".equalsIgnoreCase(docLanguage) ? "E" : "I";
+            Map<String, String> found = paymentTermsTextClient.fetchDescriptions(e.getValue(), sapLanguage);
+            for (Map.Entry<String, String> f : found.entrySet()) {
+                paymentTermsTexts.put(f.getKey() + "|" + docLanguage, f.getValue());
+            }
+        }
+
+        // 7. Build righe listino
         List<ListinoRow> rows = builder.build(
             customers, ppr0, ztra, materialDescriptions, zoneDescriptions,
-            materialByCustomer, params);
+            materialByCustomer, paymentTermsTexts, params);
         lastWarnings = builder.getWarnings();
 
         return rows;

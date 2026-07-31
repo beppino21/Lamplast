@@ -15,6 +15,11 @@ public class CustomerClient {
     // A_BusinessPartner col nome "CorrespondenceLanguage" (confermato via CDS I_BusinessPartner),
     // usando il codice cliente come numero Business Partner (numerazione unica in S/4HANA).
     private static final String BUSPART_PATH  = "/sap/opu/odata/sap/API_BUSINESS_PARTNER/A_BusinessPartner";
+    // Se "CorrespondenceLanguage" su A_BusinessPartner risulta vuoto (accertato: il campo
+    // esiste ma il valore torna "" anche quando in anagrafica risulta compilato), si prova
+    // come fallback la lingua dell'indirizzo standard del partner — spesso è quella
+    // realmente mostrata nella UI, e un campo tecnicamente distinto da CorrespondenceLanguage.
+    private static final String BUSPART_ADDR_PATH = "/sap/opu/odata/sap/API_BUSINESS_PARTNER/A_BusinessPartnerAddress";
 
     private static final int LANG_BATCH_SIZE = 30;
 
@@ -24,6 +29,10 @@ public class CustomerClient {
     // il resto dell'estrazione: meglio un cliente senza lingua (default IT)
     // che nessuna estrazione.
     private volatile boolean languageFieldAvailable = true;
+
+    // Fallback: lingua letta da A_BusinessPartnerAddress. Nomi campo NON verificati
+    // via ADT — ipotesi standard SAP, stesso meccanismo di disattivazione in caso di errore.
+    private volatile boolean addressLanguageFieldAvailable = true;
 
     // Condizioni di pagamento e Incoterms su to_CustomerSalesArea: nomi campo
     // NON verificati via ADT su questo tenant (a differenza di Language/lotto
@@ -158,9 +167,22 @@ public class CustomerClient {
     // Lingua cliente — fetch separata su A_BusinessPartner (best-effort)
     // ─────────────────────────────────────────────────────────────────────
     private void applyLanguages(Map<String, CustomerInfo> customers) {
-        if (!languageFieldAvailable || customers.isEmpty()) return;
+        if (customers.isEmpty()) return;
         try {
-            Map<String, String> langs = fetchLanguages(customers.keySet());
+            Map<String, String> langs = new HashMap<>();
+            if (languageFieldAvailable) {
+                langs.putAll(fetchLanguages(customers.keySet()));
+            }
+
+            // Fallback: per i codici non risolti da CorrespondenceLanguage, prova
+            // la lingua dell'indirizzo standard del partner.
+            Set<String> unresolved = new LinkedHashSet<>(customers.keySet());
+            unresolved.removeAll(langs.keySet());
+            if (!unresolved.isEmpty() && addressLanguageFieldAvailable) {
+                Map<String, String> fromAddress = fetchLanguagesFromAddress(unresolved);
+                langs.putAll(fromAddress);
+            }
+
             for (Map.Entry<String, String> e : langs.entrySet()) {
                 CustomerInfo info = customers.get(e.getKey());
                 if (info != null) info.setLanguage(e.getValue());
@@ -220,6 +242,64 @@ public class CustomerClient {
                         + "(lingua cliente non stampata, verrà usato IT di default). Dettaglio: " + e.getMessage());
                 }
                 return result; // quanto raccolto finora; il resto resta IT di default
+            }
+        }
+        return result;
+    }
+
+    /**
+     * Fallback: legge la lingua dall'indirizzo standard del Business Partner.
+     * A differenza di CorrespondenceLanguage (BP root), il campo Language
+     * sull'indirizzo è spesso quello realmente mostrato/mantenuto in anagrafica.
+     * Un partner può avere più indirizzi: si prende il primo con lingua valorizzata.
+     */
+    private Map<String, String> fetchLanguagesFromAddress(Set<String> customerCodes)
+            throws IOException, InterruptedException {
+        Map<String, String> result = new HashMap<>();
+        if (!addressLanguageFieldAvailable || customerCodes == null || customerCodes.isEmpty()) return result;
+
+        List<String> codes = new ArrayList<>(customerCodes);
+        for (int i = 0; i < codes.size(); i += LANG_BATCH_SIZE) {
+            List<String> batch = codes.subList(i, Math.min(i + LANG_BATCH_SIZE, codes.size()));
+
+            StringBuilder filter = new StringBuilder();
+            for (String code : batch) {
+                if (filter.length() > 0) filter.append(" or ");
+                filter.append("BusinessPartner eq '").append(code).append("'");
+            }
+
+            String path = BUSPART_ADDR_PATH
+                + "?$filter=" + S4HttpClient.encode(filter.toString())
+                + "&$select=BusinessPartner,Language"
+                + "&$top=" + (LANG_BATCH_SIZE * 5) + "&$format=json"; // un BP può avere più indirizzi
+
+            System.out.println("CustomerClient: lettura lingua (fallback indirizzo) batch, path=" + path);
+
+            try {
+                JsonNode root = http.getOData(path);
+                JsonNode results = root.path("d").path("results");
+                int found = 0;
+                if (results.isArray()) {
+                    for (JsonNode n : results) {
+                        String bp   = n.path("BusinessPartner").asText(null);
+                        String lang = n.path("Language").asText(null);
+                        if (bp != null && !bp.isBlank() && lang != null && !lang.isBlank()
+                                && !result.containsKey(bp.strip())) {
+                            result.put(bp.strip(), lang.strip());
+                            found++;
+                        }
+                    }
+                }
+                System.out.println("CustomerClient: batch lingua (fallback indirizzo) — righe restituite="
+                    + (results.isArray() ? results.size() : 0) + ", con lingua valorizzata=" + found);
+            } catch (IOException e) {
+                if (addressLanguageFieldAvailable) {
+                    addressLanguageFieldAvailable = false;
+                    System.err.println("CustomerClient: il campo OData 'Language' su A_BusinessPartnerAddress "
+                        + "non è disponibile su questo tenant — disattivato il fallback indirizzo per il resto "
+                        + "dell'estrazione. Dettaglio: " + e.getMessage());
+                }
+                return result;
             }
         }
         return result;

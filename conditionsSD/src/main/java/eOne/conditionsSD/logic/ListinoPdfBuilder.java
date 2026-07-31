@@ -124,7 +124,7 @@ public class ListinoPdfBuilder {
             l.finoA            = "fino a";
             l.page             = "Pag.";
             l.minLot           = "Lotto minimo:";
-            l.packaging        = "Imballo preferenziale:";
+            l.packaging        = "Imballo:";
             l.paymentTerms     = "Condizioni di pagamento:";
             l.incoterms        = "Incoterms:";
             return l;
@@ -150,7 +150,7 @@ public class ListinoPdfBuilder {
             l.finoA            = "up to";
             l.page             = "Page";
             l.minLot           = "Minimum lot:";
-            l.packaging        = "Preferred packaging:";
+            l.packaging        = "Packaging:";
             l.paymentTerms     = "Payment terms:";
             l.incoterms        = "Incoterms:";
             return l;
@@ -244,6 +244,9 @@ public class ListinoPdfBuilder {
             StringBuilder extra = new StringBuilder();
             if (!nvl(customerRow.getPaymentTerms()).isBlank()) {
                 extra.append("   ").append(labels.paymentTerms).append(' ').append(customerRow.getPaymentTerms());
+                if (!nvl(customerRow.getPaymentTermsText()).isBlank()) {
+                    extra.append(" (").append(customerRow.getPaymentTermsText().trim()).append(")");
+                }
             }
             String incoterms = (nvl(customerRow.getIncotermsClassification())
                 + (nvl(customerRow.getIncotermsLocation()).isBlank() ? "" : " " + customerRow.getIncotermsLocation())).trim();
@@ -413,7 +416,7 @@ public class ListinoPdfBuilder {
      * Materiale + Cod. cliente (colspan 2), il resto della riga resta vuoto.
      */
     private void addMaterialNoteRow(PdfPTable table, ListinoRow row, Labels labels) {
-        String packaging = labels.english ? row.getPackagingNoteEN() : row.getPackagingNoteIT();
+        String packaging = row.getPackagingNote();
         boolean hasMinQty = row.getMinDeliveryQuantity() > 0d;
         boolean hasPackaging = packaging != null && !packaging.isBlank();
         if (!hasMinQty && !hasPackaging) return;
@@ -421,7 +424,7 @@ public class ListinoPdfBuilder {
         StringBuilder sb = new StringBuilder("   ");
         if (hasMinQty) {
             sb.append(labels.minLot).append(' ').append(formatQty(row.getMinDeliveryQuantity()));
-            if (!nvl(row.getConditionUnit()).isBlank()) sb.append(' ').append(row.getConditionUnit());
+            if (!nvl(row.getMinDeliveryQuantityUnit()).isBlank()) sb.append(' ').append(row.getMinDeliveryQuantityUnit());
         }
         if (hasPackaging) {
             if (hasMinQty) sb.append("   —   ");
@@ -520,8 +523,8 @@ public class ListinoPdfBuilder {
 
     private String formatQty(double q) {
         return q == Math.floor(q)
-            ? String.format("%.0f", q)
-            : String.format("%.3f", q).replaceAll("0+$", "");
+            ? String.format("%,.0f", q)
+            : String.format("%,.3f", q).replaceAll("0+$", "");
     }
 
     private String nvl(String s) { return s != null ? s : ""; }

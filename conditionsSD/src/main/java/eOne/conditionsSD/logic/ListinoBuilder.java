@@ -27,6 +27,7 @@ public class ListinoBuilder {
             Map<String, String>       materialDescriptions,
             Map<String, String>       zoneDescriptions,
             Map<String, CustomerMaterialInfo> materialByCustomer,
+            Map<String, String>       paymentTermsTexts,
             ExtractParams             params) {
 
         warnings.clear();
@@ -70,9 +71,14 @@ public class ListinoBuilder {
             // Intestazione cliente
             String custHeader = custCode + " — " + info.getName();
             if (info.hasPriceGroup()) custHeader += "  [Gruppo: " + info.getPriceGroup() + "]";
+            String ptText = (paymentTermsTexts != null && info.getPaymentTerms() != null)
+                ? paymentTermsTexts.get(info.getPaymentTerms() + "|" + info.getLanguage())
+                : null;
+
             rows.add(ListinoRow.customerRow(custCode, custHeader, info.getLanguage())
                 .withPaymentTerms(info.getPaymentTerms())
-                .withIncoterms(info.getIncotermsClassification(), info.getIncotermsLocation()));
+                .withIncoterms(info.getIncotermsClassification(), info.getIncotermsLocation())
+                .withPaymentTermsText(ptText));
 
             // ── Blocco A: Prezzi materiale ────────────────────────────────
             if (mode == ExtractMode.FULL || mode == ExtractMode.PPR0) {
@@ -316,8 +322,8 @@ public class ListinoBuilder {
             if (info != null) {
                 row.setCustomerMaterialCode(info.getMaterialByCustomer());
                 row.setMinDeliveryQuantity(info.getMinDeliveryQuantity());
-                row.setPackagingNoteIT(info.getPackagingNoteIT());
-                row.setPackagingNoteEN(info.getPackagingNoteEN());
+                row.setMinDeliveryQuantityUnit(info.getMinDeliveryQuantityUnit());
+                row.setPackagingNote(info.getPackagingNote());
             }
         }
 
@@ -394,8 +400,8 @@ public class ListinoBuilder {
             if (info != null) {
                 row.setCustomerMaterialCode(info.getMaterialByCustomer());
                 row.setMinDeliveryQuantity(info.getMinDeliveryQuantity());
-                row.setPackagingNoteIT(info.getPackagingNoteIT());
-                row.setPackagingNoteEN(info.getPackagingNoteEN());
+                row.setMinDeliveryQuantityUnit(info.getMinDeliveryQuantityUnit());
+                row.setPackagingNote(info.getPackagingNote());
             }
         }
         row.setCurrency(ppr0.getCurrency());
