@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+<t:layoutdefinition xmlns:t="http://www.captaincasa.com/controllibrary/t">
+<t:rowbodypane id="g_1" padding="15" rowdistance="10">
+
+<t:row id="g_2">
+    <t:label id="g_3" font="weight:bold" text="#{d.PackagingInfoPopupBean.titleText}" width="100%"/>
+</t:row>
+
+<t:rowdistance id="g_4" height="10"/>
+
+<t:row id="g_5">
+    <t:label id="g_6" text="Cliente" width="100"/>
+    <t:field id="g_7" editable="#{d.PackagingInfoPopupBean.keyEditable}"
+             text="#{d.PackagingInfoPopupBean.customer}" width="150"/>
+</t:row>
+
+<t:row id="g_8">
+    <t:label id="g_9" text="Materiale" width="100"/>
+    <t:field id="g_10" editable="#{d.PackagingInfoPopupBean.keyEditable}"
+             text="#{d.PackagingInfoPopupBean.material}" width="150"/>
+</t:row>
+
+<t:rowdistance id="g_11" height="5"/>
+
+<t:row id="g_12">
+    <t:label id="g_13" text="Testo imballo" width="100"/>
+    <t:textarea id="g_14" height="80" text="#{d.PackagingInfoPopupBean.packagingText}" width="300"/>
+</t:row>
+
+<t:rowdistance id="g_15" height="10"/>
+
+<t:row id="g_16" rendered="#{d.PackagingInfoPopupBean.statusMessage != ''}">
+    <t:coldistance id="g_17" width="100"/>
+    <t:label id="g_18" font="#{d.PackagingInfoPopupBean.statusIsError ? 'color:#CC0000' : 'color:#0A7D2C'}"
+             text="#{d.PackagingInfoPopupBean.statusMessage}" width="300"/>
+</t:row>
+
+<t:rowdistance id="g_19" height="10"/>
+
+<t:row id="g_20">
+    <t:coldistance id="g_21" width="100"/>
+    <t:button id="g_22" actionListener="#{d.PackagingInfoPopupBean.onSalva}" text="Salva" width="90"/>
+    <t:coldistance id="g_23" width="10"/>
+    <t:button id="g_24" actionListener="#{d.PackagingInfoPopupBean.onElimina}"
+              enabled="#{!d.PackagingInfoPopupBean.isNew}" text="Elimina" width="90"/>
+    <t:coldistance id="g_25" width="10"/>
+    <t:button id="g_26" actionListener="#{d.PackagingInfoPopupBean.onChiudi}" text="Chiudi" width="90"/>
+</t:row>
+
+</t:rowbodypane>
+<t:pageaddons id="g_pa"/>
+</t:layoutdefinition>

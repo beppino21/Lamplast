@@ -80,6 +80,7 @@ public class ListinoPdfBuilder {
     private static final Font F_UM_WARN   = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 8, new Color(0xCC, 0x00, 0x00));
     private static final Font F_ALERT_HDR = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 9, new Color(0xCC, 0x66, 0x00));
     private static final Font F_ALERT     = FontFactory.getFont(FontFactory.HELVETICA, 8, new Color(0xCC, 0x66, 0x00));
+    private static final Font F_ZONE_WARNING = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 10, new Color(0xB0, 0x00, 0x20));
     private static final Font F_TABLE_HDR = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 7.5f, Color.WHITE);
     private static final Font F_FOOTER    = FontFactory.getFont(FontFactory.HELVETICA, 6, Color.GRAY);
     private static final Font F_PAGENO    = FontFactory.getFont(FontFactory.HELVETICA, 7, Color.GRAY);
@@ -102,7 +103,8 @@ public class ListinoPdfBuilder {
         boolean english;
         String title, refDate, emissionDate, colMaterial, colZone, colCodCliente,
                colDiv, colPer, colUM, colDa, colA, zoneAlternative, standardDelivery,
-               qualsiasi, finoA, page, minLot, packaging, paymentTerms, incoterms;
+               qualsiasi, finoA, page, minLot, packaging, paymentTerms, incoterms,
+               zoneMissingWarning, zoneNotAssignedWarning;
 
         static Labels it() {
             Labels l = new Labels();
@@ -127,6 +129,8 @@ public class ListinoPdfBuilder {
             l.packaging        = "Imballo:";
             l.paymentTerms     = "Condizioni di pagamento:";
             l.incoterms        = "Incoterms:";
+            l.zoneMissingWarning = "ATTENZIONE: nessuna condizione di trasporto definita per la zona di riferimento del cliente (%s). Il listino è INCOMPLETO — i costi di trasporto non sono stati calcolati.";
+            l.zoneNotAssignedWarning = "ATTENZIONE: al cliente non è assegnata alcuna zona di riferimento (BZIRK). Il listino è INCOMPLETO — i costi di trasporto non sono stati calcolati.";
             return l;
         }
 
@@ -153,6 +157,8 @@ public class ListinoPdfBuilder {
             l.packaging        = "Packaging:";
             l.paymentTerms     = "Payment terms:";
             l.incoterms        = "Incoterms:";
+            l.zoneMissingWarning = "WARNING: no transport condition defined for the customer's reference zone (%s). This price list is INCOMPLETE — transport costs have not been calculated.";
+            l.zoneNotAssignedWarning = "WARNING: no reference zone (BZIRK) is assigned to this customer. This price list is INCOMPLETE — transport costs have not been calculated.";
             return l;
         }
 
@@ -297,6 +303,16 @@ public class ListinoPdfBuilder {
 
             if (row.isZoneRow()) {
                 if (table != null) addZoneRow(table, row, labels);
+                continue;
+            }
+
+            if (row.isZoneMissingWarningRow()) {
+                if (table != null) {
+                    document.add(table);
+                    addHorizontalRule(document);
+                    table = null;
+                }
+                addZoneMissingWarning(document, row.getDescription(), labels);
                 continue;
             }
 
@@ -480,6 +496,34 @@ public class ListinoPdfBuilder {
         cell.setPadding(0f);
         rule.addCell(cell);
         document.add(rule);
+    }
+
+    /**
+     * Banner molto evidente (bordo spesso rosso, sfondo rosa, testo rosso in
+     * grassetto) stampato al posto della sezione zone quando manca la
+     * condizione ZTRA per la zona di riferimento del cliente.
+     */
+    private void addZoneMissingWarning(Document document, String missingZone, Labels labels)
+            throws DocumentException {
+        String zone = nvl(missingZone);
+        String text = zone.isBlank()
+            ? labels.zoneNotAssignedWarning
+            : String.format(labels.zoneMissingWarning, zone);
+
+        PdfPTable box = new PdfPTable(1);
+        box.setWidthPercentage(100f);
+        box.setSpacingBefore(4f);
+        box.setSpacingAfter(4f);
+
+        PdfPCell cell = new PdfPCell(new Phrase("⚠  " + text, F_ZONE_WARNING));
+        cell.setPadding(8f);
+        cell.setBackgroundColor(new Color(0xFD, 0xE8, 0xE8));
+        cell.setBorderColor(new Color(0xB0, 0x00, 0x20));
+        cell.setBorderWidth(1.5f);
+        cell.setHorizontalAlignment(Element.ALIGN_CENTER);
+        box.addCell(cell);
+
+        document.add(box);
     }
 
     private PdfPCell dataCell(String text, Font font, int align, Color bg) {

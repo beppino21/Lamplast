@@ -7,6 +7,7 @@ import eOne.conditionsSD.s4client.CustomerClient;
 import eOne.conditionsSD.s4client.CustomerClient.CustomerInfo;
 import eOne.conditionsSD.s4client.CustomerMaterialClient;
 import eOne.conditionsSD.s4client.MaterialClient;
+import eOne.conditionsSD.s4client.PackagingInfoClient;
 import eOne.conditionsSD.s4client.PaymentTermsTextClient;
 import eOne.conditionsSD.s4client.PricingClient;
 import eOne.conditionsSD.s4client.S4Config;
@@ -26,6 +27,7 @@ public class ListinoExtractor {
     private final MaterialClient      materialClient;
     private final SalesDistrictClient districtClient;
     private final PaymentTermsTextClient paymentTermsTextClient;
+    private final PackagingInfoClient    packagingInfoClient;
     private final ListinoBuilder      builder;
 
     private List<String> lastWarnings = List.of();
@@ -38,6 +40,7 @@ public class ListinoExtractor {
         this.materialClient         = new MaterialClient(httpClient, config.getLanguage());
         this.districtClient         = new SalesDistrictClient(httpClient, config.getLanguage());
         this.paymentTermsTextClient = new PaymentTermsTextClient(httpClient);
+        this.packagingInfoClient    = new PackagingInfoClient(httpClient);
         this.builder                = new ListinoBuilder();
     }
 
@@ -82,16 +85,33 @@ public class ListinoExtractor {
 
         // 4. Codifiche cliente-materiale (MaterialByCustomer, lotto minimo) — solo per PPR0
         Map<String, CustomerMaterialClient.CustomerMaterialInfo> materialByCustomer = Map.of();
+        List<String[]> customerMaterialPairs = new ArrayList<>();
         if (!ppr0.isEmpty()) {
-            List<String[]> pairs = new ArrayList<>();
             for (PricingRecord r : ppr0) {
                 String cust = r.getCustomer();
                 String mat  = r.getMaterial();
                 if (cust != null && !cust.isBlank() && mat != null && !mat.isBlank())
-                    pairs.add(new String[]{cust, mat});
+                    customerMaterialPairs.add(new String[]{cust, mat});
             }
-            if (!pairs.isEmpty())
-                materialByCustomer = customerMaterialClient.loadMaterialByCustomer(pairs);
+            if (!customerMaterialPairs.isEmpty())
+                materialByCustomer = customerMaterialClient.loadMaterialByCustomer(customerMaterialPairs);
+        }
+
+        // 4b. Imballo di default (tabella custom ZZPACKAGING_INFO, servizio RAP proprio).
+        //     Unica fonte per l'imballo: MaterialDescriptionByCustomer resta riservato
+        //     al suo scopo originale, su indicazione esplicita del cliente.
+        if (!customerMaterialPairs.isEmpty()) {
+            Map<String, String> packaging = packagingInfoClient.fetchPackaging(customerMaterialPairs);
+            for (Map.Entry<String, String> e : packaging.entrySet()) {
+                CustomerMaterialClient.CustomerMaterialInfo info = materialByCustomer.get(e.getKey());
+                if (info == null) {
+                    // Materiale senza record A_CustomerMaterial (nessun codice cliente/lotto
+                    // minimo su SAP): creo comunque la voce per non perdere l'imballo letto.
+                    info = new CustomerMaterialClient.CustomerMaterialInfo("", 0d, "");
+                    materialByCustomer.put(e.getKey(), info);
+                }
+                info.setPackagingNote(e.getValue());
+            }
         }
 
         // 5. Descrizioni zone ZTRA

@@ -50,7 +50,7 @@ public class CustomerMaterialClient extends S4HttpClient {
     }
 
     private String select() {
-        return "Customer,Material,MaterialByCustomer,MaterialDescriptionByCustomer"
+        return "Customer,Material,MaterialByCustomer"
             + (minQtyFieldAvailable ? ",MinDeliveryQtyInBaseUnit,BaseUnit" : "");
     }
 
@@ -95,11 +95,6 @@ public class CustomerMaterialClient extends S4HttpClient {
                 String customer  = n.path("Customer").asText(null);
                 String material  = n.path("Material").asText(null);
                 String matByCust = n.path("MaterialByCustomer").asText(null);
-                // Imballo di default: nessun campo dedicato disponibile su questo tenant
-                // (I_AdditionalCustomerMaterial bloccata per estensibilità) — si usa
-                // MaterialDescriptionByCustomer come ripiego pratico, su indicazione
-                // del cliente (compilato solo quando serve indicare l'imballo).
-                String packaging = n.path("MaterialDescriptionByCustomer").asText(null);
                 double minQty    = n.path("MinDeliveryQtyInBaseUnit").asDouble(0d);
                 String baseUnit  = n.path("BaseUnit").asText(null);
                 if (customer != null && !customer.isBlank()
@@ -108,7 +103,6 @@ public class CustomerMaterialClient extends S4HttpClient {
                         (matByCust != null && !matByCust.isBlank()) ? matByCust : "",
                         minQty,
                         (baseUnit != null && !baseUnit.isBlank()) ? baseUnit.strip() : "");
-                    if (packaging != null && !packaging.isBlank()) info.setPackagingNote(packaging.trim());
                     result.put(customer + "|" + material, info);
                 }
             }
@@ -127,7 +121,8 @@ public class CustomerMaterialClient extends S4HttpClient {
         private final String materialByCustomer;
         private final double minDeliveryQuantity;
         private final String minDeliveryQuantityUnit;
-        // Imballo di default: MaterialDescriptionByCustomer, quando compilato — non tradotto.
+        // Imballo di default: valorizzato esternamente da PackagingInfoClient
+        // (tabella custom ZZPACKAGING_INFO) — non tradotto.
         private String packagingNote = "";
 
         public CustomerMaterialInfo(String materialByCustomer, double minDeliveryQuantity, String minDeliveryQuantityUnit) {

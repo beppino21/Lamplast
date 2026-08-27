@@ -10,6 +10,7 @@ import java.util.List;
 
 import org.eclnt.editor.annotations.CCGenClass;
 import org.eclnt.jsfserver.base.faces.event.ActionEvent;
+import org.eclnt.jsfserver.defaultscreens.ModalPopup;
 import org.eclnt.jsfserver.elements.impl.FIXGRIDItem;
 import org.eclnt.jsfserver.elements.impl.FIXGRIDListBinding;
 import org.eclnt.jsfserver.pagebean.PageBean;
@@ -190,6 +191,8 @@ public class ListinoBean extends PageBean implements Serializable {
         private final ListinoRow row;
 
         public GridListinoItem(ListinoRow row) { this.row = row; }
+
+        public ListinoRow getRow() { return row; }
 
         public String getRowFont() {
             switch (row.getRowType()) {
@@ -454,6 +457,46 @@ public class ListinoBean extends PageBean implements Serializable {
     public void onChiudiAnteprima(ActionEvent event) {
         m_pdfVisible = false;
         m_pdfHex     = "";
+    }
+
+    /**
+     * TEMPORANEO — solo per verificare che la scrittura via OData su
+     * ZZ_PACKAGINGINFO_SRV funzioni end-to-end. Da togliere (o sostituire
+     * con un vero form) una volta collaudata la scrittura.
+     */
+    /**
+     * Apre il popup di manutenzione imballo. Se una riga materiale è
+     * selezionata nella griglia, il popup si apre pre-compilato in modalità
+     * modifica per quel cliente/materiale; altrimenti si apre vuoto per un
+     * nuovo inserimento.
+     */
+    public void onManagePackaging(ActionEvent event) {
+        String custCode = null;
+        String matCode  = null;
+        GridListinoItem selected = m_gridListino.getSelectedItem();
+        if (selected != null && selected.getRow().isMaterialRow()) {
+            custCode = selected.getRow().getCustomerCode();
+            matCode  = selected.getRow().getMaterialCode();
+        }
+
+        final PackagingInfoPopupBean popupBean = new PackagingInfoPopupBean();
+        popupBean.prepare(custCode, matCode, new PackagingInfoPopupBean.IListener() {
+            @Override
+            public void reactOnSaved() {
+                m_statusMessage = "Imballo aggiornato. Rilancia \"Estrai\" per vederlo nel listino.";
+                m_hasWarnings   = false;
+            }
+            @Override
+            public void reactOnClosed() {
+                closePopup(popupBean);
+            }
+        });
+        openModalPopup(popupBean, "Gestione imballo", 460, 360, new ModalPopup.IModalPopupListener() {
+            @Override
+            public void reactOnPopupClosedByUser() {
+                closePopup(popupBean);
+            }
+        });
     }
 
     private void doExtract() {

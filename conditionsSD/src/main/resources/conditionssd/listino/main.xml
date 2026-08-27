@@ -39,6 +39,8 @@
 <t:link id="g_37" actionListener="#{d.ListinoBean.gridListino.onOpenGridExportFunctions}" text="Export" />
 <t:coldistance id="g_38" />
 <t:link id="g_39" actionListener="#{d.ListinoBean.onStampa}" text="Stampa" />
+<t:coldistance id="g_39b" />
+<t:link id="g_39c" actionListener="#{d.ListinoBean.onManagePackaging}" text="Gestisci imballo..." />
 </t:row>
 <t:row id="g_80" rendered="#{d.ListinoBean.pdfVisible}" >
 <t:button id="g_81" actionListener="#{d.ListinoBean.onChiudiAnteprima}" text="&#171; Torna al listino" width="140" />

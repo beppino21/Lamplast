@@ -46,27 +46,39 @@ public class ListinoBuilder {
             Map<String, PricingRecord> zoneMap = ztraIndex.getOrDefault(custCode, Map.of());
 
             if (matMap.isEmpty() && zoneMap.isEmpty()) {
-                warnings.add("Cliente " + custCode + ": nessuna condizione PPR0/ZTRA — saltato.");
+                String msg = "Cliente " + custCode + ": nessuna condizione PPR0/ZTRA — saltato.";
+                warnings.add(msg);
+                System.out.println("ListinoBuilder: " + msg);
                 continue;
             }
 
             String kStar = info.getBzirk();
-            if (kStar == null || kStar.trim().isEmpty()) {
-                warnings.add("Cliente " + custCode + ": BZIRK non valorizzato — saltato.");
-                continue;
+            boolean kStarMissing = (kStar == null || kStar.trim().isEmpty());
+            if (kStarMissing) {
+                System.out.println("ListinoBuilder: Cliente " + custCode
+                    + ": BZIRK non valorizzato — stampati solo i prezzi materiale, senza delta zona.");
             }
 
-            // Per modalità FULL e PPR0 serve ztraKStar; per ZTRA puro non serve
-            PricingRecord ztraKStar = zoneMap.get(kStar);
-            if (mode != ExtractMode.ZTRA && ztraKStar == null) {
-                warnings.add("Cliente " + custCode + ": BZIRK='" + kStar
-                    + "' non presente nelle condizioni ZTRA — saltato.");
-                continue;
+            // ztraKStar: condizione ZTRA per la zona di riferimento (BZIRK) del cliente.
+            // Se manca (BZIRK non valorizzato, oppure valorizzato ma senza condizione di
+            // trasporto), il listino materiali viene comunque stampato — senza delta zona,
+            // come in modalità PPR0 pura — e un avviso ben visibile prende il posto della
+            // sezione zone (vedi Blocco B).
+            PricingRecord ztraKStar = kStarMissing ? null : zoneMap.get(kStar);
+            if (!kStarMissing && ztraKStar == null) {
+                System.out.println("ListinoBuilder: Cliente " + custCode + ": BZIRK='" + kStar
+                    + "' senza condizione ZTRA — stampati solo i prezzi materiale, senza delta zona.");
             }
 
             // Salta il cliente se non ha dati rilevanti per la modalità scelta
-            if (mode == ExtractMode.PPR0 && matMap.isEmpty()) continue;
-            if (mode == ExtractMode.ZTRA && zoneMap.isEmpty()) continue;
+            if (mode == ExtractMode.PPR0 && matMap.isEmpty()) {
+                System.out.println("ListinoBuilder: Cliente " + custCode + ": modalità PPR0 ma nessun PPR0 — saltato.");
+                continue;
+            }
+            if (mode == ExtractMode.ZTRA && zoneMap.isEmpty()) {
+                System.out.println("ListinoBuilder: Cliente " + custCode + ": modalità ZTRA ma nessuna zona — saltato.");
+                continue;
+            }
 
             // Intestazione cliente
             String custHeader = custCode + " — " + info.getName();
@@ -92,20 +104,20 @@ public class ListinoBuilder {
                 for (String mat : sortedMat) {
                     PricingRecord ppr0 = matMap.get(mat);
                     double[] mergedQty;
-                    if (mode == ExtractMode.FULL) {
+                    if (mode == ExtractMode.FULL && ztraKStar != null) {
                         mergedQty = mergeScaleQty(
                             ppr0.getScaleQty(), ppr0.getScaleType(),
                             ztraKStar.getScaleQty(), ztraKStar.getScaleType());
                         if (hasScaleConflict(ppr0, ztraKStar))
                             alerts.add(buildAlertRow(custCode, info.getName(), mat, ppr0, ztraKStar));
                     } else {
-                        // PPR0 puro: scala solo PPR0
+                        // PPR0 puro, oppure FULL senza condizione ZTRA di riferimento: scala solo PPR0
                         mergedQty = ppr0.getScaleQty();
                     }
                     String key = Arrays.toString(mergedQty);
                     byScale.computeIfAbsent(key, k -> new ArrayList<>()).add(ppr0);
                     scaleQtyMap.put(key, mergedQty);
-                    String unit = mode == ExtractMode.FULL
+                    String unit = (mode == ExtractMode.FULL && ztraKStar != null)
                         ? nvl(ppr0.getConditionUnit(), ztraKStar.getConditionUnit())
                         : nvl(ppr0.getConditionUnit(), "");
                     scaleUnitMap.put(key, unit);
@@ -117,7 +129,7 @@ public class ListinoBuilder {
                     int      activeCols = countActive(mergedQty);
                     rows.add(ListinoRow.headerScaleRow(custCode, mergedQty, scaleUnit, activeCols));
                     for (PricingRecord ppr0 : byScale.get(key))
-                        rows.add(mode == ExtractMode.FULL
+                        rows.add(mode == ExtractMode.FULL && ztraKStar != null
                             ? buildMaterialRow(custCode, ppr0, ztraKStar,
                                 mergedQty, activeCols, materialDescriptions, materialByCustomer)
                             : buildPPR0OnlyRow(custCode, ppr0,
@@ -126,7 +138,16 @@ public class ListinoBuilder {
             }
 
             // ── Blocco B: Zone ────────────────────────────────────────────
-            if (mode == ExtractMode.FULL || mode == ExtractMode.ZTRA) {
+            if (mode == ExtractMode.FULL && ztraKStar == null) {
+                // Nessuna condizione ZTRA per la zona di riferimento (o zona non
+                // assegnata): niente sezione zone (i delta non sarebbero calcolabili),
+                // avviso ben visibile invece.
+                warnings.add("Cliente " + custCode + ": " + (kStarMissing
+                        ? "nessuna zona di riferimento assegnata"
+                        : "BZIRK='" + kStar + "' non presente nelle condizioni ZTRA")
+                    + " — prezzi materiale stampati senza delta zona.");
+                rows.add(ListinoRow.zoneMissingWarningRow(custCode, kStar));
+            } else if ((mode == ExtractMode.FULL || mode == ExtractMode.ZTRA) && !zoneMap.isEmpty()) {
                 double[] ztraScale  = buildZoneScale(zoneMap);
                 int      ztraActive = countActive(ztraScale);
                 String   ztraUnit   = nvl(zoneMap.values().iterator().next().getConditionUnit(), "");
@@ -156,6 +177,9 @@ public class ListinoBuilder {
             rows.add(ListinoRow.alertHeaderRow());
             rows.addAll(alerts);
         }
+
+        System.out.println("ListinoBuilder: generate " + rows.size() + " righe totali per "
+            + sortedCustomers.size() + " clienti richiesti.");
 
         return rows;
     }
@@ -313,6 +337,7 @@ public class ListinoBuilder {
         row.setRowType(ListinoRow.RowType.MATERIAL);
         row.setCustomerCode(custCode);
         String mat  = ppr0.getMaterial();
+        row.setMaterialCode(mat);
         String desc = materialDescriptions != null ? materialDescriptions.get(mat) : null;
         row.setDescription(desc != null && !desc.trim().isEmpty()
             ? mat + " — " + desc : mat);
@@ -390,6 +415,7 @@ public class ListinoBuilder {
         row.setRowType(ListinoRow.RowType.MATERIAL);
         row.setCustomerCode(custCode);
         String mat  = ppr0.getMaterial();
+        row.setMaterialCode(mat);
         String desc = materialDescriptions != null ? materialDescriptions.get(mat) : null;
         row.setDescription(desc != null && !desc.trim().isEmpty()
             ? mat + " — " + desc

@@ -10,7 +10,8 @@ public class ListinoRow {
         MATERIAL,       // riga materiale
         HEADER_ZONE,    // intestazione "Zone alternative"
         ZONE,           // riga zona con delta
-        ALERT           // riga allarme scaglioni non allineati
+        ALERT,          // riga allarme scaglioni non allineati
+        ZONE_MISSING_WARNING // nessuna condizione ZTRA per la zona di riferimento del cliente
     }
 
     private RowType   rowType;
@@ -41,6 +42,7 @@ public class ListinoRow {
     private double    minDeliveryQuantity;        // MATERIAL: lotto minimo (Customer-Material Info Record)
     private String    minDeliveryQuantityUnit = ""; // MATERIAL: UM del lotto minimo (BaseUnit, non l'UM di prezzo)
     private String    packagingNote = "";           // MATERIAL: imballo di default (Materiale Cliente Supplementare "IMBALLO"), non tradotto
+    private String    materialCode = "";              // MATERIAL: codice materiale puro (senza descrizione), per riuso es. nel popup imballo
     private String    paymentTerms = "";              // CUSTOMER: condizioni di pagamento (anagrafica)
     private String    incotermsClassification = "";   // CUSTOMER: Incoterms (codice, es. "FCA")
     private String    incotermsLocation = "";          // CUSTOMER: Incoterms (località)
@@ -93,6 +95,21 @@ public class ListinoRow {
         return r;
     }
 
+    /**
+     * Segnala che per la zona di riferimento del cliente (BZIRK) non esiste
+     * alcuna condizione ZTRA: il listino materiali viene comunque stampato
+     * (senza delta zona), ma va evidenziato che manca la condizione di
+     * trasporto. {@code description} contiene il solo codice zona mancante;
+     * il testo del messaggio viene composto e tradotto in fase di stampa.
+     */
+    public static ListinoRow zoneMissingWarningRow(String custCode, String missingZone) {
+        ListinoRow r  = new ListinoRow();
+        r.rowType      = RowType.ZONE_MISSING_WARNING;
+        r.customerCode = custCode;
+        r.description  = missingZone;
+        return r;
+    }
+
     // ── Getters / Setters ─────────────────────────────────────────────────
 
     public RowType   getRowType()                        { return rowType; }
@@ -131,6 +148,8 @@ public class ListinoRow {
     public void      setMinDeliveryQuantityUnit(String v) { this.minDeliveryQuantityUnit = v != null ? v : ""; }
     public String    getPackagingNote()                  { return packagingNote; }
     public void      setPackagingNote(String v)          { this.packagingNote = v != null ? v : ""; }
+    public String    getMaterialCode()                   { return materialCode; }
+    public void      setMaterialCode(String v)           { this.materialCode = v != null ? v : ""; }
     public String    getPaymentTerms()                   { return paymentTerms; }
     public void      setPaymentTerms(String v)           { this.paymentTerms = v != null ? v : ""; }
     public String    getIncotermsClassification()        { return incotermsClassification; }
@@ -165,6 +184,7 @@ public class ListinoRow {
     public boolean isZoneRow()        { return rowType == RowType.ZONE; }
     public boolean isHeaderZoneRow()  { return rowType == RowType.HEADER_ZONE; }
     public boolean isAlertRow()       { return rowType == RowType.ALERT; }
+    public boolean isZoneMissingWarningRow() { return rowType == RowType.ZONE_MISSING_WARNING; }
     public boolean isHeaderRow()      { return rowType == RowType.HEADER_SCALE
                                             || rowType == RowType.HEADER_ZONE; }
 }
