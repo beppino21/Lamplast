@@ -28,6 +28,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import eOne.conditionsSD.model.ListinoRow;
+import eOne.conditionsSD.s4client.Imbal3ReadClient;
 
 /**
  * Costruisce il PDF "carta intestata" del listino a partire dalle righe
@@ -104,7 +105,7 @@ public class ListinoPdfBuilder {
         String title, refDate, emissionDate, colMaterial, colZone, colCodCliente,
                colDiv, colPer, colUM, colDa, colA, zoneAlternative, standardDelivery,
                qualsiasi, finoA, page, minLot, packaging, paymentTerms, incoterms,
-               zoneMissingWarning, zoneNotAssignedWarning;
+               zoneMissingWarning, zoneNotAssignedWarning, unitsPerPallet, palletWeight;
 
         static Labels it() {
             Labels l = new Labels();
@@ -131,6 +132,8 @@ public class ListinoPdfBuilder {
             l.incoterms        = "Incoterms:";
             l.zoneMissingWarning = "ATTENZIONE: nessuna condizione di trasporto definita per la zona di riferimento del cliente (%s). Il listino è INCOMPLETO — i costi di trasporto non sono stati calcolati.";
             l.zoneNotAssignedWarning = "ATTENZIONE: al cliente non è assegnata alcuna zona di riferimento (BZIRK). Il listino è INCOMPLETO — i costi di trasporto non sono stati calcolati.";
+            l.unitsPerPallet   = "Imballi per pallet:";
+            l.palletWeight     = "Peso pallet:";
             return l;
         }
 
@@ -159,6 +162,8 @@ public class ListinoPdfBuilder {
             l.incoterms        = "Incoterms:";
             l.zoneMissingWarning = "WARNING: no transport condition defined for the customer's reference zone (%s). This price list is INCOMPLETE — transport costs have not been calculated.";
             l.zoneNotAssignedWarning = "WARNING: no reference zone (BZIRK) is assigned to this customer. This price list is INCOMPLETE — transport costs have not been calculated.";
+            l.unitsPerPallet   = "Units per pallet:";
+            l.palletWeight     = "Pallet weight:";
             return l;
         }
 
@@ -426,33 +431,63 @@ public class ListinoPdfBuilder {
     }
 
     /**
-     * Seconda riga, subito sotto il materiale, con lotto minimo e/o imballo
-     * preferenziale (Customer-Material Info Record) — solo se almeno una
-     * delle due informazioni è presente. Occupa la colonna unificata
-     * Materiale + Cod. cliente (colspan 2), il resto della riga resta vuoto.
+     * Righe informative aggiuntive subito sotto il materiale (Customer-Material
+     * Info Record + attribuzione imballo ZIMBAL_3) — una riga per ciascuna,
+     * nell'ordine: Imballo, Lotto minimo, Imballi per pallet (quest'ultima solo
+     * se l'imballo è presente ed ha una numerosità per pallet valorizzata).
+     * Occupano la colonna unificata Materiale + Cod. cliente (colspan 2), il
+     * resto della riga resta vuoto. Nessuna riga se non c'è nulla da mostrare.
      */
     private void addMaterialNoteRow(PdfPTable table, ListinoRow row, Labels labels) {
-        String packaging = row.getPackagingNote();
-        boolean hasMinQty = row.getMinDeliveryQuantity() > 0d;
-        boolean hasPackaging = packaging != null && !packaging.isBlank();
-        if (!hasMinQty && !hasPackaging) return;
+        String rawNote = row.getPackagingNote();
+        String[] parts = (rawNote != null && !rawNote.isBlank())
+            ? rawNote.split(Imbal3ReadClient.PACKAGING_NOTE_SEPARATOR, -1) : new String[0];
+        String packagingText = parts.length > 0 ? parts[0].trim() : "";
+        boolean hasPackaging = !packagingText.isBlank();
+        // Suffisso pallet presente solo se lo split ha prodotto tutti e 4 i campi
+        // (testo + numerosità + peso + UM) — vedi Imbal3ReadClient.PACKAGING_NOTE_SEPARATOR.
+        boolean hasPalletInfo = hasPackaging && parts.length == 4;
 
-        StringBuilder sb = new StringBuilder("   ");
+        boolean hasMinQty = row.getMinDeliveryQuantity() > 0d;
+
+        if (!hasPackaging && !hasMinQty) return;
+
+        List<String> lines = new ArrayList<>();
+        if (hasPackaging)
+            lines.add(labels.packaging + " " + packagingText);
         if (hasMinQty) {
-            sb.append(labels.minLot).append(' ').append(formatQty(row.getMinDeliveryQuantity()));
-            if (!nvl(row.getMinDeliveryQuantityUnit()).isBlank()) sb.append(' ').append(row.getMinDeliveryQuantityUnit());
+            StringBuilder sb = new StringBuilder(labels.minLot).append(' ')
+                .append(formatQty(row.getMinDeliveryQuantity()));
+            if (!nvl(row.getMinDeliveryQuantityUnit()).isBlank())
+                sb.append(' ').append(row.getMinDeliveryQuantityUnit());
+            lines.add(sb.toString());
         }
-        if (hasPackaging) {
-            if (hasMinQty) sb.append("   —   ");
-            sb.append(labels.packaging).append(' ').append(packaging.trim());
+        if (hasPalletInfo) {
+            String numerosita  = parts[1];
+            String palletPeso  = parts[2];
+            String meins       = parts[3];
+            String pesoLine = labels.unitsPerPallet + " " + numerosita
+                + "   " + labels.palletWeight + " " + palletPeso
+                + (meins.isBlank() ? "" : " " + meins);
+            lines.add(pesoLine);
+        }
+
+        Paragraph noteParagraph = new Paragraph();
+        noteParagraph.setLeading(8f);
+        for (int i = 0; i < lines.size(); i++) {
+            if (i > 0) noteParagraph.add(Chunk.NEWLINE);
+            noteParagraph.add(new Chunk("   " + lines.get(i), F_MATERIAL_NOTE));
         }
 
         // stessa alternanza colore della riga materiale appena scritta (rowToggle già incrementato)
         Color bg = (((rowToggle - 1) % 2) == 0) ? Color.WHITE : COLOR_ROW_ALT_BG;
 
-        PdfPCell noteCell = dataCell(sb.toString(), F_MATERIAL_NOTE, Element.ALIGN_LEFT, bg);
+        PdfPCell noteCell = new PdfPCell(noteParagraph);
         noteCell.setColspan(2);
+        noteCell.setPadding(4f);
         noteCell.setPaddingTop(0f);
+        noteCell.setBackgroundColor(bg);
+        noteCell.setBorderColor(new Color(0xE0, 0xE0, 0xE0));
         table.addCell(noteCell);
         for (int i = 0; i < 10; i++) table.addCell(dataCell("", F_MATERIAL_NOTE, Element.ALIGN_CENTER, bg));
     }

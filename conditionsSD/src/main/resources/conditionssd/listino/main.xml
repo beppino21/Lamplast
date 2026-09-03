@@ -40,7 +40,11 @@
 <t:coldistance id="g_38" />
 <t:link id="g_39" actionListener="#{d.ListinoBean.onStampa}" text="Stampa" />
 <t:coldistance id="g_39b" />
-<t:link id="g_39c" actionListener="#{d.ListinoBean.onManagePackaging}" text="Gestisci imballo..." />
+<t:link id="g_39c" actionListener="#{d.ListinoBean.onGestisciImballo}" text="Gestisci imballo..." />
+<t:coldistance id="g_39d" />
+<t:link id="g_39e" actionListener="#{d.ListinoBean.onGestisciImballo1}" text="Parametri Imballo 1..." />
+<t:coldistance id="g_39f" />
+<t:link id="g_39g" actionListener="#{d.ListinoBean.onGestisciImballo2}" text="Parametri Imballo 2..." />
 </t:row>
 <t:row id="g_80" rendered="#{d.ListinoBean.pdfVisible}" >
 <t:button id="g_81" actionListener="#{d.ListinoBean.onChiudiAnteprima}" text="&#171; Torna al listino" width="140" />
@@ -85,6 +89,12 @@
 </t:gridcol>
 <t:gridcol id="g_72" text="Cod. cliente" width="130" >
 <t:label id="g_73" text=".{customerMaterialCode}" />
+</t:gridcol>
+<t:gridcol id="g_72b" text="Lotto minimo" width="100" >
+<t:label id="g_73b" align="right" text=".{lottoMinimo}" />
+</t:gridcol>
+<t:gridcol id="g_74" text="Imballo" width="90" >
+<t:label id="g_75" font=".{imballoStatoFont}" text=".{imballoStato}" />
 </t:gridcol>
 </t:fixgrid>
 </t:row>

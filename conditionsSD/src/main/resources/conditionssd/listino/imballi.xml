@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="utf-8"?>
+<t:layoutdefinition xmlns:t="http://www.captaincasa.com/controllibrary/t" >
+
+<t:beanprocessing id="g_1" beanbinding="#{d.ImballiUI}" />
+<t:rowtitlebar id="g_2" text="Manutenzione Imballi (ZIMBAL_3)" />
+
+<t:rowheader id="g_3" >
+<t:autocomplete id="g_4" autocompletetimer="200" labeltext="Cliente:" value="#{d.ImballiUI.searchCustomerInput}" valuesurl="#{d.ImballiUI.customerACURL}" width="300" />
+<t:coldistance id="g_5" />
+<t:autocomplete id="g_6" autocompletetimer="200" labeltext="Materiale:" value="#{d.ImballiUI.searchMaterialInput}" valuesurl="#{d.ImballiUI.materialACURL}" width="250" />
+<t:coldistance id="g_7" width="20" />
+<t:button id="g_8" actionListener="#{d.ImballiUI.onCerca}" stylevariant="ccbig" text="Cerca" width="90" />
+<t:coldistance id="g_9" width="100%" />
+<t:link id="g_10" actionListener="#{d.ImballiUI.onGestisciImballo1}" text="Parametri Imballo 1..." />
+<t:coldistance id="g_11" />
+<t:link id="g_12" actionListener="#{d.ImballiUI.onGestisciImballo2}" text="Parametri Imballo 2..." />
+</t:rowheader>
+
+<t:row id="g_13" >
+<t:coldistance id="g_14" width="10" />
+<t:label id="g_15" font="weight:bold;#{d.ImballiUI.statusIsError ? 'color:#CC0000' : 'color:#007700'}" text="#{d.ImballiUI.statusMessage}" />
+</t:row>
+
+<t:rowdistance id="g_16" height="10" />
+
+<t:row id="g_17" height="100%" >
+<t:coldistance id="g_18" width="10" />
+<t:fixgrid id="g_19" height="100%" objectbinding="#{d.ImballiUI.grid}" width="98%" >
+<t:gridcol id="g_20" text="Cliente" width="130" >
+<t:label id="g_21" text=".{customer}" />
+</t:gridcol>
+<t:gridcol id="g_22" text="Materiale" width="130" >
+<t:label id="g_23" text=".{material}" />
+</t:gridcol>
+<t:gridcol id="g_24" text="Tipo" width="80" >
+<t:label id="g_25" text=".{specificity}" />
+</t:gridcol>
+<t:gridcol id="g_26" text="Imballo" width="320" >
+<t:label id="g_27" text=".{imballoText}" />
+</t:gridcol>
+<t:gridcol id="g_28" text="Qtà" width="70" >
+<t:label id="g_29" align="right" text=".{quantitaFormatted}" />
+</t:gridcol>
+<t:gridcol id="g_30" text="UM" width="60" >
+<t:label id="g_31" text=".{meins}" />
+</t:gridcol>
+<t:gridcol id="g_32" text="Imb./pallet" width="90" >
+<t:label id="g_33" align="right" text=".{numerosita}" />
+</t:gridcol>
+</t:fixgrid>
+</t:row>
+
+<t:rowdistance id="g_34" height="10" />
+
+<t:row id="g_35" >
+<t:coldistance id="g_36" width="10" />
+<t:button id="g_37" actionListener="#{d.ImballiUI.onNuovo}" stylevariant="ccbig" text="Nuovo..." width="110" />
+<t:coldistance id="g_38" width="10" />
+<t:button id="g_39" actionListener="#{d.ImballiUI.onModificaSelezionato}" stylevariant="ccbig" text="Modifica selezionato..." width="180" />
+</t:row>
+
+<t:rowdistance id="g_40" height="6" />
+
+<t:row id="g_41" >
+<t:coldistance id="g_42" width="10" />
+<t:label id="g_43" font="color:#888888" text="&quot;Nuovo...&quot; usa Cliente/Materiale inseriti in alto (Cliente vuoto = imballo generico di materiale)." />
+</t:row>
+
+</t:layoutdefinition>

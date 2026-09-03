@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="utf-8"?>
+<t:layoutdefinition xmlns:t="http://www.captaincasa.com/controllibrary/t">
+<t:rowbodypane id="g_1" padding="15" rowdistance="10">
+
+<t:row id="g_2">
+    <t:label id="g_3" font="weight:bold" text="#{d.ImballoAttribuzionePopupBean.titleText}" width="100%"/>
+</t:row>
+
+<t:rowdistance id="g_4" height="10"/>
+
+<t:row id="g_5">
+    <t:checkbox id="g_6" selected="#{d.ImballoAttribuzionePopupBean.generico}"
+                text="Generico (vale per tutti i clienti su questo materiale)" width="100%"/>
+</t:row>
+
+<t:rowdistance id="g_7" height="10"/>
+
+<t:row id="g_8">
+    <t:label id="g_9" text="Imballo 1" width="100"/>
+    <t:combobox id="g_10" validvaluesbinding="#{d.ImballoAttribuzionePopupBean.imballo1Vvb}"
+                value="#{d.ImballoAttribuzionePopupBean.codImballo}" width="260"/>
+</t:row>
+
+<t:row id="g_11">
+    <t:label id="g_12" text="Imballo 2" width="100"/>
+    <t:combobox id="g_13" validvaluesbinding="#{d.ImballoAttribuzionePopupBean.imballo2Vvb}"
+                value="#{d.ImballoAttribuzionePopupBean.codImballo2}" width="260"/>
+</t:row>
+
+<t:rowdistance id="g_14" height="5"/>
+
+<t:row id="g_15">
+    <t:label id="g_16" text="Quantità" width="100"/>
+    <t:field id="g_17" text="#{d.ImballoAttribuzionePopupBean.quantitaText}" width="90"/>
+    <t:coldistance id="g_18" width="10"/>
+    <t:label id="g_19" text="UM" width="30"/>
+    <t:field id="g_20" text="#{d.ImballoAttribuzionePopupBean.meins}" width="60"/>
+</t:row>
+
+<t:row id="g_21">
+    <t:label id="g_22" text="Numerosità/pallet" width="130"/>
+    <t:field id="g_23" text="#{d.ImballoAttribuzionePopupBean.numerositaText}" width="90"/>
+</t:row>
+
+<t:rowdistance id="g_24" height="10"/>
+
+<t:row id="g_25" rendered="#{d.ImballoAttribuzionePopupBean.statusMessage != ''}">
+    <t:label id="g_26" font="#{d.ImballoAttribuzionePopupBean.statusIsError ? 'color:#CC0000' : 'color:#0A7D2C'}"
+             text="#{d.ImballoAttribuzionePopupBean.statusMessage}" width="100%"/>
+</t:row>
+
+<t:rowdistance id="g_27" height="10"/>
+
+<t:row id="g_28">
+    <t:button id="g_29" actionListener="#{d.ImballoAttribuzionePopupBean.onSalva}" text="Salva" width="90"/>
+    <t:coldistance id="g_30" width="10"/>
+    <t:button id="g_31" actionListener="#{d.ImballoAttribuzionePopupBean.onElimina}"
+              enabled="#{d.ImballoAttribuzionePopupBean.hadExisting}" text="Elimina" width="90"/>
+    <t:coldistance id="g_32" width="10"/>
+    <t:button id="g_33" actionListener="#{d.ImballoAttribuzionePopupBean.onChiudi}" text="Chiudi" width="90"/>
+</t:row>
+
+</t:rowbodypane>
+<t:pageaddons id="g_pa"/>
+</t:layoutdefinition>

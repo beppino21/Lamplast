@@ -6,6 +6,7 @@ import eOne.conditionsSD.model.ListinoRow;
 import eOne.conditionsSD.model.PricingRecord;
 import eOne.conditionsSD.s4client.CustomerClient.CustomerInfo;
 import eOne.conditionsSD.s4client.CustomerMaterialClient.CustomerMaterialInfo;
+import eOne.conditionsSD.s4client.Imbal3ReadClient;
 
 import java.time.LocalDate;
 import java.util.*;
@@ -28,6 +29,7 @@ public class ListinoBuilder {
             Map<String, String>       zoneDescriptions,
             Map<String, CustomerMaterialInfo> materialByCustomer,
             Map<String, String>       paymentTermsTexts,
+            Map<String, Imbal3ReadClient.Imbal3Info> imbal3ByCustomerMaterial,
             ExtractParams             params) {
 
         warnings.clear();
@@ -128,12 +130,15 @@ public class ListinoBuilder {
                     String   scaleUnit  = scaleUnitMap.get(key);
                     int      activeCols = countActive(mergedQty);
                     rows.add(ListinoRow.headerScaleRow(custCode, mergedQty, scaleUnit, activeCols));
-                    for (PricingRecord ppr0 : byScale.get(key))
-                        rows.add(mode == ExtractMode.FULL && ztraKStar != null
+                    for (PricingRecord ppr0 : byScale.get(key)) {
+                        ListinoRow matRow = (mode == ExtractMode.FULL && ztraKStar != null)
                             ? buildMaterialRow(custCode, ppr0, ztraKStar,
                                 mergedQty, activeCols, materialDescriptions, materialByCustomer)
                             : buildPPR0OnlyRow(custCode, ppr0,
-                                mergedQty, activeCols, materialDescriptions, materialByCustomer));
+                                mergedQty, activeCols, materialDescriptions, materialByCustomer);
+                        applyImbal3(matRow, custCode, ppr0.getMaterial(), info.getLanguage(), imbal3ByCustomerMaterial);
+                        rows.add(matRow);
+                    }
                 }
             }
 
@@ -341,14 +346,13 @@ public class ListinoBuilder {
         String desc = materialDescriptions != null ? materialDescriptions.get(mat) : null;
         row.setDescription(desc != null && !desc.trim().isEmpty()
             ? mat + " — " + desc : mat);
-        // Codice materiale cliente + lotto minimo + imballo preferenziale
+        // Codice materiale cliente + lotto minimo (imballo agganciato a parte da applyImbal3)
         if (materialByCustomer != null) {
             CustomerMaterialInfo info = materialByCustomer.get(custCode + "|" + mat);
             if (info != null) {
                 row.setCustomerMaterialCode(info.getMaterialByCustomer());
                 row.setMinDeliveryQuantity(info.getMinDeliveryQuantity());
                 row.setMinDeliveryQuantityUnit(info.getMinDeliveryQuantityUnit());
-                row.setPackagingNote(info.getPackagingNote());
             }
         }
 
@@ -420,14 +424,13 @@ public class ListinoBuilder {
         row.setDescription(desc != null && !desc.trim().isEmpty()
             ? mat + " — " + desc
             : mat);
-        // Codice materiale cliente + lotto minimo + imballo preferenziale
+        // Codice materiale cliente + lotto minimo (imballo agganciato a parte da applyImbal3)
         if (materialByCustomer != null) {
             CustomerMaterialInfo info = materialByCustomer.get(custCode + "|" + mat);
             if (info != null) {
                 row.setCustomerMaterialCode(info.getMaterialByCustomer());
                 row.setMinDeliveryQuantity(info.getMinDeliveryQuantity());
                 row.setMinDeliveryQuantityUnit(info.getMinDeliveryQuantityUnit());
-                row.setPackagingNote(info.getPackagingNote());
             }
         }
         row.setCurrency(ppr0.getCurrency());
@@ -538,5 +541,15 @@ public class ListinoBuilder {
     }
     private String nvl(String a, String b) {
         return (a != null && !a.trim().isEmpty()) ? a : (b != null ? b : "");
+    }
+
+    /** Applica alla riga materiale l'esito della cascata imballo (ZIMBAL_3), se disponibile. */
+    private void applyImbal3(ListinoRow row, String custCode, String material, String language,
+                              Map<String, Imbal3ReadClient.Imbal3Info> imbal3Map) {
+        if (imbal3Map == null) return;
+        Imbal3ReadClient.Imbal3Info info = imbal3Map.get(custCode + "|" + material);
+        if (info == null) return;
+        row.setPackagingStatus(info.specificity.name());
+        row.setPackagingNote(info.getText(language));
     }
 }

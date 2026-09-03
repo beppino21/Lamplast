@@ -121,9 +121,6 @@ public class CustomerMaterialClient extends S4HttpClient {
         private final String materialByCustomer;
         private final double minDeliveryQuantity;
         private final String minDeliveryQuantityUnit;
-        // Imballo di default: valorizzato esternamente da PackagingInfoClient
-        // (tabella custom ZZPACKAGING_INFO) — non tradotto.
-        private String packagingNote = "";
 
         public CustomerMaterialInfo(String materialByCustomer, double minDeliveryQuantity, String minDeliveryQuantityUnit) {
             this.materialByCustomer = materialByCustomer;
@@ -135,7 +132,5 @@ public class CustomerMaterialClient extends S4HttpClient {
         public double getMinDeliveryQuantity()      { return minDeliveryQuantity; }
         public String getMinDeliveryQuantityUnit()  { return minDeliveryQuantityUnit; }
         public boolean hasMinDeliveryQuantity()     { return minDeliveryQuantity > 0d; }
-        public String getPackagingNote()      { return packagingNote; }
-        public void setPackagingNote(String v) { this.packagingNote = v != null ? v : ""; }
     }
 }

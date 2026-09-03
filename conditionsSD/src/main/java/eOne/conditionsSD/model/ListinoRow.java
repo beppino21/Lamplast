@@ -41,7 +41,8 @@ public class ListinoRow {
     private String    language = "IT";   // lingua cliente (CUSTOMER row) per la stampa
     private double    minDeliveryQuantity;        // MATERIAL: lotto minimo (Customer-Material Info Record)
     private String    minDeliveryQuantityUnit = ""; // MATERIAL: UM del lotto minimo (BaseUnit, non l'UM di prezzo)
-    private String    packagingNote = "";           // MATERIAL: imballo di default (Materiale Cliente Supplementare "IMBALLO"), non tradotto
+    private String    packagingNote = "";           // MATERIAL: testo imballo composto (ZIMBAL_1+ZIMBAL_2+quantità/UM), già nella lingua del cliente
+    private String    packagingStatus = "MISSING";   // MATERIAL: esito cascata imballo — "SPECIFIC" | "GENERIC" | "MISSING"
     private String    materialCode = "";              // MATERIAL: codice materiale puro (senza descrizione), per riuso es. nel popup imballo
     private String    paymentTerms = "";              // CUSTOMER: condizioni di pagamento (anagrafica)
     private String    incotermsClassification = "";   // CUSTOMER: Incoterms (codice, es. "FCA")
@@ -148,6 +149,8 @@ public class ListinoRow {
     public void      setMinDeliveryQuantityUnit(String v) { this.minDeliveryQuantityUnit = v != null ? v : ""; }
     public String    getPackagingNote()                  { return packagingNote; }
     public void      setPackagingNote(String v)          { this.packagingNote = v != null ? v : ""; }
+    public String    getPackagingStatus()                { return packagingStatus; }
+    public void      setPackagingStatus(String v)        { this.packagingStatus = v != null ? v : "MISSING"; }
     public String    getMaterialCode()                   { return materialCode; }
     public void      setMaterialCode(String v)           { this.materialCode = v != null ? v : ""; }
     public String    getPaymentTerms()                   { return paymentTerms; }

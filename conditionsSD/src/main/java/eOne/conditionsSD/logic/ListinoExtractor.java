@@ -6,8 +6,8 @@ import eOne.conditionsSD.model.PricingRecord;
 import eOne.conditionsSD.s4client.CustomerClient;
 import eOne.conditionsSD.s4client.CustomerClient.CustomerInfo;
 import eOne.conditionsSD.s4client.CustomerMaterialClient;
+import eOne.conditionsSD.s4client.Imbal3ReadClient;
 import eOne.conditionsSD.s4client.MaterialClient;
-import eOne.conditionsSD.s4client.PackagingInfoClient;
 import eOne.conditionsSD.s4client.PaymentTermsTextClient;
 import eOne.conditionsSD.s4client.PricingClient;
 import eOne.conditionsSD.s4client.S4Config;
@@ -27,7 +27,7 @@ public class ListinoExtractor {
     private final MaterialClient      materialClient;
     private final SalesDistrictClient districtClient;
     private final PaymentTermsTextClient paymentTermsTextClient;
-    private final PackagingInfoClient    packagingInfoClient;
+    private final Imbal3ReadClient       imbal3ReadClient;
     private final ListinoBuilder      builder;
 
     private List<String> lastWarnings = List.of();
@@ -40,7 +40,7 @@ public class ListinoExtractor {
         this.materialClient         = new MaterialClient(httpClient, config.getLanguage());
         this.districtClient         = new SalesDistrictClient(httpClient, config.getLanguage());
         this.paymentTermsTextClient = new PaymentTermsTextClient(httpClient);
-        this.packagingInfoClient    = new PackagingInfoClient(httpClient);
+        this.imbal3ReadClient       = new Imbal3ReadClient(httpClient);
         this.builder                = new ListinoBuilder();
     }
 
@@ -97,21 +97,12 @@ public class ListinoExtractor {
                 materialByCustomer = customerMaterialClient.loadMaterialByCustomer(customerMaterialPairs);
         }
 
-        // 4b. Imballo di default (tabella custom ZZPACKAGING_INFO, servizio RAP proprio).
-        //     Unica fonte per l'imballo: MaterialDescriptionByCustomer resta riservato
-        //     al suo scopo originale, su indicazione esplicita del cliente.
+        // 4b. Imballo (ZIMBAL_3 — associazione cliente/materiale con cascata
+        //     specifico → generico → mancante, testo già composto lato client
+        //     dalle descrizioni ZIMBAL_1/ZIMBAL_2 risolte via CDS).
+        Map<String, Imbal3ReadClient.Imbal3Info> imbal3ByCustomerMaterial = Map.of();
         if (!customerMaterialPairs.isEmpty()) {
-            Map<String, String> packaging = packagingInfoClient.fetchPackaging(customerMaterialPairs);
-            for (Map.Entry<String, String> e : packaging.entrySet()) {
-                CustomerMaterialClient.CustomerMaterialInfo info = materialByCustomer.get(e.getKey());
-                if (info == null) {
-                    // Materiale senza record A_CustomerMaterial (nessun codice cliente/lotto
-                    // minimo su SAP): creo comunque la voce per non perdere l'imballo letto.
-                    info = new CustomerMaterialClient.CustomerMaterialInfo("", 0d, "");
-                    materialByCustomer.put(e.getKey(), info);
-                }
-                info.setPackagingNote(e.getValue());
-            }
+            imbal3ByCustomerMaterial = imbal3ReadClient.fetch(customerMaterialPairs);
         }
 
         // 5. Descrizioni zone ZTRA
@@ -144,7 +135,7 @@ public class ListinoExtractor {
         // 7. Build righe listino
         List<ListinoRow> rows = builder.build(
             customers, ppr0, ztra, materialDescriptions, zoneDescriptions,
-            materialByCustomer, paymentTermsTexts, params);
+            materialByCustomer, paymentTermsTexts, imbal3ByCustomerMaterial, params);
         lastWarnings = builder.getWarnings();
 
         return rows;

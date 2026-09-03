@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="utf-8"?>
+<t:layoutdefinition xmlns:t="http://www.captaincasa.com/controllibrary/t">
+<t:rowbodypane id="g_1" padding="15" rowdistance="10">
+
+<t:row id="g_2">
+    <t:label id="g_3" font="weight:bold" text="Parametri Imballo 1 (tipologia)" width="100%"/>
+</t:row>
+
+<t:rowdistance id="g_4" height="10"/>
+
+<t:row id="g_5" height="330">
+    <t:fixgrid id="g_6" height="100%" objectbinding="#{d.Imbal1ParametriPopupBean.grid}" width="100%">
+        <t:gridcol id="g_7" text="Codice" width="70">
+            <t:label id="g_8" text=".{codImballo}"/>
+        </t:gridcol>
+        <t:gridcol id="g_9" text="Descrizione IT" width="240">
+            <t:label id="g_10" text=".{descrIt}"/>
+        </t:gridcol>
+        <t:gridcol id="g_11" text="Descrizione EN" width="240">
+            <t:label id="g_12" text=".{descrEn}"/>
+        </t:gridcol>
+    </t:fixgrid>
+</t:row>
+
+<t:rowdistance id="g_13" height="8"/>
+
+<t:row id="g_14">
+    <t:button id="g_15" actionListener="#{d.Imbal1ParametriPopupBean.onNuovo}" text="Nuovo" width="90"/>
+    <t:coldistance id="g_16" width="10"/>
+    <t:button id="g_17" actionListener="#{d.Imbal1ParametriPopupBean.onModificaSelezionato}" text="Modifica selezionato" width="150"/>
+</t:row>
+
+<t:rowdistance id="g_18" height="14"/>
+
+<t:row id="g_19">
+    <t:label id="g_20" text="Codice" width="100"/>
+    <t:field id="g_21" enabled="#{d.Imbal1ParametriPopupBean.creatingNew}"
+             text="#{d.Imbal1ParametriPopupBean.codImballo}" width="60"/>
+</t:row>
+
+<t:row id="g_22">
+    <t:label id="g_23" text="Descrizione IT" width="100"/>
+    <t:field id="g_24" text="#{d.Imbal1ParametriPopupBean.descrIt}" width="300"/>
+</t:row>
+
+<t:row id="g_25">
+    <t:label id="g_26" text="Descrizione EN" width="100"/>
+    <t:field id="g_27" text="#{d.Imbal1ParametriPopupBean.descrEn}" width="300"/>
+</t:row>
+
+<t:rowdistance id="g_28" height="10"/>
+
+<t:row id="g_29" rendered="#{d.Imbal1ParametriPopupBean.statusMessage != ''}">
+    <t:label id="g_30" font="#{d.Imbal1ParametriPopupBean.statusIsError ? 'color:#CC0000' : 'color:#0A7D2C'}"
+             text="#{d.Imbal1ParametriPopupBean.statusMessage}" width="100%"/>
+</t:row>
+
+<t:rowdistance id="g_31" height="10"/>
+
+<t:row id="g_32">
+    <t:button id="g_33" actionListener="#{d.Imbal1ParametriPopupBean.onSalva}" text="Salva" width="90"/>
+    <t:coldistance id="g_34" width="10"/>
+    <t:button id="g_35" actionListener="#{d.Imbal1ParametriPopupBean.onElimina}"
+              enabled="#{!d.Imbal1ParametriPopupBean.creatingNew}" text="Elimina" width="90"/>
+    <t:coldistance id="g_36" width="10"/>
+    <t:button id="g_37" actionListener="#{d.Imbal1ParametriPopupBean.onChiudi}" text="Chiudi" width="90"/>
+</t:row>
+
+</t:rowbodypane>
+<t:pageaddons id="g_pa"/>
+</t:layoutdefinition>

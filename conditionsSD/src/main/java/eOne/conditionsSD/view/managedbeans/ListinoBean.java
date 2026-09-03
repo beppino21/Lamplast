@@ -48,6 +48,9 @@ public class ListinoBean extends PageBean implements Serializable {
     private static final String FONT_UM_WARNING = "color:#cc0000;weight:bold";
     private static final String FONT_ALERT_HDR  = "weight:bold;color:#cc6600;size:13";
     private static final String FONT_ALERT      = "color:#cc6600";
+    private static final String FONT_IMBALLO_SPECIFIC = "color:#0A7D2C;weight:bold";
+    private static final String FONT_IMBALLO_GENERIC  = "color:#B8860B";
+    private static final String FONT_IMBALLO_MISSING  = "color:#AAAAAA";
 
     // ═══════════════════════════════════════════════════════════════════════
     // Campi — variabili di istanza (prefisso m_)
@@ -213,6 +216,25 @@ public class ListinoBean extends PageBean implements Serializable {
             return nvl(row.getDescription());
         }
 
+        /** Etichetta indicatore imballo (solo per righe MATERIAL): Specifico / Generico / Mancante. */
+        public String getImballoStato() {
+            if (!row.isMaterialRow()) return "";
+            switch (row.getPackagingStatus()) {
+                case "SPECIFIC": return "Specifico";
+                case "GENERIC":  return "Generico";
+                default:         return "Mancante";
+            }
+        }
+
+        public String getImballoStatoFont() {
+            if (!row.isMaterialRow()) return "";
+            switch (row.getPackagingStatus()) {
+                case "SPECIFIC": return FONT_IMBALLO_SPECIFIC;
+                case "GENERIC":  return FONT_IMBALLO_GENERIC;
+                default:         return FONT_IMBALLO_MISSING;
+            }
+        }
+
         public String getCol1() { return buildCol(1); }
         public String getCol2() { return buildCol(2); }
         public String getCol3() { return buildCol(3); }
@@ -295,6 +317,18 @@ public class ListinoBean extends PageBean implements Serializable {
         public String getCustomerMaterialCode() {
             if (!row.isMaterialRow()) return "";
             return row.getCustomerMaterialCode();
+        }
+
+        /** Lotto minimo (quantità + UM), formattato come nel PDF — solo per righe MATERIAL. */
+        public String getLottoMinimo() {
+            if (!row.isMaterialRow()) return "";
+            double q = row.getMinDeliveryQuantity();
+            if (q <= 0d) return "";
+            String qty = q == Math.floor(q)
+                ? String.format("%,.0f", q)
+                : String.format("%,.3f", q).replaceAll("0+$", "");
+            String um = nvl(row.getMinDeliveryQuantityUnit());
+            return qty + (um.isBlank() ? "" : " " + um);
         }
 
         private String nvl(String s) { return s != null ? s : ""; }
@@ -460,30 +494,26 @@ public class ListinoBean extends PageBean implements Serializable {
     }
 
     /**
-     * TEMPORANEO — solo per verificare che la scrittura via OData su
-     * ZZ_PACKAGINGINFO_SRV funzioni end-to-end. Da togliere (o sostituire
-     * con un vero form) una volta collaudata la scrittura.
+     * Apre il popup di attribuzione imballo (ZIMBAL_3) per la riga materiale
+     * selezionata in griglia. Richiede una selezione: Cliente e Materiale
+     * arrivano sempre da lì, non sono inseribili a mano.
      */
-    /**
-     * Apre il popup di manutenzione imballo. Se una riga materiale è
-     * selezionata nella griglia, il popup si apre pre-compilato in modalità
-     * modifica per quel cliente/materiale; altrimenti si apre vuoto per un
-     * nuovo inserimento.
-     */
-    public void onManagePackaging(ActionEvent event) {
-        String custCode = null;
-        String matCode  = null;
+    public void onGestisciImballo(ActionEvent event) {
         GridListinoItem selected = m_gridListino.getSelectedItem();
-        if (selected != null && selected.getRow().isMaterialRow()) {
-            custCode = selected.getRow().getCustomerCode();
-            matCode  = selected.getRow().getMaterialCode();
+        if (selected == null || !selected.getRow().isMaterialRow()) {
+            m_statusMessage = "Seleziona prima una riga materiale in griglia.";
+            m_hasWarnings   = true;
+            return;
         }
+        String custCode = selected.getRow().getCustomerCode();
+        String matCode  = selected.getRow().getMaterialCode();
+        String language = findCustomerLanguage(custCode);
 
-        final PackagingInfoPopupBean popupBean = new PackagingInfoPopupBean();
-        popupBean.prepare(custCode, matCode, new PackagingInfoPopupBean.IListener() {
+        final ImballoAttribuzionePopupBean popupBean = new ImballoAttribuzionePopupBean();
+        popupBean.prepare(custCode, matCode, language, new ImballoAttribuzionePopupBean.IListener() {
             @Override
             public void reactOnSaved() {
-                m_statusMessage = "Imballo aggiornato. Rilancia \"Estrai\" per vederlo nel listino.";
+                m_statusMessage = "Attribuzione imballo aggiornata. Rilancia \"Estrai\" per vederla nel listino.";
                 m_hasWarnings   = false;
             }
             @Override
@@ -491,12 +521,74 @@ public class ListinoBean extends PageBean implements Serializable {
                 closePopup(popupBean);
             }
         });
-        openModalPopup(popupBean, "Gestione imballo", 460, 360, new ModalPopup.IModalPopupListener() {
+        // Popup allargato del 30% rispetto all'originale (480x320) per rendere
+        // visibile tutto il contenuto senza scroll/troncamenti.
+        openModalPopup(popupBean, "Attribuzione imballo", 624, 416, new ModalPopup.IModalPopupListener() {
             @Override
             public void reactOnPopupClosedByUser() {
                 closePopup(popupBean);
             }
         });
+    }
+
+    /**
+     * Apre la gestione "Parametri Imballo 1" (ZIMBAL_1 — tipologia imballo):
+     * elenco libero, non legato a una riga selezionata in griglia.
+     */
+    public void onGestisciImballo1(ActionEvent event) {
+        final Imbal1ParametriPopupBean popupBean = new Imbal1ParametriPopupBean();
+        popupBean.prepare(new Imbal1ParametriPopupBean.IListener() {
+            @Override
+            public void reactOnChanged() {
+                // Nessuna azione sul listino: le tendine del popup di attribuzione
+                // si ricaricano già ad ogni apertura successiva.
+            }
+            @Override
+            public void reactOnClosed() {
+                closePopup(popupBean);
+            }
+        });
+        openModalPopup(popupBean, "Parametri Imballo 1", 600, 620, new ModalPopup.IModalPopupListener() {
+            @Override
+            public void reactOnPopupClosedByUser() {
+                closePopup(popupBean);
+            }
+        });
+    }
+
+    /**
+     * Apre la gestione "Parametri Imballo 2" (ZIMBAL_2 — caratteristiche imballo):
+     * elenco libero, non legato a una riga selezionata in griglia.
+     */
+    public void onGestisciImballo2(ActionEvent event) {
+        final Imbal2ParametriPopupBean popupBean = new Imbal2ParametriPopupBean();
+        popupBean.prepare(new Imbal2ParametriPopupBean.IListener() {
+            @Override
+            public void reactOnChanged() {
+                // Nessuna azione sul listino: le tendine del popup di attribuzione
+                // si ricaricano già ad ogni apertura successiva.
+            }
+            @Override
+            public void reactOnClosed() {
+                closePopup(popupBean);
+            }
+        });
+        openModalPopup(popupBean, "Parametri Imballo 2", 620, 620, new ModalPopup.IModalPopupListener() {
+            @Override
+            public void reactOnPopupClosedByUser() {
+                closePopup(popupBean);
+            }
+        });
+    }
+
+    /** Risale alla lingua documento del cliente cercando la sua riga CUSTOMER nell'ultima estrazione. */
+    private String findCustomerLanguage(String customerCode) {
+        if (m_lastRows == null) return "IT";
+        for (ListinoRow row : m_lastRows) {
+            if (row.isCustomerRow() && customerCode.equals(row.getCustomerCode()))
+                return row.getLanguage();
+        }
+        return "IT";
     }
 
     private void doExtract() {
