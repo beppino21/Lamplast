@@ -93,8 +93,11 @@
 <t:gridcol id="g_72b" text="Lotto minimo" width="100" >
 <t:label id="g_73b" align="right" text=".{lottoMinimo}" />
 </t:gridcol>
-<t:gridcol id="g_74" text="Imballo" width="90" >
+<t:gridcol id="g_74" text="Imballo" width="130" >
 <t:label id="g_75" font=".{imballoStatoFont}" text=".{imballoStato}" />
+</t:gridcol>
+<t:gridcol id="g_74b" text="S/G" width="40" >
+<t:label id="g_75b" align="center" font=".{imballoLetterFont}" text=".{imballoLetter}" />
 </t:gridcol>
 </t:fixgrid>
 </t:row>

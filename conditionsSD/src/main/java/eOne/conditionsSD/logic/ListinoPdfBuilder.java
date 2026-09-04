@@ -71,7 +71,11 @@ public class ListinoPdfBuilder {
     private static final Font F_COMPANY   = FontFactory.getFont(FontFactory.HELVETICA, 7, Color.DARK_GRAY);
     private static final Font F_TITLE     = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 16, Color.BLACK);
     private static final Font F_SUBTITLE  = FontFactory.getFont(FontFactory.HELVETICA, 9, Color.DARK_GRAY);
-    private static final Font F_CUSTOMER  = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 13, new Color(0x15, 0x65, 0xC0));
+    // Verde Lamplast (dal logo aziendale), usato per titolo cliente, intestazione
+    // tabella, separatori — al posto del blu usato nelle prime versioni.
+    private static final Color COLOR_LAMPLAST_GREEN = new Color(0x1A, 0x7B, 0x52);
+
+    private static final Font F_CUSTOMER  = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 13, COLOR_LAMPLAST_GREEN);
     private static final Font F_CUSTOMER_EXTRA = FontFactory.getFont(FontFactory.HELVETICA, 8.5f, Color.DARK_GRAY);
     private static final Font F_ZONE_HDR  = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 8, new Color(0x55, 0x55, 0x55));
     private static final Font F_MATERIAL  = FontFactory.getFont(FontFactory.HELVETICA, 8, Color.BLACK);
@@ -86,7 +90,7 @@ public class ListinoPdfBuilder {
     private static final Font F_FOOTER    = FontFactory.getFont(FontFactory.HELVETICA, 6, Color.GRAY);
     private static final Font F_PAGENO    = FontFactory.getFont(FontFactory.HELVETICA, 7, Color.GRAY);
 
-    private static final Color COLOR_TABLE_HDR_BG = new Color(0x15, 0x65, 0xC0);
+    private static final Color COLOR_TABLE_HDR_BG = COLOR_LAMPLAST_GREEN;
     private static final Color COLOR_ROW_ALT_BG   = new Color(0xF4, 0xF7, 0xFB);
 
     private static final float MARGIN_LEFT   = 34f;
@@ -435,10 +439,8 @@ public class ListinoPdfBuilder {
      * Info Record + attribuzione imballo ZIMBAL_3) — una riga per ciascuna,
      * nell'ordine: Imballo, Lotto minimo, Imballi per pallet (quest'ultima solo
      * se l'imballo è presente ed ha una numerosità per pallet valorizzata).
-     * Occupano l'intera riga (colspan su tutte le colonne): le condizioni di
-     * prezzo restano comunque vuote su questa riga, quindi l'intero spazio è
-     * disponibile per il testo, che va a capo molto più raramente. Nessuna
-     * riga se non c'è nulla da mostrare.
+     * Occupano la colonna unificata Materiale + Cod. cliente (colspan 2), il
+     * resto della riga resta vuoto. Nessuna riga se non c'è nulla da mostrare.
      */
     private void addMaterialNoteRow(PdfPTable table, ListinoRow row, Labels labels) {
         String rawNote = row.getPackagingNote();
@@ -528,7 +530,7 @@ public class ListinoPdfBuilder {
         cell.setFixedHeight(1.2f);
         cell.setBorder(Rectangle.BOTTOM);
         cell.setBorderWidth(1.2f);
-        cell.setBorderColor(new Color(0x15, 0x65, 0xC0));
+        cell.setBorderColor(COLOR_LAMPLAST_GREEN);
         cell.setPadding(0f);
         rule.addCell(cell);
         document.add(rule);
@@ -673,7 +675,7 @@ public class ListinoPdfBuilder {
                 // ── Separatore ───────────────────────────────────────────
                 float headerBottom = top - Math.max(logoHeight, companyBlockHeight) - 8f;
                 cb.setLineWidth(0.6f);
-                cb.setColorStroke(new Color(0x15, 0x65, 0xC0));
+                cb.setColorStroke(COLOR_LAMPLAST_GREEN);
                 cb.moveTo(left, headerBottom);
                 cb.lineTo(right, headerBottom);
                 cb.stroke();

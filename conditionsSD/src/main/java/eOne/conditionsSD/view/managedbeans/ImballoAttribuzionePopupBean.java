@@ -1,6 +1,7 @@
 package eOne.conditionsSD.view.managedbeans;
 
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.List;
 
 import org.eclnt.editor.annotations.CCGenClass;
@@ -40,6 +41,8 @@ public class ImballoAttribuzionePopupBean extends PageBean implements Serializab
     private String  m_material;
     private boolean m_generico;      // true = l'associazione riguarda cliente=''(tutti), false = solo m_customer
     private boolean m_hadExisting;   // true se all'apertura esisteva già un'associazione (specifica o generica)
+    private List<String> m_customerMaterials = List.of();  // altri materiali dello stesso cliente, per "Salva per il cliente"
+    private boolean m_overwriteConflicts;   // checkbox: se true, "Salva per il cliente" sovrascrive anche i materiali già configurati diversamente
 
     private String  m_codImballo;
     private String  m_codImballo2;
@@ -60,11 +63,19 @@ public class ImballoAttribuzionePopupBean extends PageBean implements Serializab
     public String getPageName() { return "/conditionssd/listino/imballo_attribuzione_popup.xml"; }
     public String getRootExpressionUsedInPage() { return "#{d.ImballoAttribuzionePopupBean}"; }
 
-    /** @param language lingua documento del cliente (IT/EN), per i testi delle tendine */
-    public void prepare(String customer, String material, String language, IListener listener) {
+    /**
+     * @param language lingua documento del cliente (IT/EN), per i testi delle tendine
+     * @param customerMaterials elenco dei materiali dello stesso cliente presenti
+     *        nell'estrazione corrente, usato dal bottone "Salva per il cliente"
+     *        (di norma condividono lo stesso imballo)
+     */
+    public void prepare(String customer, String material, String language,
+                         List<String> customerMaterials, IListener listener) {
         m_listener = listener;
         m_customer = customer != null ? customer : "";
         m_material = material != null ? material : "";
+        m_customerMaterials = customerMaterials != null ? customerMaterials : List.of();
+        m_overwriteConflicts = false;
         m_statusMessage = "";
         m_statusIsError = false;
 
@@ -113,6 +124,12 @@ public class ImballoAttribuzionePopupBean extends PageBean implements Serializab
     public void    setGenerico(boolean v) { m_generico = v; }
     public boolean getHadExisting() { return m_hadExisting; }
 
+    /** true se il cliente corrente ha più di un materiale nell'estrazione — mostra "Salva per il cliente". */
+    public boolean getHasMultipleMaterials() { return m_customerMaterials.size() > 1; }
+
+    public boolean getOverwriteConflicts() { return m_overwriteConflicts; }
+    public void    setOverwriteConflicts(boolean v) { m_overwriteConflicts = v; }
+
     public String  getCodImballo()  { return m_codImballo; }
     public void    setCodImballo(String v) { m_codImballo = v; }
     public String  getCodImballo2() { return m_codImballo2; }
@@ -137,11 +154,120 @@ public class ImballoAttribuzionePopupBean extends PageBean implements Serializab
     }
 
     public void onSalva(ActionEvent event) {
+        String targetCustomer = m_generico ? "" : m_customer;
+        try {
+            Object[] parsed = validateAndParse();
+            if (parsed == null) return;  // messaggio di errore già impostato
+
+            saveAssociation(targetCustomer, m_material, (double) parsed[0], (int) parsed[1]);
+
+            m_hadExisting   = true;
+            m_statusMessage = "Salvato con successo.";
+            m_statusIsError = false;
+            if (m_listener != null) {
+                m_listener.reactOnSaved();
+                m_listener.reactOnClosed();   // Salva ora chiude automaticamente
+            }
+        } catch (Exception e) {
+            m_statusMessage = "Errore durante il salvataggio: " + e.getMessage();
+            m_statusIsError = true;
+        }
+    }
+
+    /**
+     * Applica la stessa attribuzione (Imballo 1/2, UM, Quantità, Numerosità)
+     * a tutti i materiali del cliente corrente presenti nell'estrazione — utile
+     * perché di norma condividono lo stesso imballo. Sempre specifica per
+     * m_customer (ignora il flag "Generico": qui l'intento è esplicitamente
+     * "per questo cliente").
+     *
+     * Non distruttivo di default: i materiali che hanno già un'attribuzione
+     * SPECIFICA diversa vengono saltati (non un'attribuzione generica o
+     * assente, che viene comunque valorizzata come atteso), a meno che la
+     * checkbox "Sovrascrivi anche i materiali già configurati diversamente"
+     * (vedi {@link #getOverwriteConflicts()}) non sia spuntata.
+     */
+    public void onSalvaPerCliente(ActionEvent event) {
+        try {
+            Object[] parsed = validateAndParse();
+            if (parsed == null) return;
+            double quantita   = (double) parsed[0];
+            int    numerosita = (int) parsed[1];
+
+            List<String> conflicts = m_overwriteConflicts ? List.of() : findConflicts(quantita, numerosita);
+
+            int ok = 0, skipped = 0, ko = 0;
+            for (String material : m_customerMaterials) {
+                if (conflicts.contains(material)) { skipped++; continue; }
+                try {
+                    saveAssociation(m_customer, material, quantita, numerosita);
+                    ok++;
+                } catch (Exception e) {
+                    ko++;
+                }
+            }
+
+            m_hadExisting = true;
+            StringBuilder msg = new StringBuilder("Salvato per " + ok + " materiali del cliente.");
+            if (skipped > 0)
+                msg.append("  ").append(skipped).append(" saltati perché già configurati diversamente"
+                    + " (spunta \"Sovrascrivi\" per applicarli comunque): ").append(String.join(", ", conflicts)).append(".");
+            if (ko > 0)
+                msg.append("  ").append(ko).append(" falliti.");
+            m_statusMessage = msg.toString();
+            m_statusIsError = ko > 0 && ok == 0;
+
+            if (m_listener != null) {
+                m_listener.reactOnSaved();
+                m_listener.reactOnClosed();
+            }
+        } catch (Exception e) {
+            m_statusMessage = "Errore durante il salvataggio multiplo: " + e.getMessage();
+            m_statusIsError = true;
+        }
+    }
+
+    /**
+     * Tra {@link #m_customerMaterials}, individua quelli che hanno già
+     * un'attribuzione SPECIFICA (per m_customer) diversa da quella che si
+     * sta per salvare — un'attribuzione generica o assente non conta come
+     * conflitto, perché "Salva per il cliente" la sovrascriverebbe comunque
+     * come comportamento atteso (crea lo specifico dove non c'era).
+     */
+    private List<String> findConflicts(double quantita, int numerosita) {
+        List<String> conflicts = new ArrayList<>();
+        try {
+            S4Config cfg = S4Config.fromCCConfig();
+            Imbal3ReadClient readClient = new Imbal3ReadClient(new S4HttpClient(cfg));
+            for (String material : m_customerMaterials) {
+                Imbal3ReadClient.AssociationRecord existing = readClient.fetchAssociation(m_customer, material);
+                if (existing == null || existing.specificity != Imbal3ReadClient.Specificity.SPECIFIC)
+                    continue;
+                boolean same = m_codImballo.equals(existing.codImballo)
+                    && m_codImballo2.equals(existing.codImballo2)
+                    && m_meins.equalsIgnoreCase(existing.meins)
+                    && Double.compare(existing.quantita, quantita) == 0
+                    && existing.numerosita == numerosita;
+                if (!same) conflicts.add(material);
+            }
+        } catch (Exception e) {
+            // In caso di errore nella verifica, non blocchiamo il flusso: nessun conflitto
+            // rilevato — il salvataggio procederà come se non ci fossero attribuzioni pregresse.
+        }
+        return conflicts;
+    }
+
+    /**
+     * Valida i campi comuni (Imballo 1/2, UM, Quantità, Numerosità) e li
+     * converte. Ritorna null (con messaggio di errore già impostato) se la
+     * validazione fallisce, altrimenti {quantita (Double), numerosita (Integer)}.
+     */
+    private Object[] validateAndParse() {
         if (m_codImballo == null || m_codImballo.isBlank()
                 || m_codImballo2 == null || m_codImballo2.isBlank()) {
             m_statusMessage = "Seleziona sia Imballo 1 sia Imballo 2.";
             m_statusIsError = true;
-            return;
+            return null;
         }
         double quantita;
         int numerosita;
@@ -151,54 +277,53 @@ public class ImballoAttribuzionePopupBean extends PageBean implements Serializab
         } catch (Exception e) {
             m_statusMessage = "Quantità e Numerosità devono essere numeri validi.";
             m_statusIsError = true;
-            return;
+            return null;
         }
-
-        String targetCustomer = m_generico ? "" : m_customer;
-
         String meinsUpper = m_meins == null ? "" : m_meins.trim().toUpperCase();
         if (meinsUpper.isBlank()) {
             m_statusMessage = "Inserire l'unità di misura.";
             m_statusIsError = true;
-            return;
+            return null;
         }
-
         try {
             S4Config cfg = S4Config.fromCCConfig();
             S4HttpClient http = new S4HttpClient(cfg);
-
             // Validazione UM contro anagrafica SAP — se il servizio non è
             // ancora pronto (ZZ_UNITOFMEASURE_SRV da creare), isValid() non
             // blocca il salvataggio (vedi UnitOfMeasureClient).
             if (!new UnitOfMeasureClient(http).isValid(meinsUpper)) {
                 m_statusMessage = "Unità di misura '" + meinsUpper + "' non valida — verifica il valore inserito.";
                 m_statusIsError = true;
-                return;
+                return null;
             }
-            m_meins = meinsUpper;
-
-            Imbal3ReadClient readClient = new Imbal3ReadClient(http);
-            Imbal3WriteClient writeClient = new Imbal3WriteClient(http);
-
-            // Verifica puntuale (non a cascata) se esiste già un record esattamente
-            // sulla combinazione target, per decidere create vs update.
-            boolean existsAtTarget = existsExact(readClient, targetCustomer, m_material);
-
-            if (existsAtTarget) {
-                writeClient.update(targetCustomer, m_material, m_codImballo, m_codImballo2,
-                    m_meins, quantita, numerosita);
-            } else {
-                writeClient.create(targetCustomer, m_material, m_codImballo, m_codImballo2,
-                    m_meins, quantita, numerosita);
-            }
-
-            m_hadExisting   = true;
-            m_statusMessage = "Salvato con successo.";
-            m_statusIsError = false;
-            if (m_listener != null) m_listener.reactOnSaved();
         } catch (Exception e) {
-            m_statusMessage = "Errore durante il salvataggio: " + e.getMessage();
+            m_statusMessage = "Errore durante la validazione: " + e.getMessage();
             m_statusIsError = true;
+            return null;
+        }
+        m_meins = meinsUpper;
+        return new Object[] { quantita, numerosita };
+    }
+
+    /** Crea o aggiorna (a seconda che esista già) l'associazione per (targetCustomer, material). */
+    private void saveAssociation(String targetCustomer, String material, double quantita, int numerosita)
+            throws Exception {
+        S4Config cfg = S4Config.fromCCConfig();
+        S4HttpClient http = new S4HttpClient(cfg);
+
+        Imbal3ReadClient readClient = new Imbal3ReadClient(http);
+        Imbal3WriteClient writeClient = new Imbal3WriteClient(http);
+
+        // Verifica puntuale (non a cascata) se esiste già un record esattamente
+        // sulla combinazione target, per decidere create vs update.
+        boolean existsAtTarget = existsExact(readClient, targetCustomer, material);
+
+        if (existsAtTarget) {
+            writeClient.update(targetCustomer, material, m_codImballo, m_codImballo2,
+                m_meins, quantita, numerosita);
+        } else {
+            writeClient.create(targetCustomer, material, m_codImballo, m_codImballo2,
+                m_meins, quantita, numerosita);
         }
     }
 

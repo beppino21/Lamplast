@@ -43,6 +43,8 @@ public class ListinoRow {
     private String    minDeliveryQuantityUnit = ""; // MATERIAL: UM del lotto minimo (BaseUnit, non l'UM di prezzo)
     private String    packagingNote = "";           // MATERIAL: testo imballo composto (ZIMBAL_1+ZIMBAL_2+quantità/UM), già nella lingua del cliente
     private String    packagingStatus = "MISSING";   // MATERIAL: esito cascata imballo — "SPECIFIC" | "GENERIC" | "MISSING"
+    private String    packagingCode1 = "";            // MATERIAL: codice ZIMBAL_1 (tipologia imballo), grezzo — vuoto se MISSING
+    private String    packagingCode2 = "";            // MATERIAL: codice ZIMBAL_2 (caratteristiche imballo), grezzo — vuoto se MISSING
     private String    materialCode = "";              // MATERIAL: codice materiale puro (senza descrizione), per riuso es. nel popup imballo
     private String    paymentTerms = "";              // CUSTOMER: condizioni di pagamento (anagrafica)
     private String    incotermsClassification = "";   // CUSTOMER: Incoterms (codice, es. "FCA")
@@ -151,6 +153,13 @@ public class ListinoRow {
     public void      setPackagingNote(String v)          { this.packagingNote = v != null ? v : ""; }
     public String    getPackagingStatus()                { return packagingStatus; }
     public void      setPackagingStatus(String v)        { this.packagingStatus = v != null ? v : "MISSING"; }
+    public String    getPackagingCode1()                 { return packagingCode1; }
+    public void      setPackagingCode1(String v)         { this.packagingCode1 = v != null ? v : ""; }
+    public String    getPackagingCode2()                 { return packagingCode2; }
+    public void      setPackagingCode2(String v)         { this.packagingCode2 = v != null ? v : ""; }
+
+    /** Codici ZIMBAL_1+ZIMBAL_2 concatenati (es. "Z" + "5E2CC" → "Z5E2CC"), vuoto se non presenti. */
+    public String    getPackagingCode()                  { return packagingCode1 + packagingCode2; }
     public String    getMaterialCode()                   { return materialCode; }
     public void      setMaterialCode(String v)           { this.materialCode = v != null ? v : ""; }
     public String    getPaymentTerms()                   { return paymentTerms; }

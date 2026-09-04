@@ -551,5 +551,7 @@ public class ListinoBuilder {
         if (info == null) return;
         row.setPackagingStatus(info.specificity.name());
         row.setPackagingNote(info.getText(language));
+        row.setPackagingCode1(info.codImballo);
+        row.setPackagingCode2(info.codImballo2);
     }
 }

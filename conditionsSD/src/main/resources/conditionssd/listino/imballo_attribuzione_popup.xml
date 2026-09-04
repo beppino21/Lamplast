@@ -51,13 +51,24 @@
 
 <t:rowdistance id="g_27" height="10"/>
 
+<t:row id="g_27b" rendered="#{d.ImballoAttribuzionePopupBean.hasMultipleMaterials}">
+    <t:checkbox id="g_27c" selected="#{d.ImballoAttribuzionePopupBean.overwriteConflicts}"
+                text="Sovrascrivi anche i materiali già configurati diversamente" width="100%"/>
+</t:row>
+
+<t:rowdistance id="g_27d" height="8" rendered="#{d.ImballoAttribuzionePopupBean.hasMultipleMaterials}"/>
+
 <t:row id="g_28">
     <t:button id="g_29" actionListener="#{d.ImballoAttribuzionePopupBean.onSalva}" text="Salva" width="90"/>
     <t:coldistance id="g_30" width="10"/>
+    <t:button id="g_29b" actionListener="#{d.ImballoAttribuzionePopupBean.onSalvaPerCliente}"
+              rendered="#{d.ImballoAttribuzionePopupBean.hasMultipleMaterials}"
+              text="Salva per il cliente" width="150"/>
+    <t:coldistance id="g_30b" width="10"/>
     <t:button id="g_31" actionListener="#{d.ImballoAttribuzionePopupBean.onElimina}"
               enabled="#{d.ImballoAttribuzionePopupBean.hadExisting}" text="Elimina" width="90"/>
     <t:coldistance id="g_32" width="10"/>
-    <t:button id="g_33" actionListener="#{d.ImballoAttribuzionePopupBean.onChiudi}" text="Chiudi" width="90"/>
+    <t:button id="g_33" actionListener="#{d.ImballoAttribuzionePopupBean.onChiudi}" text="Annulla" width="90"/>
 </t:row>
 
 </t:rowbodypane>

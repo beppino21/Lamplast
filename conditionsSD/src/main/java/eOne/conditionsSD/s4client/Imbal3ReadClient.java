@@ -48,11 +48,16 @@ public class Imbal3ReadClient {
 
     public static class Imbal3Info {
         public final Specificity specificity;
+        public final String codImballo;    // codice ZIMBAL_1 (tipologia), grezzo — vuoto se MISSING
+        public final String codImballo2;   // codice ZIMBAL_2 (caratteristiche), grezzo — vuoto se MISSING
         private final String composedTextIt;
         private final String composedTextEn;
 
-        Imbal3Info(Specificity specificity, String composedTextIt, String composedTextEn) {
+        Imbal3Info(Specificity specificity, String codImballo, String codImballo2,
+                   String composedTextIt, String composedTextEn) {
             this.specificity     = specificity;
+            this.codImballo      = codImballo  != null ? codImballo  : "";
+            this.codImballo2     = codImballo2 != null ? codImballo2 : "";
             this.composedTextIt  = composedTextIt;
             this.composedTextEn  = composedTextEn;
         }
@@ -278,7 +283,7 @@ public class Imbal3ReadClient {
                 spec = Specificity.GENERIC;
             }
             if (row == null) {
-                result.put(key, new Imbal3Info(Specificity.MISSING, "", ""));
+                result.put(key, new Imbal3Info(Specificity.MISSING, "", "", "", ""));
                 continue;
             }
             String textIt = composeText(row, "descr_text_it_1", "descr_text_it_2");
@@ -296,7 +301,9 @@ public class Imbal3ReadClient {
                 textEn += suffix;
             }
 
-            result.put(key, new Imbal3Info(spec, textIt, textEn));
+            String codImballo  = row.path("cod_imballo").asText("");
+            String codImballo2 = row.path("cod_imballo2").asText("");
+            result.put(key, new Imbal3Info(spec, codImballo, codImballo2, textIt, textEn));
         }
         return result;
     }

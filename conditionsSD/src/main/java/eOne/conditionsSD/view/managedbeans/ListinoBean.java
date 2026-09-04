@@ -27,6 +27,7 @@ import eOne.conditionsSD.model.ExtractParams;
 import eOne.conditionsSD.model.ListinoRow;
 import eOne.conditionsSD.model.ListinoRow.RowType;
 import eOne.conditionsSD.s4client.CustomerClient;
+import eOne.conditionsSD.s4client.Imbal3ReadClient;
 import eOne.conditionsSD.s4client.S4Config;
 import eOne.conditionsSD.s4client.S4HttpClient;
 
@@ -39,8 +40,8 @@ public class ListinoBean extends PageBean implements Serializable {
     // ═══════════════════════════════════════════════════════════════════════
     // Font costanti per tipo riga
     // ═══════════════════════════════════════════════════════════════════════
-    private static final String FONT_CUSTOMER   = "weight:bold;size:13;color:#1565C0";
-    private static final String FONT_SCALE_HDR  = "weight:bold;color:#1565C0";
+    private static final String FONT_CUSTOMER   = "weight:bold;size:13;color:#1A7B52";
+    private static final String FONT_SCALE_HDR  = "weight:bold;color:#1A7B52";
     private static final String FONT_ZONE_HDR   = "weight:bold;color:#555555";
     private static final String FONT_MATERIAL   = "";
     private static final String FONT_ZONE_REF   = "weight:bold;color:#007700";
@@ -216,14 +217,42 @@ public class ListinoBean extends PageBean implements Serializable {
             return nvl(row.getDescription());
         }
 
-        /** Etichetta indicatore imballo (solo per righe MATERIAL): Specifico / Generico / Mancante. */
+        /**
+         * Etichetta imballo per una prima verifica visiva veloce: codice
+         * concatenato ZIMBAL_1+ZIMBAL_2 seguito da numerosità x quantità/UM
+         * (es. "Z5E2CC 1x1.200 kg"), quando disponibili — lo stato
+         * Specifico/Generico/Mancante resta comunque leggibile dalla colonna
+         * S/G accanto (colore + lettera).
+         */
         public String getImballoStato() {
             if (!row.isMaterialRow()) return "";
-            switch (row.getPackagingStatus()) {
-                case "SPECIFIC": return "Specifico";
-                case "GENERIC":  return "Generico";
-                default:         return "Mancante";
+            if ("MISSING".equals(row.getPackagingStatus())) return "Mancante";
+
+            String code = row.getPackagingCode();
+            String qtyInfo = "";
+            String raw = row.getPackagingNote();
+            if (raw != null && !raw.isBlank()) {
+                String[] parts = raw.split(Imbal3ReadClient.PACKAGING_NOTE_SEPARATOR, -1);
+                // parts: [0]=testo composto ZIMBAL_1+ZIMBAL_2, [1]=numerosità, [2]=quantità/peso, [3]=UM
+                if (parts.length == 4) {
+                    String numerosita = parts[1].trim();
+                    String quantita   = parts[2].trim();
+                    String meins      = parts[3].trim();
+                    if (!numerosita.isBlank() && !quantita.isBlank())
+                        qtyInfo = numerosita + "x" + quantita + (meins.isBlank() ? "" : " " + meins);
+                }
             }
+
+            if (!code.isBlank())
+                return qtyInfo.isBlank() ? code : code + " " + qtyInfo;
+            if (!qtyInfo.isBlank())
+                return qtyInfo;
+
+            // Fallback: né codice né quantità disponibili — usa il testo composto o l'etichetta di stato.
+            String[] parts = raw != null ? raw.split(Imbal3ReadClient.PACKAGING_NOTE_SEPARATOR, -1) : new String[0];
+            String text = parts.length > 0 ? parts[0].trim() : "";
+            return !text.isBlank() ? text
+                : ("GENERIC".equals(row.getPackagingStatus()) ? "Generico" : "Specifico");
         }
 
         public String getImballoStatoFont() {
@@ -233,6 +262,28 @@ public class ListinoBean extends PageBean implements Serializable {
                 case "GENERIC":  return FONT_IMBALLO_GENERIC;
                 default:         return FONT_IMBALLO_MISSING;
             }
+        }
+
+        /** Lettera indicatore compatta (S/G), stessa palette colori dello stato imballo. */
+        public String getImballoLetter() {
+            if (!row.isMaterialRow()) return "";
+            switch (row.getPackagingStatus()) {
+                case "SPECIFIC": return "S";
+                case "GENERIC":  return "G";
+                default:         return "";
+            }
+        }
+
+        public String getImballoLetterFont() { return getImballoStatoFont(); }
+
+        /** Doppio clic (o invio) sulla riga: apre direttamente "Gestisci imballo"
+         *  per le righe materiale, come scorciatoia rispetto a selezionare +
+         *  cliccare il link in alto. */
+        @Override
+        public void onRowExecute() {
+            if (!row.isMaterialRow()) return;
+            m_gridListino.selectItem(this);
+            onGestisciImballo(null);
         }
 
         public String getCol1() { return buildCol(1); }
@@ -509,12 +560,24 @@ public class ListinoBean extends PageBean implements Serializable {
         String matCode  = selected.getRow().getMaterialCode();
         String language = findCustomerLanguage(custCode);
 
+        // Elenco materiali dello stesso cliente nell'estrazione corrente, per
+        // l'opzione "Salva per il cliente" del popup (di solito stesso imballo).
+        List<String> customerMaterials = new ArrayList<>();
+        if (m_lastRows != null) {
+            for (ListinoRow r : m_lastRows) {
+                if (r.isMaterialRow() && custCode.equals(r.getCustomerCode()))
+                    customerMaterials.add(r.getMaterialCode());
+            }
+        }
+
         final ImballoAttribuzionePopupBean popupBean = new ImballoAttribuzionePopupBean();
-        popupBean.prepare(custCode, matCode, language, new ImballoAttribuzionePopupBean.IListener() {
+        popupBean.prepare(custCode, matCode, language, customerMaterials, new ImballoAttribuzionePopupBean.IListener() {
             @Override
             public void reactOnSaved() {
-                m_statusMessage = "Attribuzione imballo aggiornata. Rilancia \"Estrai\" per vederla nel listino.";
-                m_hasWarnings   = false;
+                // Rilancia l'estrazione corrente per riflettere subito la modifica
+                // nella colonna Imballo, senza richiedere all'utente di premere "Estrai".
+                doExtract();
+                m_statusMessage = m_statusMessage + "  (imballo aggiornato)";
             }
             @Override
             public void reactOnClosed() {
@@ -523,7 +586,7 @@ public class ListinoBean extends PageBean implements Serializable {
         });
         // Popup allargato del 30% rispetto all'originale (480x320) per rendere
         // visibile tutto il contenuto senza scroll/troncamenti.
-        openModalPopup(popupBean, "Attribuzione imballo", 624, 416, new ModalPopup.IModalPopupListener() {
+        openModalPopup(popupBean, "Attribuzione imballo", 624, 456, new ModalPopup.IModalPopupListener() {
             @Override
             public void reactOnPopupClosedByUser() {
                 closePopup(popupBean);

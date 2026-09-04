@@ -8,7 +8,7 @@
 
 <t:rowdistance id="g_4" height="10"/>
 
-<t:row id="g_5" height="330">
+<t:row id="g_5" height="230">
     <t:fixgrid id="g_6" height="100%" objectbinding="#{d.Imbal1ParametriPopupBean.grid}" width="100%">
         <t:gridcol id="g_7" text="Codice" width="70">
             <t:label id="g_8" text=".{codImballo}"/>

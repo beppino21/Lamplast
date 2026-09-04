@@ -196,8 +196,18 @@ public class ImballiUI extends PageBean implements Serializable {
      * incide solo sul testo mostrato nelle tendine, non sul dato salvato.
      */
     private void openAttribuzionePopup(String customer, String material) {
+        // Altri materiali dello stesso cliente già presenti nei risultati di
+        // ricerca correnti, per l'opzione "Salva per il cliente" del popup.
+        List<String> customerMaterials = new ArrayList<>();
+        if (customer != null && !customer.isBlank()) {
+            for (GridItem gi : m_grid.getItems())
+                if (customer.equals(gi.row.customer))
+                    customerMaterials.add(gi.row.material);
+            if (!customerMaterials.contains(material)) customerMaterials.add(material);
+        }
+
         final ImballoAttribuzionePopupBean popupBean = new ImballoAttribuzionePopupBean();
-        popupBean.prepare(customer, material, "IT", new ImballoAttribuzionePopupBean.IListener() {
+        popupBean.prepare(customer, material, "IT", customerMaterials, new ImballoAttribuzionePopupBean.IListener() {
             @Override
             public void reactOnSaved() {
                 m_statusMessage = "Attribuzione imballo salvata.";
@@ -209,7 +219,7 @@ public class ImballiUI extends PageBean implements Serializable {
                 closePopup(popupBean);
             }
         });
-        openModalPopup(popupBean, "Attribuzione imballo", 624, 416, new ModalPopup.IModalPopupListener() {
+        openModalPopup(popupBean, "Attribuzione imballo", 624, 456, new ModalPopup.IModalPopupListener() {
             @Override
             public void reactOnPopupClosedByUser() {
                 closePopup(popupBean);
