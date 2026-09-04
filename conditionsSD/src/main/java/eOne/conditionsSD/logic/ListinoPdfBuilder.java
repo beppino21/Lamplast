@@ -435,8 +435,10 @@ public class ListinoPdfBuilder {
      * Info Record + attribuzione imballo ZIMBAL_3) — una riga per ciascuna,
      * nell'ordine: Imballo, Lotto minimo, Imballi per pallet (quest'ultima solo
      * se l'imballo è presente ed ha una numerosità per pallet valorizzata).
-     * Occupano la colonna unificata Materiale + Cod. cliente (colspan 2), il
-     * resto della riga resta vuoto. Nessuna riga se non c'è nulla da mostrare.
+     * Occupano l'intera riga (colspan su tutte le colonne): le condizioni di
+     * prezzo restano comunque vuote su questa riga, quindi l'intero spazio è
+     * disponibile per il testo, che va a capo molto più raramente. Nessuna
+     * riga se non c'è nulla da mostrare.
      */
     private void addMaterialNoteRow(PdfPTable table, ListinoRow row, Labels labels) {
         String rawNote = row.getPackagingNote();
@@ -483,13 +485,12 @@ public class ListinoPdfBuilder {
         Color bg = (((rowToggle - 1) % 2) == 0) ? Color.WHITE : COLOR_ROW_ALT_BG;
 
         PdfPCell noteCell = new PdfPCell(noteParagraph);
-        noteCell.setColspan(2);
+        noteCell.setColspan(COL_WIDTHS.length);
         noteCell.setPadding(4f);
         noteCell.setPaddingTop(0f);
         noteCell.setBackgroundColor(bg);
         noteCell.setBorderColor(new Color(0xE0, 0xE0, 0xE0));
         table.addCell(noteCell);
-        for (int i = 0; i < 10; i++) table.addCell(dataCell("", F_MATERIAL_NOTE, Element.ALIGN_CENTER, bg));
     }
 
     private void addZoneRow(PdfPTable table, ListinoRow row, Labels labels) {
