@@ -1,10 +1,17 @@
 <?xml version="1.0" encoding="utf-8"?>
 <t:layoutdefinition xmlns:t="http://www.captaincasa.com/controllibrary/t" >
 
-<t:beanprocessing id="g_1" beanbinding="#{d.Xlsx2schedlinesUI}" />
-<t:rowtitlebar id="g_48" text="Aggiorna schedulazioni OdV da file XLSX/XLS" />
+<t:beanprocessing id="g_1" beanbinding="#{d.Xlsx2schedlinesUI}" >
+<t:callserverontrigger id="g_pref_rt" actionListener="#{d.Xlsx2schedlinesUI.onStartupRoundtrip}" trigger="#{d.Xlsx2schedlinesUI.startupTrigger}" />
+<t:clientlocalstorage id="g_pref_ls" name="lamplastUtilitySapSystem" value="#{d.Xlsx2schedlinesUI.preferredSystemId}" />
+</t:beanprocessing>
+<t:rowtitlebar id="g_48" text="#{d.Xlsx2schedlinesUI.pageTitle}" />
 <t:rowheader id="g_3" >
 <t:coldistance id="g_10" />
+<t:label id="g_sys_lbl" font="weight:bold" text="Sistema SAP:" />
+<t:coldistance id="g_sys_d1" width="8" />
+<t:combobox id="g_sys_combo" enabled="#{d.Xlsx2schedlinesUI.systemSelectionEnabled}" flush="true" validvaluesbinding="#{d.Xlsx2schedlinesUI.systemVVB}" value="#{d.Xlsx2schedlinesUI.selectedSystemId}" valuetextmode="TEXT" width="320" />
+<t:coldistance id="g_sys_d2" width="40" />
 <t:fileuploadbutton id="g_42" actionListener="#{d.Xlsx2schedlinesUI.onLoadXLSX}" fileextensions="xlsx;xls" text="Load XLSX/XLS" width="100+" />
 <t:coldistance id="g_71" width="20" />
 <t:button id="g_308" actionListener="#{d.Xlsx2schedlinesUI.onDryRun}" text="Verifica (Dry-run)" width="120+" />
@@ -12,16 +19,24 @@
 <t:button id="g_253" actionListener="#{d.Xlsx2schedlinesUI.onUpdSchedLine}" text="Aggiorna Ordini" width="100+" />
 </t:rowheader>
 <t:rowdistance id="g_67" />
-<t:row id="g_65" />
-<t:rowdistance id="g_69" height="25" />
+<t:row id="g_65" >
+<t:pane id="g_sys_bar" background="#{d.Xlsx2schedlinesUI.systemBarBackground}" padding="10" width="100%" >
+<t:row id="g_sys_bar_r1" >
+<t:label id="g_sys_bar_txt" font="#{d.Xlsx2schedlinesUI.systemBarFont}" foreground="#{d.Xlsx2schedlinesUI.systemBarForeground}" text="#{d.Xlsx2schedlinesUI.systemBarText}" width="100%" />
+</t:row>
+<t:row id="g_sys_bar_r2" >
+<t:label id="g_sys_bar_sub" foreground="#{d.Xlsx2schedlinesUI.systemBarForeground}" text="#{d.Xlsx2schedlinesUI.systemBarSubText}" width="100%" />
+</t:row>
+</t:pane>
+</t:row>
+<t:rowdistance id="g_69" />
 <t:row id="g_5" />
 <t:rowbodypane id="g_24" >
-<t:rowdistance id="g_46" height="25" />
 <t:row id="g_31" >
 <t:tabbedpane id="g_32" height="100%" width="100%" >
 <t:tabbedpanetab id="g_33" text="Dati da file XLSX" >
 <t:row id="g_121" >
-<t:pane id="g_138" height="100%" width="100%" >
+<t:pane id="g_138" border="#{d.Xlsx2schedlinesUI.bodyBorder}" height="100%" width="100%" >
 <t:row id="g_141" >
 <t:coldistance id="g_4" width="100%" />
 <t:hyperlink id="g_201" enabled="#{d.Xlsx2schedlinesUI.enableFioriVA03}" text="Visualizza Ordine" url="#{d.Xlsx2schedlinesUI.salesOrderNumberFiori}" />
@@ -87,6 +102,26 @@
 </t:row>
 </t:tabbedpanetab>
 <t:tabbedpanetab id="g_181" text="Parametri" >
+<t:row id="g_pref_row" >
+<t:foldablepane id="g_pref_fp" opened="true" rowdistance="0" text="Sistema SAP predefinito (questo browser)" width="100%" >
+<t:row id="g_pref_r1" >
+<t:coldistance id="g_pref_d1" width="10" />
+<t:label id="g_pref_txt" text="#{d.Xlsx2schedlinesUI.preferredSystemText}" width="100%" />
+</t:row>
+<t:rowdistance id="g_pref_rd" height="8" />
+<t:row id="g_pref_r2" >
+<t:coldistance id="g_pref_d2" width="10" />
+<t:button id="g_pref_save" actionListener="#{d.Xlsx2schedlinesUI.onSavePreferredSystem}" text="Fissa il sistema attuale come predefinito" width="280+" />
+<t:coldistance id="g_pref_d3" width="10" />
+<t:button id="g_pref_clear" actionListener="#{d.Xlsx2schedlinesUI.onClearPreferredSystem}" enabled="#{d.Xlsx2schedlinesUI.preferredSystemSet}" text="Rimuovi preferenza" width="150+" />
+</t:row>
+<t:row id="g_pref_r3" >
+<t:coldistance id="g_pref_d4" width="10" />
+<t:label id="g_pref_note" stylevariant="ccsmalldesc" text="La scelta è salvata nel browser di questo PC (vale per tutte le sessioni aperte da qui, sopravvive a riavvii e deploy) e ha precedenza su sap.system.default di config.properties." width="100%" />
+</t:row>
+</t:foldablepane>
+</t:row>
+<t:rowdistance id="g_pref_rd2" height="12" />
 <t:row id="g_236" >
 <t:foldablepane id="g_400" opened="true" rowdistance="0" text="Visualizzazione risultati" width="100%" >
 <t:row id="g_401" >

@@ -1,15 +1,33 @@
 package lamplast.utility.config;
 
-import java.io.IOException;
-import java.io.InputStream;
 import java.util.Properties;
 
+import lamplast.utility.config.SapSystemRegistry.SapSystemInfo;
+
 /**
- * Configurazione centralizzata per l'accesso a SAP e per il mapping
- * delle colonne Excel. Le proprietà vengono lette da config.properties
- * (nel classpath, es. src/main/resources/).
+ * Configurazione centralizzata per l'accesso a UN sistema SAP e per il
+ * mapping delle colonne Excel.
+ * <p>
+ * Le istanze si ottengono da {@link SapSystemRegistry#createConfiguration(String)}.
+ * Ogni property viene cercata prima nella variante specifica del sistema e poi
+ * in quella globale:
+ * <pre>
+ *   sap.baseUrl          → sap.system.&lt;ID&gt;.baseUrl
+ *   sap.client           → sap.system.&lt;ID&gt;.client        (fallback: sap.client)
+ *   odv.virtual.prefix   → sap.system.&lt;ID&gt;.odv.virtual.prefix (fallback: globale)
+ *   excel.sheetName      → sap.system.&lt;ID&gt;.excel.sheetName    (fallback: globale)
+ * </pre>
+ * Per sicurezza, in modalità multi-sistema <b>baseUrl, username e password
+ * NON hanno fallback</b> sulle property globali: vanno sempre dichiarate per
+ * ciascun sistema, così non si rischia di usare le credenziali di un sistema
+ * su un altro.
  */
 public class SapConfiguration {
+
+    // --- Identità sistema ---
+    private final String  systemId;
+    private final String  systemName;
+    private final boolean productive;
 
     // --- SAP ---
     private final String baseUrl;
@@ -47,70 +65,79 @@ public class SapConfiguration {
      */
     private final String viewModeAfterUpdate;
 
-    private static final String CONFIG_FILE = "config.properties";
+    // Supporto lookup
+    private final Properties props;
+    private final String     sysPrefix;   // "sap.system.<ID>." oppure null in legacy
+    private final boolean    legacyMode;
 
-    public SapConfiguration() {
-        Properties props = loadProperties();
+    /** Usare {@link SapSystemRegistry#createConfiguration(String)}. */
+    SapConfiguration(Properties props, SapSystemInfo info, boolean legacyMode) {
+        this.props      = props;
+        this.legacyMode = legacyMode;
+        this.sysPrefix  = legacyMode ? null : "sap.system." + info.getId() + ".";
 
-        // SAP
-        this.baseUrl  = props.getProperty("sap.baseUrl");
-        this.username = props.getProperty("sap.username");
-        this.password = props.getProperty("sap.password");
-        this.client   = props.getProperty("sap.client");
+        this.systemId   = info.getId();
+        this.systemName = info.getName();
+        this.productive = info.isProductive();
+
+        // SAP — baseUrl/username/password senza fallback in multi-sistema
+        this.baseUrl  = strict("sap.baseUrl");
+        this.username = strict("sap.username");
+        this.password = strict("sap.password");
+        this.client   = get("sap.client", null);
 
         // URL ordini (con default nel caso mancassero)
-        this.urlVa03  = props.getProperty("sap.url.va03",
-                            "/sap/bc/ui2/flp#SalesOrder-manage?SalesOrder=");
-        this.urlFiori = props.getProperty("sap.url.fiori",
-                            "/sap/bc/ui2/flp#SalesOrder-displayFactSheet?SalesOrder=");
+        this.urlVa03  = get("sap.url.va03",  "/sap/bc/ui2/flp#SalesOrder-manage?SalesOrder=");
+        this.urlFiori = get("sap.url.fiori", "/sap/bc/ui2/flp#SalesOrder-displayFactSheet?SalesOrder=");
 
         // Normalizzazione numerazione OdV
-        this.odvVirtualPrefix = props.getProperty("odv.virtual.prefix", "").trim();
-        String offsetStr = props.getProperty("odv.virtual.offset", "0").trim();
+        this.odvVirtualPrefix = get("odv.virtual.prefix", "").trim();
+        String offsetStr = get("odv.virtual.offset", "0").trim();
         this.odvVirtualOffset = offsetStr.isEmpty() ? 0L : Long.parseLong(offsetStr);
 
         // Cartella log stampa
-        this.logPrintFolder = props.getProperty("log.printFolder", "logprint");
+        this.logPrintFolder = get("log.printFolder", "logprint");
 
         // Foglio Excel
-        this.sheetName = props.getProperty("excel.sheetName", "Export");
+        this.sheetName = get("excel.sheetName", "Export");
 
         // Colonne Excel
-        this.colOrdine        = props.getProperty("excel.col.ordine",        "Ordine");
-        this.colPosizione     = props.getProperty("excel.col.posizione",     "Pos.");
-        this.colSchedulazione = props.getProperty("excel.col.schedulazione", "Sch.");
-        this.colMateriale     = props.getProperty("excel.col.materiale",     "Materiale");
-        this.colMaterialeText = props.getProperty("excel.col.materialeText", "Text");
-        this.colQuantita      = props.getProperty("excel.col.quantita",      "Qtà");
-        this.colDataProd      = props.getProperty("excel.col.dataProd",      "Data prod.");
+        this.colOrdine        = get("excel.col.ordine",        "Ordine");
+        this.colPosizione     = get("excel.col.posizione",     "Pos.");
+        this.colSchedulazione = get("excel.col.schedulazione", "Sch.");
+        this.colMateriale     = get("excel.col.materiale",     "Materiale");
+        this.colMaterialeText = get("excel.col.materialeText", "Text");
+        this.colQuantita      = get("excel.col.quantita",      "Qtà");
+        this.colDataProd      = get("excel.col.dataProd",      "Data prod.");
 
         // Modalità visualizzazione post-aggiornamento (default: sintetico)
-        this.viewModeAfterUpdate = props.getProperty(
-                "ui.viewMode.afterUpdate", "sintetico").trim().toLowerCase();
+        this.viewModeAfterUpdate = get("ui.viewMode.afterUpdate", "sintetico").trim().toLowerCase();
 
         validateSapConfig();
     }
 
     // -------------------------------------------------------
-    // CARICAMENTO PROPERTIES
+    // LOOKUP PROPERTY (specifica di sistema → globale → default)
     // -------------------------------------------------------
 
-    private Properties loadProperties() {
-        Properties props = new Properties();
-        try (InputStream is = getClass().getClassLoader()
-                                        .getResourceAsStream(CONFIG_FILE)) {
-            if (is == null) {
-                throw new IllegalStateException(
-                    "File di configurazione non trovato nel classpath: "
-                    + CONFIG_FILE
-                    + " — verificare che sia in src/main/resources/");
-            }
-            props.load(is);
-        } catch (IOException e) {
-            throw new IllegalStateException(
-                "Errore nella lettura di " + CONFIG_FILE + ": " + e.getMessage(), e);
+    /** "sap.baseUrl" → "sap.system.DEV.baseUrl"; "odv.x" → "sap.system.DEV.odv.x" */
+    private String systemKey(String globalKey) {
+        String k = globalKey.startsWith("sap.") ? globalKey.substring(4) : globalKey;
+        return sysPrefix + k;
+    }
+
+    private String get(String globalKey, String def) {
+        if (!legacyMode) {
+            String v = props.getProperty(systemKey(globalKey));
+            if (v != null) return v.trim();
         }
-        return props;
+        String v = props.getProperty(globalKey);
+        return v != null ? v.trim() : def;
+    }
+
+    private String strict(String globalKey) {
+        String v = legacyMode ? props.getProperty(globalKey) : props.getProperty(systemKey(globalKey));
+        return v != null ? v.trim() : null;
     }
 
     // -------------------------------------------------------
@@ -125,15 +152,30 @@ public class SapConfiguration {
 
         if (baseUrl.endsWith("/")) {
             throw new IllegalStateException(
-                "sap.baseUrl non deve terminare con '/': " + baseUrl);
+                "[" + systemId + "] baseUrl non deve terminare con '/': " + baseUrl);
         }
     }
 
     private void validateRequired(String key, String value) {
         if (value == null || value.isBlank()) {
+            String shown = legacyMode ? key : systemKey(key);
             throw new IllegalStateException(
-                "Proprietà obbligatoria mancante in " + CONFIG_FILE + ": " + key);
+                "Proprietà obbligatoria mancante per il sistema " + systemId + ": " + shown);
         }
+    }
+
+    // -------------------------------------------------------
+    // GETTER — Identità sistema
+    // -------------------------------------------------------
+
+    public String  getSystemId()   { return systemId; }
+    public String  getSystemName() { return systemName; }
+    public boolean isProductive()  { return productive; }
+    public String  getHost()       { return SapSystemRegistry.hostOf(baseUrl); }
+
+    /** Es. "TEST · LAMPLAST Sviluppo (my434383.s4hana.cloud.sap)" */
+    public String getSystemLabel() {
+        return (productive ? "PRODUZIONE" : "TEST") + " · " + systemName + " (" + getHost() + ")";
     }
 
     // -------------------------------------------------------

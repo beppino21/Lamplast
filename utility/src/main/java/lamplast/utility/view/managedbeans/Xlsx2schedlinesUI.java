@@ -11,14 +11,19 @@ import org.eclnt.jsfserver.base.faces.event.ActionEvent;
 import org.eclnt.jsfserver.defaultscreens.BlockerInfo;
 import org.eclnt.jsfserver.defaultscreens.OKPopup;
 import org.eclnt.jsfserver.defaultscreens.Statusbar;
+import org.eclnt.jsfserver.defaultscreens.YESNOPopup;
 import org.eclnt.jsfserver.elements.events.BaseActionEventUpload;
 import org.eclnt.jsfserver.elements.impl.FIXGRIDItem;
 import org.eclnt.jsfserver.elements.impl.FIXGRIDListBinding;
+import org.eclnt.jsfserver.elements.util.Trigger;
+import org.eclnt.jsfserver.elements.util.ValidValuesBinding;
 import org.eclnt.jsfserver.pagebean.PageBean;
 import org.eclnt.jsfserver.polling.LongOperationWithObserverPopup;
 import org.eclnt.util.log.IObserver;
 
 import lamplast.utility.config.SapConfiguration;
+import lamplast.utility.config.SapSystemRegistry;
+import lamplast.utility.config.SapSystemRegistry.SapSystemInfo;
 import lamplast.utility.model.ScheduleLineData;
 import lamplast.utility.service.ExcelParser;
 import lamplast.utility.service.SapResponse;
@@ -56,9 +61,42 @@ public class Xlsx2schedlinesUI extends PageBean implements Serializable {
     // SERVIZI
     // =========================
 
-    private SapConfiguration       sapConfig;
+    private SapSystemRegistry       sapRegistry;
+    private SapConfiguration        sapConfig;
     private SapScheduleLineService  sapService;
     private ExcelParser             excelParser;
+
+    // =========================
+    // SELEZIONE SISTEMA SAP
+    // =========================
+
+    private final ValidValuesBinding m_systemVVB = new ValidValuesBinding();
+    private String                   m_selectedSystemId;
+
+    // =========================
+    // PREFERENZA UTENTE (local storage del browser)
+    // =========================
+
+    /**
+     * Sistema "fissato" dall'utente, salvato nel local storage del browser
+     * tramite il componente CLIENTLOCALSTORAGE. Su Cloud Foundry il disco
+     * del container non è persistente: il browser sì. La preferenza vale
+     * quindi per quel browser/PC, sopravvive a restart e redeploy e ha
+     * precedenza su sap.system.default di config.properties.
+     */
+    private String  m_preferredSystemId;
+    /** La preferenza letta dal browser viene applicata una sola volta, all'apertura. */
+    private boolean m_preferenceStartupDone = false;
+    /** Forza un roundtrip all'avvio, così il valore del local storage arriva subito al server. */
+    private final Trigger m_startupTrigger  = new Trigger();
+
+    // Colori barra di sistema
+    private static final String COLOR_TEST_BG   = "#D50000";   // rosso acceso
+    private static final String COLOR_TEST_FG   = "#FFFFFF";
+    private static final String COLOR_TEST_BODY = "top:6;bottom:6;left:6;right:6;color:#D50000";
+    private static final String COLOR_PROD_BG   = "#1B5E20";   // verde scuro
+    private static final String COLOR_PROD_FG   = "#FFFFFF";
+    private static final String COLOR_NONE_BG   = "#616161";   // grigio: nessun sistema valido
 
     // =========================
     // DATI UI
@@ -208,26 +246,127 @@ public class Xlsx2schedlinesUI extends PageBean implements Serializable {
 
     public Xlsx2schedlinesUI() {
         try {
-            this.sapConfig  = new SapConfiguration();
-            this.sapService = new SapScheduleLineService(sapConfig);
+            this.sapRegistry = new SapSystemRegistry();
+            for (SapSystemInfo si : sapRegistry.getSystems()) {
+                m_systemVVB.addValidValue(si.getId(), si.getComboText());
+            }
+            System.out.println("[Xlsx2schedlines] Configurazione letta da " + sapRegistry.getSource()
+                + " — sistemi: " + sapRegistry.getSystems().size());
 
-            m_sheetName         = sapConfig.getSheetName();
-            m_lblOrdine         = sapConfig.getColOrdine();
-            m_lblPosizione      = sapConfig.getColPosizione();
-            m_lblSchedulazione  = sapConfig.getColSchedulazione();
-            m_lblMateriale      = sapConfig.getColMateriale();
-            m_lblMaterialeText  = sapConfig.getColMaterialeText();
-            m_lblQuantita       = sapConfig.getColQuantita();
-            m_lblDataProd       = sapConfig.getColDataProd();
-            m_viewModeSintetico = sapConfig.isViewModeSinteticoDefault();
+            String err = activateSystem(sapRegistry.getDefaultSystemId());
+            if (err != null) {
+                Statusbar.outputAlert("Sistema di default non utilizzabile: " + err
+                    + " — selezionare un altro sistema");
+            }
 
         } catch (Exception e) {
-            m_logText = "ERRORE CONFIGURAZIONE: " + e.getMessage()
-                      + " — verificare che config.properties sia in src/main/resources/";
-            Statusbar.outputAlert(m_logText);
+            String msg = "ERRORE CONFIGURAZIONE: " + e.getMessage()
+                       + " — verificare config.properties";
+            System.out.println("[Xlsx2schedlines] " + msg);
+            Statusbar.outputAlert(msg);
         }
 
         m_logText = "Nuova sessione";
+        m_startupTrigger.trigger();
+    }
+
+    /**
+     * Attiva il sistema indicato: crea configurazione e servizio dedicati
+     * (il servizio ha una cache ordine→variante API che NON deve essere
+     * condivisa tra sistemi diversi) e ricarica le label Excel, che possono
+     * essere ridefinite per singolo sistema.
+     *
+     * @return null se ok, altrimenti il messaggio d'errore (stato invariato)
+     */
+    private String activateSystem(String systemId) {
+        try {
+            SapConfiguration       cfg = sapRegistry.createConfiguration(systemId);
+            SapScheduleLineService svc = new SapScheduleLineService(cfg);
+
+            this.sapConfig          = cfg;
+            this.sapService         = svc;
+            this.m_selectedSystemId = systemId;
+
+            m_sheetName         = cfg.getSheetName();
+            m_lblOrdine         = cfg.getColOrdine();
+            m_lblPosizione      = cfg.getColPosizione();
+            m_lblSchedulazione  = cfg.getColSchedulazione();
+            m_lblMateriale      = cfg.getColMateriale();
+            m_lblMaterialeText  = cfg.getColMaterialeText();
+            m_lblQuantita       = cfg.getColQuantita();
+            m_lblDataProd       = cfg.getColDataProd();
+            m_viewModeSintetico = cfg.isViewModeSinteticoDefault();
+
+            System.out.println("[Xlsx2schedlines] Sistema attivo: " + cfg.getSystemLabel());
+            return null;
+        } catch (Exception e) {
+            System.out.println("[Xlsx2schedlines] Attivazione sistema " + systemId + " fallita: " + e.getMessage());
+            return e.getMessage();
+        }
+    }
+
+    /**
+     * Cambio sistema da combo. Bloccato durante un'elaborazione. Se un file
+     * è già caricato:
+     *  - se l'aggiornamento è già stato eseguito → reset completo (va ricaricato il file);
+     *  - altrimenti si mantengono le righe ma si azzerano gli esiti del dry-run,
+     *    che erano riferiti al sistema precedente.
+     */
+    private void changeSystem(String newId) {
+        if (newId == null || newId.equals(m_selectedSystemId)) return;
+
+        if (m_statoElab == StatoElab.IN_CORSO) {
+            OKPopup.createInstance("Cambio sistema non consentito",
+                "Elaborazione in corso sul sistema " + sapConfig.getSystemName()
+                + " — attendere il completamento prima di cambiare sistema.");
+            return;
+        }
+
+        String oldLabel = sapConfig != null ? sapConfig.getSystemLabel() : "—";
+        String err      = activateSystem(newId);
+        if (err != null) {
+            OKPopup.createInstance("Sistema non utilizzabile",
+                "Impossibile attivare il sistema " + newId + ":\n\n" + err
+                + "\n\nResta attivo: " + oldLabel);
+            return;
+        }
+
+        // Link agli ordini puntavano al sistema precedente
+        m_salesOrderNumberVA03  = "";
+        m_salesOrderNumberFiori = "";
+        m_enableVA03            = false;
+        m_enableFioriVA03       = false;
+
+        String note;
+        if (m_elaborazioneFatta) {
+            allItems.clear();
+            m_gridJSONdata.getItems().clear();
+            scheduleLines   = null;
+            m_fileName      = null;
+            m_logText       = "Nuova sessione";
+            note = " — griglia azzerata: ricaricare il file Excel";
+        } else if (scheduleLines != null && !scheduleLines.isEmpty()) {
+            for (ScheduleLineData d : scheduleLines) {
+                d.setDryRunResult(null);
+                d.setProcessingResult(null);
+                d.setErrorMessage(null);
+                d.setCreatedScheduleLine(null);
+            }
+            applyViewFilter();
+            note = " — esiti del dry-run azzerati: rieseguire la verifica";
+        } else {
+            note = "";
+        }
+        m_dryRunDone        = false;
+        m_elaborazioneFatta = false;
+        m_statoElab         = StatoElab.IDLE;
+
+        System.out.println("[Xlsx2schedlines] CAMBIO SISTEMA: " + oldLabel + " → " + sapConfig.getSystemLabel());
+        if (sapConfig.isProductive()) {
+            Statusbar.outputWarning("Connesso a PRODUZIONE: " + sapConfig.getSystemName() + note);
+        } else {
+            Statusbar.outputAlert("Connesso a sistema di TEST: " + sapConfig.getSystemName() + note);
+        }
     }
 
     // =========================
@@ -309,15 +448,24 @@ public class Xlsx2schedlinesUI extends PageBean implements Serializable {
             return;
         }
 
+        if (sapService == null) {
+            OKPopup.createInstance("", "Nessun sistema SAP attivo — selezionare un sistema valido.");
+            return;
+        }
+
         final List<ScheduleLineData>    lines  = scheduleLines;
         final List<GridJSONdataItem>    items  = new ArrayList<>(allItems);
         final int                       totale = lines.size();
+        final SapScheduleLineService    svc    = sapService;   // sistema fissato per tutta l'operazione
+        final String                    sysLbl = sapConfig.getSystemLabel();
 
-        System.out.println("[Xlsx2schedlines] DRY-RUN avviato — file: " + m_fileName
+        System.out.println("[Xlsx2schedlines] DRY-RUN avviato — sistema: " + sysLbl
+            + " — file: " + m_fileName
             + " — righe: " + totale
             + " — " + LocalDateTime.now().format(FMT_TS));
 
-        final IObserver observer = LongOperationWithObserverPopup.prepare("Verifica preventiva (Dry-run)");
+        final IObserver observer = LongOperationWithObserverPopup.prepare(
+            "Verifica preventiva (Dry-run) — " + sysLbl);
 
         Runnable longOperation = new Runnable() {
             public void run() {
@@ -329,7 +477,7 @@ public class Xlsx2schedlinesUI extends PageBean implements Serializable {
                 try {
                     java.util.List<String> orderNumbers = new ArrayList<>();
                     for (ScheduleLineData d : lines) orderNumbers.add(d.getOrderNumber());
-                    sapService.resolveOrderVariants(orderNumbers, msg -> {
+                    svc.resolveOrderVariants(orderNumbers, msg -> {
                         observer.addMessage(msg);
                         System.out.println("[Xlsx2schedlines] " + msg);
                     });
@@ -344,7 +492,7 @@ public class Xlsx2schedlinesUI extends PageBean implements Serializable {
                     int              rigaExcel = items.get(i).getRowIndex();
 
                     try {
-                        SapDryRunResult result    = sapService.dryRun(data);
+                        SapDryRunResult result    = svc.dryRun(data);
                         String          dettaglio = result.getDettaglio();
 
                         if ("NESSUNA_MODIFICA".equals(dettaglio)) {
@@ -463,9 +611,16 @@ public class Xlsx2schedlinesUI extends PageBean implements Serializable {
             }
         }
 
+        if (sapService == null) {
+            OKPopup.createInstance("", "Nessun sistema SAP attivo — selezionare un sistema valido.");
+            return;
+        }
+
         final List<ScheduleLineData> lines  = scheduleLines;
         final List<GridJSONdataItem> items  = new ArrayList<>(itemsInGriglia);
         final int                    totale = lines.size();
+        final SapScheduleLineService svc    = sapService;   // sistema fissato per tutta l'operazione
+        final String                 sysLbl = sapConfig.getSystemLabel();
 
         // Inizializza stato elaborazione
         m_statoElab        = StatoElab.IN_CORSO;
@@ -478,17 +633,20 @@ public class Xlsx2schedlinesUI extends PageBean implements Serializable {
         m_elabFine         = null;
         m_pendingLog       = "";
 
-        System.out.println("[Xlsx2schedlines] ELABORAZIONE avviata — file: " + m_fileName
+        System.out.println("[Xlsx2schedlines] ELABORAZIONE avviata — sistema: " + sysLbl
+            + " — file: " + m_fileName
             + " — righe: " + totale
             + " — " + m_elabInizio.format(FMT_TS));
 
-        final IObserver observer = LongOperationWithObserverPopup.prepare("Aggiornamento Schedule Lines SAP");
+        final IObserver observer = LongOperationWithObserverPopup.prepare(
+            "Aggiornamento Schedule Lines SAP — " + sysLbl);
 
         Runnable longOperation = new Runnable() {
             public void run() {
 
                 StringBuilder log = new StringBuilder();
                 log.append("Inizio elaborazione: ").append(m_elabInizio.format(FMT_TS)).append("\n");
+                log.append("Sistema SAP: ").append(sysLbl).append("\n");
                 log.append("File: ").append(m_fileName).append(" — ").append(totale).append(" righe\n");
                 log.append("=====================\n\n");
 
@@ -552,7 +710,7 @@ public class Xlsx2schedlinesUI extends PageBean implements Serializable {
 
                         // --- Chiamata SAP ---
                         String      azione   = item.getAzione();
-                        SapResponse response = sapService.updateScheduleLine(data);
+                        SapResponse response = svc.updateScheduleLine(data);
 
                         if (response.isSuccess()) {
                             if (response.isFrozen()) {
@@ -770,6 +928,158 @@ public class Xlsx2schedlinesUI extends PageBean implements Serializable {
                                 +  Character.digit(hex.charAt(i + 1), 16));
         return data;
     }
+
+    // =========================
+    // PREFERENZA UTENTE — sistema predefinito
+    // =========================
+
+    /** Roundtrip di avvio: serve solo a far arrivare il valore del local storage. */
+    public void onStartupRoundtrip(ActionEvent event) {
+        m_preferenceStartupDone = true;   // se il browser non aveva nulla, non arriverà più nulla
+    }
+
+    public String getPreferredSystemId() { return m_preferredSystemId; }
+
+    /**
+     * Chiamato da CLIENTLOCALSTORAGE quando il browser comunica il valore
+     * salvato. All'avvio la preferenza viene applicata, ma solo se l'utente
+     * non ha già iniziato a lavorare.
+     */
+    public void setPreferredSystemId(String v) {
+        String id = (v == null || v.isBlank()) ? null : v.trim();
+        m_preferredSystemId = id;
+
+        if (m_preferenceStartupDone) return;
+        m_preferenceStartupDone = true;
+
+        if (id == null || sapRegistry == null || id.equals(m_selectedSystemId)) return;
+        if (sapRegistry.getSystem(id) == null) {
+            Statusbar.outputWarning("Il sistema predefinito salvato in questo browser (" + id
+                + ") non esiste più in config.properties — preferenza ignorata");
+            return;
+        }
+        if (m_statoElab == StatoElab.IN_CORSO || scheduleLines != null) return;
+
+        String err = activateSystem(id);
+        if (err != null) {
+            Statusbar.outputWarning("Sistema predefinito " + id + " non utilizzabile: " + err);
+            return;
+        }
+        if (sapConfig.isProductive()) {
+            Statusbar.outputWarning("Aperto su PRODUZIONE (" + sapConfig.getSystemName()
+                + ") — sistema predefinito di questo browser");
+        } else {
+            Statusbar.outputMessage("Aperto su " + sapConfig.getSystemName()
+                + " — sistema predefinito di questo browser");
+        }
+    }
+
+    /** Fissa il sistema attualmente selezionato come predefinito per questo browser. */
+    public void onSavePreferredSystem(ActionEvent event) {
+        if (sapConfig == null) {
+            OKPopup.createInstance("", "Nessun sistema attivo da salvare.");
+            return;
+        }
+        final String id   = sapConfig.getSystemId();
+        final String name = sapConfig.getSystemName();
+
+        if (sapConfig.isProductive()) {
+            YESNOPopup.createInstance("Sistema predefinito: PRODUZIONE",
+                "Stai per fissare come predefinito il sistema di PRODUZIONE \"" + name + "\".\n\n"
+                + "Da questo browser l'applicazione si aprirà sempre collegata alla produzione.\n\n"
+                + "Confermi?",
+                new YESNOPopup.IYesNoListener() {
+                    public void reactOnYes() { storePreferredSystem(id, name); }
+                    public void reactOnNo()  { Statusbar.outputMessage("Operazione annullata"); }
+                });
+            return;
+        }
+        storePreferredSystem(id, name);
+    }
+
+    private void storePreferredSystem(String id, String name) {
+        m_preferredSystemId     = id;     // CLIENTLOCALSTORAGE lo scrive nel browser
+        m_preferenceStartupDone = true;
+        Statusbar.outputSuccess("Sistema predefinito per questo browser: " + name);
+    }
+
+    /** Rimuove la preferenza: si torna a sap.system.default di config.properties. */
+    public void onClearPreferredSystem(ActionEvent event) {
+        m_preferredSystemId     = "";     // stringa vuota = nessuna preferenza
+        m_preferenceStartupDone = true;
+        Statusbar.outputMessage("Preferenza rimossa — all'apertura verrà usato il default di config.properties");
+    }
+
+    public boolean isPreferredSystemSet() {
+        return m_preferredSystemId != null && !m_preferredSystemId.isBlank();
+    }
+
+    public String getPreferredSystemText() {
+        String def = sapRegistry != null ? sapRegistry.getDefaultSystemId() : "?";
+        SapSystemInfo defInfo = sapRegistry != null ? sapRegistry.getSystem(def) : null;
+        String defTxt = defInfo != null ? defInfo.getComboText() : def;
+        if (!isPreferredSystemSet()) {
+            return "Nessuna preferenza salvata — all'apertura si usa il default di config.properties: " + defTxt;
+        }
+        SapSystemInfo p = sapRegistry != null ? sapRegistry.getSystem(m_preferredSystemId) : null;
+        return "All'apertura si usa: " + (p != null ? p.getComboText() : m_preferredSystemId + " (non più configurato)");
+    }
+
+    public Trigger getStartupTrigger() { return m_startupTrigger; }
+
+    // =========================
+    // BARRA SISTEMA SAP (header)
+    // =========================
+
+    public boolean isSystemProductive() { return sapConfig != null && sapConfig.isProductive(); }
+
+    public String getSystemBarBackground() {
+        if (sapConfig == null) return COLOR_NONE_BG;
+        return sapConfig.isProductive() ? COLOR_PROD_BG : COLOR_TEST_BG;
+    }
+
+    public String getSystemBarForeground() {
+        return (sapConfig != null && sapConfig.isProductive()) ? COLOR_PROD_FG : COLOR_TEST_FG;
+    }
+
+    /** Font: molto grande per i sistemi di test, normale per la produzione. */
+    public String getSystemBarFont() {
+        return (sapConfig != null && sapConfig.isProductive()) ? "size:14;weight:bold" : "size:22;weight:bold";
+    }
+
+    public String getSystemBarText() {
+        if (sapConfig == null) return "⛔ NESSUN SISTEMA SAP ATTIVO — verificare config.properties";
+        if (sapConfig.isProductive()) {
+            return "● PRODUZIONE — " + sapConfig.getSystemName() + "  [" + sapConfig.getSystemId() + "]";
+        }
+        return "⚠ SISTEMA DI TEST — NON PRODUTTIVO ⚠   " + sapConfig.getSystemName()
+             + "  [" + sapConfig.getSystemId() + "]";
+    }
+
+    public String getSystemBarSubText() {
+        if (sapConfig == null) return "";
+        return sapConfig.getHost() + "  ·  client " + sapConfig.getClient()
+             + "  ·  utente " + sapConfig.getUsername();
+    }
+
+    /** Bordo rosso spesso attorno all'area dati quando non si è in produzione. */
+    public String getBodyBorder() {
+        return (sapConfig != null && sapConfig.isProductive()) ? "" : COLOR_TEST_BODY;
+    }
+
+    public String getPageTitle() {
+        String base = "Aggiorna schedulazioni OdV da file XLSX/XLS";
+        if (sapConfig == null) return base;
+        return base + (sapConfig.isProductive()
+            ? "  —  PRODUZIONE: " + sapConfig.getSystemName()
+            : "  —  ⚠ TEST: " + sapConfig.getSystemName());
+    }
+
+    public ValidValuesBinding getSystemVVB()      { return m_systemVVB; }
+    public String  getSelectedSystemId()          { return m_selectedSystemId; }
+    public void    setSelectedSystemId(String v)  { changeSystem(v); }
+    /** Combo disabilitata durante l'elaborazione. */
+    public boolean isSystemSelectionEnabled()     { return m_statoElab != StatoElab.IN_CORSO; }
 
     // =========================
     // GETTERS / SETTERS

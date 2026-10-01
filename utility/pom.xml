@@ -29,6 +29,9 @@
 	<properties>
 		<!-- This is the CaptainCasa version to be used. -->
 		<cc.version>20260518	</cc.version>
+		<!-- Encoding esplicito: senza, su Windows si usa Cp1252 e "Qtà" diventa "QtÃ" -->
+		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+		<project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
 	</properties>
 
 	<dependencies>
@@ -100,6 +103,7 @@
 				<version>3.1</version>
 				<configuration>
 					<source>21</source>
+					<encoding>UTF-8</encoding>
 					<target>21</target>
 				</configuration>
 			</plugin>
