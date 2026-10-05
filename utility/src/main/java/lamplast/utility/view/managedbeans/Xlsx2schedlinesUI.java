@@ -282,20 +282,27 @@ public class Xlsx2schedlinesUI extends PageBean implements Serializable {
         try {
             SapConfiguration       cfg = sapRegistry.createConfiguration(systemId);
             SapScheduleLineService svc = new SapScheduleLineService(cfg);
+            SapConfiguration       old = this.sapConfig;
 
             this.sapConfig          = cfg;
             this.sapService         = svc;
             this.m_selectedSystemId = systemId;
 
-            m_sheetName         = cfg.getSheetName();
-            m_lblOrdine         = cfg.getColOrdine();
-            m_lblPosizione      = cfg.getColPosizione();
-            m_lblSchedulazione  = cfg.getColSchedulazione();
-            m_lblMateriale      = cfg.getColMateriale();
-            m_lblMaterialeText  = cfg.getColMaterialeText();
-            m_lblQuantita       = cfg.getColQuantita();
-            m_lblDataProd       = cfg.getColDataProd();
-            m_viewModeSintetico = cfg.isViewModeSinteticoDefault();
+            // Label Excel e modalità vista: si prendono dalla config del nuovo
+            // sistema SOLO se l'utente non le ha modificate (cioè se valgono
+            // ancora quanto previsto dalla config precedente). Le scelte fatte
+            // a mano nella vista "Parametri" sopravvivono al cambio sistema.
+            m_sheetName         = pick(m_sheetName,        old == null ? null : old.getSheetName(),        cfg.getSheetName());
+            m_lblOrdine         = pick(m_lblOrdine,        old == null ? null : old.getColOrdine(),        cfg.getColOrdine());
+            m_lblPosizione      = pick(m_lblPosizione,     old == null ? null : old.getColPosizione(),     cfg.getColPosizione());
+            m_lblSchedulazione  = pick(m_lblSchedulazione, old == null ? null : old.getColSchedulazione(), cfg.getColSchedulazione());
+            m_lblMateriale      = pick(m_lblMateriale,     old == null ? null : old.getColMateriale(),     cfg.getColMateriale());
+            m_lblMaterialeText  = pick(m_lblMaterialeText, old == null ? null : old.getColMaterialeText(), cfg.getColMaterialeText());
+            m_lblQuantita       = pick(m_lblQuantita,      old == null ? null : old.getColQuantita(),      cfg.getColQuantita());
+            m_lblDataProd       = pick(m_lblDataProd,      old == null ? null : old.getColDataProd(),      cfg.getColDataProd());
+            if (old == null || Boolean.valueOf(old.isViewModeSinteticoDefault()).equals(m_viewModeSintetico)) {
+                m_viewModeSintetico = cfg.isViewModeSinteticoDefault();
+            }
 
             System.out.println("[Xlsx2schedlines] Sistema attivo: " + cfg.getSystemLabel());
             return null;
@@ -303,6 +310,12 @@ public class Xlsx2schedlinesUI extends PageBean implements Serializable {
             System.out.println("[Xlsx2schedlines] Attivazione sistema " + systemId + " fallita: " + e.getMessage());
             return e.getMessage();
         }
+    }
+
+    /** Valore dalla nuova config, a meno che l'utente non abbia cambiato quello della config precedente. */
+    private static String pick(String current, String oldDefault, String newDefault) {
+        if (oldDefault == null || current == null || current.equals(oldDefault)) return newDefault;
+        return current;
     }
 
     /**
@@ -322,6 +335,23 @@ public class Xlsx2schedlinesUI extends PageBean implements Serializable {
             return;
         }
 
+        if (m_elaborazioneFatta) {
+            final String target = newId;
+            YESNOPopup.createInstance("Cambio sistema",
+                "Cambiando sistema i risultati dell'elaborazione appena eseguita "
+                + "verranno cancellati dalla griglia.\n\n"
+                + "Se servono, esportarli prima (link \"Export\" sopra la griglia).\n\n"
+                + "Procedere con il cambio sistema?",
+                new YESNOPopup.IYesNoListener() {
+                    public void reactOnYes() { doChangeSystem(target); }
+                    public void reactOnNo()  { Statusbar.outputMessage("Cambio sistema annullato — risultati conservati"); }
+                });
+            return;
+        }
+        doChangeSystem(newId);
+    }
+
+    private void doChangeSystem(String newId) {
         String oldLabel = sapConfig != null ? sapConfig.getSystemLabel() : "—";
         String err      = activateSystem(newId);
         if (err != null) {
@@ -882,6 +912,13 @@ public class Xlsx2schedlinesUI extends PageBean implements Serializable {
         if (m_elaborazioneFatta && Boolean.TRUE.equals(m_viewModeSintetico)) {
             for (GridJSONdataItem item : allItems) {
                 if (item.isSignificativa()) m_gridJSONdata.getItems().add(item);
+            }
+            // Nessuna riga "significativa" (es. solo modifiche andate a buon fine):
+            // invece di una griglia vuota si mostra tutto, così resta esportabile.
+            if (m_gridJSONdata.getItems().isEmpty() && !allItems.isEmpty()) {
+                m_gridJSONdata.getItems().addAll(allItems);
+                Statusbar.outputMessage("Vista sintetica: nessun errore, inserimento o eliminazione"
+                    + " — mostrate tutte le " + allItems.size() + " righe");
             }
         } else {
             m_gridJSONdata.getItems().addAll(allItems);

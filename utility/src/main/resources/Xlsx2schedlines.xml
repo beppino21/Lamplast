@@ -29,9 +29,10 @@
 </t:row>
 </t:pane>
 </t:row>
-<t:rowdistance id="g_69" />
+<t:rowdistance id="g_69" height="25" />
 <t:row id="g_5" />
 <t:rowbodypane id="g_24" >
+<t:rowdistance id="g_46" height="25" />
 <t:row id="g_31" >
 <t:tabbedpane id="g_32" height="100%" width="100%" >
 <t:tabbedpanetab id="g_33" text="Dati da file XLSX" >
@@ -117,7 +118,7 @@
 </t:row>
 <t:row id="g_pref_r3" >
 <t:coldistance id="g_pref_d4" width="10" />
-<t:label id="g_pref_note" stylevariant="ccsmalldesc" text="La scelta è salvata nel browser di questo PC (vale per tutte le sessioni aperte da qui, sopravvive a riavvii e deploy) e ha precedenza su sap.system.default di config.properties." width="100%" />
+<t:label id="g_pref_note" stylevariant="ccsmalldesc" width="100%" text="La scelta è salvata nel browser di questo PC (vale per tutte le sessioni aperte da qui, sopravvive a riavvii e deploy) e ha precedenza su sap.system.default di config.properties." />
 </t:row>
 </t:foldablepane>
 </t:row>
@@ -164,4 +165,4 @@
 </t:row>
 </t:rowbodypane>
 
-</t:layoutdefinition>
+</t:layoutdefinition>
