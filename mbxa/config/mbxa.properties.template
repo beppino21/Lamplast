@@ -1,0 +1,82 @@
+# =====================================================================
+#  MBXA - Stampa DDT trasferimenti tra stabilimenti (mov. 301)
+#  Copiare come  <tomcat>/conf/mbxa.properties  (codifica UTF-8)
+#  oppure indicare il percorso con -Dmbxa.config=... o la variabile MBXA_CONFIG.
+#  Il file viene riletto automaticamente quando cambia.
+# =====================================================================
+
+# ---------------------------------------------------------------------
+#  SAP S/4HANA Cloud (host API, con "-api")
+# ---------------------------------------------------------------------
+sap.baseUrl=https://my434383-api.s4hana.cloud.sap
+
+# Utente di comunicazione dell'arrangement SAP_COM_0108 (API_MATERIAL_DOCUMENT_SRV)
+sap.user=
+sap.password=
+
+# Utente dell'arrangement SAP_COM_0009 (API_PRODUCT_SRV, es. ZFCS_SAP_COM_0009).
+# Se vuoti si usano sap.user / sap.password.
+sap.product.user=
+sap.product.password=
+
+#sap.materialDocument.path=/sap/opu/odata/sap/API_MATERIAL_DOCUMENT_SRV
+#sap.product.path=/sap/opu/odata/sap/API_PRODUCT_SRV
+#sap.timeout.seconds=30
+
+# Lingua delle descrizioni materiale (ISO 2 lettere)
+ddt.lingua=IT
+
+# ---------------------------------------------------------------------
+#  PostgreSQL
+# ---------------------------------------------------------------------
+db.url=jdbc:postgresql://localhost:5432/ddt_trasf?currentSchema=ddt
+db.user=
+db.password=
+
+# ---------------------------------------------------------------------
+#  Numerazione DDT
+#  MANUALE = continuità con i DDT delle consegne: l'operatore inserisce il
+#            numero bolla assegnato da SAP (visibile in MIGO)
+#  INTERNA = serie propria dell'applicazione (prefisso + progressivo per anno)
+#  Il modo va cambiato solo a inizio anno.
+# ---------------------------------------------------------------------
+ddt.numerazione.modo=MANUALE
+
+# Solo modo MANUALE. NESSUNO | AVVISO | BLOCCO
+# Controlla che il numero inserito sia successivo all'ultimo DDT da 301 emesso nell'anno.
+# Con serie condivisa con i DDT di vendita i salti sono normali: si segnala solo il ritorno indietro.
+ddt.numerazione.controllo.sequenza=AVVISO
+
+# Solo modo INTERNA
+ddt.numerazione.tipo=TR
+ddt.numerazione.formato={TIPO}{ANNO}/{PROGRESSIVO:000000}
+
+# ---------------------------------------------------------------------
+#  Elenco dei 301 da acquisire
+# ---------------------------------------------------------------------
+ddt.lista.giorni=30
+ddt.lista.max=300
+
+# ---------------------------------------------------------------------
+#  Stampa
+# ---------------------------------------------------------------------
+# Logo: percorso su disco. Se vuoto si usa la risorsa interna /lamplast/mbxa/pdf/logo.jpg
+#pdf.logo=C:/mbxa/logo_lamplast.jpg
+
+# Righe sotto il logo
+azienda.logo.riga.1=Lamplast s.r.l. di Aldo Redaelli & C.
+azienda.logo.riga.2=Capitale sociale 1.000.000 Eur interamente versato
+
+# Dati aziendali in alto a destra
+azienda.riga.1=Lamplast s.r.l. di Aldo Redaelli & C.
+azienda.riga.2=20833 Giussano (MB) Italia - fraz. Molino Principe
+azienda.riga.3=Tel. 0362 3537.1 Fax 0362 852409
+azienda.riga.4=e-mail: lamplast@lamplast.it
+azienda.riga.5=Sito web: http://www.lamplast.it
+azienda.riga.6=Sede Soc. e legale: Giussano (MB)
+azienda.riga.7=Ufficio Reg. delle imprese di Milano n.
+azienda.riga.8=02660370152 - REA MB-839731
+#azienda.riga.9=C.F./P.IVA IT00736790965
+
+# Alias delle unità di misura in stampa (codice SAP=testo stampato)
+pdf.um.alias=PC=NR,ST=NR,PZ=NR

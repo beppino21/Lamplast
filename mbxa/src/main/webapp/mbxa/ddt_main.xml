@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="utf-8"?>
+<t:layoutdefinition xmlns:t="http://www.CaptainCasa.com/controllibrary/t" xmlns:tpbc="http://www.CaptainCasa.com/controllibrary/tpbc" >
+<t:beanprocessing id="g_1" beanbinding="#{d.DdtMainUI}" />
+<t:rowtitlebar id="g_2" text="DDT trasferimenti tra stabilimenti (movimento 301)" />
+<t:rowbodypane id="g_3" rowdistance="6" >
+  <t:row id="g_4" coldistance="6" >
+    <t:label id="g_5" text="Documento materiale" width="130" />
+    <t:field id="g_6" text="#{d.DdtMainUI.matDoc}" width="110" actionListener="#{d.DdtMainUI.onAcquisisci}" />
+    <t:label id="g_7" text="Anno" width="35" />
+    <t:field id="g_8" text="#{d.DdtMainUI.anno}" width="50" />
+    <t:button id="g_9" actionListener="#{d.DdtMainUI.onAcquisisci}" text="Acquisisci / Apri" width="130+" />
+    <t:coldistance id="g_10" width="30" />
+    <t:label id="g_11" text="N. DDT" width="50" />
+    <t:field id="g_12" text="#{d.DdtMainUI.numeroDdt}" width="100" actionListener="#{d.DdtMainUI.onCercaNumero}" />
+    <t:button id="g_13" actionListener="#{d.DdtMainUI.onCercaNumero}" text="Cerca DDT" width="90+" />
+    <t:coldistance id="g_14" width="100%" />
+    <t:label id="g_15" text="#{d.DdtMainUI.modoNumerazione}" />
+    <t:coldistance id="g_16" width="15" />
+    <t:link id="g_17" actionListener="#{d.DdtMainUI.onAnagrafiche}" text="Anagrafiche..." />
+  </t:row>
+  <t:row id="g_18" >
+    <t:label id="g_19" font="#{d.DdtMainUI.messaggioFont}" text="#{d.DdtMainUI.messaggio}" width="100%" />
+  </t:row>
+
+  <t:row id="g_20" >
+    <t:foldablepane id="g_21" height="58%" rowdistance="5" text="DDT in archivio" width="100%" >
+      <t:row id="g_22" coldistance="6" >
+        <t:label id="g_23" text="Data da" width="55" />
+        <t:calendarfield id="g_24" format="date" value="#{d.DdtMainUI.filtroDa}" width="110" />
+        <t:label id="g_25" text="a" width="15" />
+        <t:calendarfield id="g_26" format="date" value="#{d.DdtMainUI.filtroA}" width="110" />
+        <t:label id="g_27" text="Stato" width="40" />
+        <t:combobox id="g_28" validvaluesbinding="#{d.DdtMainUI.statiVvb}" value="#{d.DdtMainUI.filtroStato}" width="110" />
+        <t:label id="g_29" text="Cerca" width="45" />
+        <t:field id="g_30" text="#{d.DdtMainUI.filtroTesto}" width="180" actionListener="#{d.DdtMainUI.onCerca}" />
+        <t:button id="g_31" actionListener="#{d.DdtMainUI.onCerca}" text="Aggiorna" width="90+" />
+        <t:coldistance id="g_32" width="100%" />
+        <t:button id="g_33" actionListener="#{d.DdtMainUI.onApriSelezionato}" text="Apri DDT" width="100+" />
+      </t:row>
+      <t:row id="g_34" >
+        <t:fixgrid id="g_35" height="100%" objectbinding="#{d.DdtMainUI.gridDdt}" sbvisibleamount="20" selectorcolumn="1" width="100%" nodatatext="(Nessun DDT con i filtri impostati.)" >
+          <t:gridcol id="g_36" sortreference=".{numero}" text="N. DDT" width="90" >
+            <t:label id="g_37" text=".{numero}" />
+          </t:gridcol>
+          <t:gridcol id="g_38" sortreference=".{dataSort}" text="Data DDT" width="90" >
+            <t:label id="g_39" text=".{data}" />
+          </t:gridcol>
+          <t:gridcol id="g_40" sortreference=".{matDoc}" text="Doc. materiale" width="130" >
+            <t:label id="g_41" text=".{matDoc}" />
+          </t:gridcol>
+          <t:gridcol id="g_42" text="Data reg." width="90" >
+            <t:label id="g_43" text=".{dataReg}" />
+          </t:gridcol>
+          <t:gridcol id="g_44" sortreference=".{mittente}" text="Da" width="60" >
+            <t:label id="g_45" text=".{mittente}" />
+          </t:gridcol>
+          <t:gridcol id="g_46" searchenabled="true" sortreference=".{destinatario}" text="Destinatario" width="100%" >
+            <t:label id="g_47" text=".{destinatario}" />
+          </t:gridcol>
+          <t:gridcol id="g_48" sortreference=".{stato}" text="Stato" width="90" >
+            <t:label id="g_49" font=".{statoFont}" text=".{stato}" />
+          </t:gridcol>
+          <t:gridcol id="g_50" text="Vers." width="45" >
+            <t:label id="g_51" align="right" text=".{versione}" />
+          </t:gridcol>
+        </t:fixgrid>
+      </t:row>
+    </t:foldablepane>
+  </t:row>
+
+  <t:row id="g_52" >
+    <t:foldablepane id="g_53" height="100%" rowdistance="5" text="#{d.DdtMainUI.titoloDaAcquisire}" width="100%" >
+      <t:row id="g_54" coldistance="6" >
+        <t:label id="g_55" text="Doppio clic su una riga per acquisire il documento e compilare il DDT." width="100%" />
+        <t:button id="g_56" actionListener="#{d.DdtMainUI.onAggiornaDaAcquisire}" text="Aggiorna da SAP" width="120+" />
+        <t:button id="g_57" actionListener="#{d.DdtMainUI.onAcquisisciSelezionato}" text="Acquisisci" width="100+" />
+      </t:row>
+      <t:row id="g_58" >
+        <t:fixgrid id="g_59" height="100%" objectbinding="#{d.DdtMainUI.gridDaAcquisire}" sbvisibleamount="12" selectorcolumn="1" width="100%" nodatatext="(Nessun movimento 301 da acquisire.)" >
+          <t:gridcol id="g_60" sortreference=".{matDoc}" text="Doc. materiale" width="130" >
+            <t:label id="g_61" text=".{matDoc}" />
+          </t:gridcol>
+          <t:gridcol id="g_62" text="Anno" width="55" >
+            <t:label id="g_63" text=".{anno}" />
+          </t:gridcol>
+          <t:gridcol id="g_64" sortreference=".{dataSort}" text="Data reg." width="90" >
+            <t:label id="g_65" text=".{dataReg}" />
+          </t:gridcol>
+          <t:gridcol id="g_66" sortreference=".{mittente}" text="Da" width="70" >
+            <t:label id="g_67" text=".{mittente}" />
+          </t:gridcol>
+          <t:gridcol id="g_68" sortreference=".{destinatario}" text="A" width="70" >
+            <t:label id="g_69" text=".{destinatario}" />
+          </t:gridcol>
+          <t:gridcol id="g_70" text="Righe" width="55" >
+            <t:label id="g_71" align="right" text=".{righe}" />
+          </t:gridcol>
+          <t:gridcol id="g_72" text="Nota" width="100%" >
+            <t:label id="g_73" text=".{nota}" />
+          </t:gridcol>
+        </t:fixgrid>
+      </t:row>
+    </t:foldablepane>
+  </t:row>
+</t:rowbodypane>
+<t:pageaddons id="g_pa" />
+</t:layoutdefinition>

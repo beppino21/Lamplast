@@ -1,0 +1,146 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+	<groupId>lamplast</groupId>
+	<artifactId>mbxa</artifactId>
+	<packaging>war</packaging>
+	<version>0.0.1</version>
+	<name>mbxa Maven Webapp</name>
+	<url>http://maven.apache.org</url>
+
+	<repositories>
+		<repository>
+			<id>org.eclnt</id>
+			<url>https://www.captaincasa.com/mavenrepository</url>
+		</repository>
+		<!-- Repository for dependent artifacts -->
+		<repository>
+			<id>mvnrepository.com</id>
+			<url>https://mvnrepository.com/repos/central</url>
+		</repository>
+		<repository>
+			<id>org.outerj</id>
+			<url>https://maven.atlassian.com/3rdparty/</url>
+		</repository>
+	</repositories>
+
+
+	<properties>
+		<!-- This is the CaptainCasa version to be used. -->
+		<cc.version>20260331</cc.version>
+		<!-- Allineare openpdf alla versione usata nel progetto del listino
+		(conditionsSD) -->
+		<openpdf.version>2.0.3</openpdf.version>
+		<jackson.version>2.17.0</jackson.version>
+		<postgresql.version>42.7.4</postgresql.version>
+		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+		<project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+	</properties>
+
+	<dependencies>
+		<dependency>
+			<groupId>org.eclnt</groupId>
+			<artifactId>eclntjsfserverRISC_jakarta</artifactId>
+			<version>${cc.version}</version>
+		</dependency>
+		<!-- PDF del DDT (stessa libreria della stampa listino) -->
+		<dependency>
+			<groupId>com.github.librepdf</groupId>
+			<artifactId>openpdf</artifactId>
+			<version>${openpdf.version}</version>
+		</dependency>
+		<!-- JSON: risposte OData e fotografia dei dati stampati (jsonb) -->
+		<dependency>
+			<groupId>com.fasterxml.jackson.core</groupId>
+			<artifactId>jackson-databind</artifactId>
+			<version>${jackson.version}</version>
+		</dependency>
+		<!-- Driver PostgreSQL -->
+		<dependency>
+			<groupId>org.postgresql</groupId>
+			<artifactId>postgresql</artifactId>
+			<version>${postgresql.version}</version>
+		</dependency>
+
+		<!-- API Servlet: fornita da Tomcat a runtime, serve solo per compilare -->
+		<dependency>
+			<groupId>jakarta.servlet</groupId>
+			<artifactId>jakarta.servlet-api</artifactId>
+			<version>5.0.0</version>
+			<scope>provided</scope>
+		</dependency>
+
+		<!-- optional: addon pacakges -->
+		<!--
+		<dependency>
+		    <groupId>org.eclnt</groupId>
+		    <artifactId>eclntccee_jakarta</artifactId>
+		    <version>${cc.version}</version>
+		</dependency>        
+		<dependency>
+		    <groupId>org.eclnt</groupId>
+		    <artifactId>eclntpbc_jakarta</artifactId>
+		    <version>${cc.version}</version>
+		</dependency>        
+		-->
+	</dependencies>
+
+	<build>
+		<finalName>mbxa</finalName>
+		<plugins>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-war-plugin</artifactId>
+				<version>3.3.1</version>
+			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-compiler-plugin</artifactId>
+				<version>3.11.0</version>
+				<configuration>
+					<release>17</release>
+				</configuration>
+			</plugin>
+			<!-- ************************************************************** -->
+			<!-- OPTIONAL COPYING OF TOOLSET                                    -->
+			<!-- Copies the tools for the version into /cctoolset-directory of  -->
+			<!-- project. You may then directly start it, e.g. by batch file:   -->
+			<!-- /projectdirectory                                              -->
+			<!--   /cctoolset                                                   -->
+			<!--     eclnteditor_springboot.war                                 -->
+			<!--     start.bat                                                  -->
+			<!-- In start.bat:                                                  -->
+			<!-- java -jar eclnteditor_springboot.war
+			configDir=../cctoolsetconfig -->
+			<!-- ************************************************************** -->
+			<!--
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-dependency-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>cctoolset-copy</id>
+                        <phase>package</phase>
+                        <goals><goal>copy</goal></goals>
+                        <configuration>
+                            <artifactItems>
+                                <artifactItem>
+                                    <groupId>org.eclnt</groupId>
+                                    <artifactId>eclnteditor_springboot</artifactId>
+                                    <version>${cc.version}</version>
+                                    <type>war</type>
+                                    <overWrite>true</overWrite>
+                                    <outputDirectory>${project.basedir}/cctoolset</outputDirectory>
+                                    <destFileName>eclnteditor_springboot_jakarta.war</destFileName>
+                                </artifactItem>
+                            </artifactItems>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            -->
+		</plugins>
+	</build>
+
+</project>

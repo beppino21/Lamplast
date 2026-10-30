@@ -1,0 +1,244 @@
+<?xml version="1.0" encoding="utf-8"?>
+<t:layoutdefinition xmlns:t="http://www.CaptainCasa.com/controllibrary/t" xmlns:tpbc="http://www.CaptainCasa.com/controllibrary/tpbc" >
+<t:beanprocessing id="g_1" >
+  <t:jshowurl id="g_170" target="mbxa_ddt" trigger="#{d.DdtDettaglioUI.printTrigger}" url="#{d.DdtDettaglioUI.printUrl}" usedesktop="true" />
+</t:beanprocessing>
+<t:rowbodypane id="g_2" rowdistance="4" >
+  <t:row id="g_3" >
+    <t:label id="g_4" font="#{d.DdtDettaglioUI.statoFont}" text="#{d.DdtDettaglioUI.statoTesto}" width="100%" />
+  </t:row>
+  <t:row id="g_5" >
+    <t:label id="g_6" font="#{d.DdtDettaglioUI.messaggioFont}" text="#{d.DdtDettaglioUI.messaggio}" width="100%" />
+  </t:row>
+  <t:row id="g_7" rendered="#{d.DdtDettaglioUI.stornoRilevato}" coldistance="6" >
+    <t:label id="g_8" font="weight:bold;color:#B71C1C" text="Documento materiale stornato in SAP." width="100%" />
+    <t:button id="g_9" actionListener="#{d.DdtDettaglioUI.onAnnullaPerStorno}" text="Annulla DDT per storno" width="170+" />
+  </t:row>
+
+  <t:row id="g_10" >
+    <t:pane id="g_11" height="100%" width="60%" >
+      <t:row id="g_12" >
+        <t:scrollpane id="g_13" height="100%" width="100%" >
+
+          <t:row id="g_14" >
+            <t:foldablepane id="g_15" rowdistance="3" text="Documento" width="100%" >
+              <t:row id="g_16" coldistance="6" >
+                <t:label id="g_17" text="Doc. materiale" width="110" />
+                <t:label id="g_18" text="#{d.DdtDettaglioUI.matDocChiave}" width="140" />
+                <t:label id="g_19" text="Data reg." width="65" />
+                <t:label id="g_20" text="#{d.DdtDettaglioUI.dataRegistrazione}" width="90" />
+              </t:row>
+              <t:row id="g_21" coldistance="6" >
+                <t:label id="g_22" text="#{d.DdtDettaglioUI.numeroEtichetta}" width="250" />
+                <t:field id="g_23" enabled="#{d.DdtDettaglioUI.numeroEditabile}" text="#{d.DdtDettaglioUI.ddtNumero}" width="140" />
+              </t:row>
+              <t:row id="g_24" coldistance="6" >
+                <t:label id="g_25" text="Data DDT" width="250" />
+                <t:calendarfield id="g_26" enabled="#{d.DdtDettaglioUI.bozza}" format="date" value="#{d.DdtDettaglioUI.ddtData}" width="120" />
+              </t:row>
+            </t:foldablepane>
+          </t:row>
+
+          <t:row id="g_27" >
+            <t:foldablepane id="g_28" rowdistance="3" text="Destinatario e partenza" width="100%" >
+              <t:row id="g_29" coldistance="6" >
+                <t:label id="g_30" text="Destinatario" width="110" />
+                <t:label id="g_31" text="#{d.DdtDettaglioUI.ddt.destCodice}" width="50" />
+                <t:field id="g_32" enabled="#{d.DdtDettaglioUI.bozza}" text="#{d.DdtDettaglioUI.ddt.destRagioneSociale}" width="100%" />
+              </t:row>
+              <t:row id="g_33" coldistance="6" >
+                <t:label id="g_34" text="Indirizzo" width="110" />
+                <t:field id="g_35" enabled="#{d.DdtDettaglioUI.bozza}" text="#{d.DdtDettaglioUI.ddt.destIndirizzo}" width="100%" />
+              </t:row>
+              <t:row id="g_36" coldistance="6" >
+                <t:label id="g_37" text="CAP / Città / Prov." width="110" />
+                <t:field id="g_38" enabled="#{d.DdtDettaglioUI.bozza}" text="#{d.DdtDettaglioUI.ddt.destCap}" width="60" />
+                <t:field id="g_39" enabled="#{d.DdtDettaglioUI.bozza}" text="#{d.DdtDettaglioUI.ddt.destCitta}" width="100%" />
+                <t:field id="g_40" enabled="#{d.DdtDettaglioUI.bozza}" text="#{d.DdtDettaglioUI.ddt.destProvincia}" width="35" />
+                <t:field id="g_41" enabled="#{d.DdtDettaglioUI.bozza}" text="#{d.DdtDettaglioUI.ddt.destNazione}" width="35" />
+              </t:row>
+              <t:row id="g_42" coldistance="6" >
+                <t:label id="g_43" text="P.IVA / C.F." width="110" />
+                <t:field id="g_44" enabled="#{d.DdtDettaglioUI.bozza}" text="#{d.DdtDettaglioUI.ddt.destPartitaIva}" width="160" />
+              </t:row>
+              <t:rowline id="g_45" />
+              <t:row id="g_46" coldistance="6" >
+                <t:label id="g_47" text="Partenza" width="110" />
+                <t:label id="g_48" text="#{d.DdtDettaglioUI.ddt.mittCodice}" width="50" />
+                <t:field id="g_49" enabled="#{d.DdtDettaglioUI.bozza}" text="#{d.DdtDettaglioUI.ddt.mittRagioneSociale}" width="100%" />
+              </t:row>
+              <t:row id="g_50" coldistance="6" >
+                <t:label id="g_51" text="Indirizzo" width="110" />
+                <t:field id="g_52" enabled="#{d.DdtDettaglioUI.bozza}" text="#{d.DdtDettaglioUI.ddt.mittIndirizzo}" width="100%" />
+              </t:row>
+              <t:row id="g_53" coldistance="6" >
+                <t:label id="g_54" text="CAP / Città / Prov." width="110" />
+                <t:field id="g_55" enabled="#{d.DdtDettaglioUI.bozza}" text="#{d.DdtDettaglioUI.ddt.mittCap}" width="60" />
+                <t:field id="g_56" enabled="#{d.DdtDettaglioUI.bozza}" text="#{d.DdtDettaglioUI.ddt.mittCitta}" width="100%" />
+                <t:field id="g_57" enabled="#{d.DdtDettaglioUI.bozza}" text="#{d.DdtDettaglioUI.ddt.mittProvincia}" width="35" />
+                <t:field id="g_58" enabled="#{d.DdtDettaglioUI.bozza}" text="#{d.DdtDettaglioUI.ddt.mittNazione}" width="35" />
+              </t:row>
+              <t:row id="g_59" coldistance="6" >
+                <t:coldistance id="g_60" width="100%" />
+                <t:link id="g_61" actionListener="#{d.DdtDettaglioUI.onRileggiAnagrafiche}" rendered="#{d.DdtDettaglioUI.bozza}" text="Riprendi dall'anagrafica stabilimenti" />
+              </t:row>
+            </t:foldablepane>
+          </t:row>
+
+          <t:row id="g_62" >
+            <t:foldablepane id="g_63" rowdistance="3" text="Trasporto" width="100%" >
+              <t:row id="g_64" coldistance="6" >
+                <t:label id="g_65" text="Causale" width="110" />
+                <t:combobox id="g_66" enabled="#{d.DdtDettaglioUI.modificabile}" validvaluesbinding="#{d.DdtDettaglioUI.causaliVvb}" value="#{d.DdtDettaglioUI.ddt.causale}" width="100%" />
+              </t:row>
+              <t:row id="g_67" coldistance="6" >
+                <t:label id="g_68" text="Aspetto dei beni" width="110" />
+                <t:combobox id="g_69" enabled="#{d.DdtDettaglioUI.modificabile}" validvaluesbinding="#{d.DdtDettaglioUI.aspettiVvb}" value="#{d.DdtDettaglioUI.ddt.aspettoBeni}" width="100%" />
+              </t:row>
+              <t:row id="g_70" coldistance="6" >
+                <t:label id="g_71" text="Porto" width="110" />
+                <t:combobox id="g_72" enabled="#{d.DdtDettaglioUI.modificabile}" validvaluesbinding="#{d.DdtDettaglioUI.portiVvb}" value="#{d.DdtDettaglioUI.ddt.porto}" width="100%" />
+              </t:row>
+              <t:row id="g_73" coldistance="6" >
+                <t:label id="g_74" text="Colli" width="110" />
+                <t:formattedfield id="g_75" align="right" enabled="#{d.DdtDettaglioUI.modificabile}" format="int" value="#{d.DdtDettaglioUI.colli}" width="70" />
+                <t:label id="g_76" text="Peso lordo kg" width="85" />
+                <t:formattedfield id="g_77" align="right" enabled="#{d.DdtDettaglioUI.modificabile}" format="double" value="#{d.DdtDettaglioUI.pesoLordo}" width="95" />
+                <t:label id="g_78" text="netto kg" width="55" />
+                <t:formattedfield id="g_79" align="right" enabled="#{d.DdtDettaglioUI.modificabile}" format="double" value="#{d.DdtDettaglioUI.pesoNetto}" width="95" />
+                <t:link id="g_80" actionListener="#{d.DdtDettaglioUI.onRicalcolaPeso}" rendered="#{d.DdtDettaglioUI.modificabile}" text="ricalcola" />
+              </t:row>
+              <t:rowline id="g_81" />
+              <t:row id="g_82" coldistance="6" >
+                <t:label id="g_83" text="Vettore" width="110" />
+                <t:combobox id="g_84" enabled="#{d.DdtDettaglioUI.modificabile}" flush="true" validvaluesbinding="#{d.DdtDettaglioUI.vettoriVvb}" value="#{d.DdtDettaglioUI.vettoreSel}" width="100%" />
+              </t:row>
+              <t:row id="g_85" coldistance="6" >
+                <t:label id="g_86" text="Ragione sociale" width="110" />
+                <t:field id="g_87" enabled="#{d.DdtDettaglioUI.modificabile}" text="#{d.DdtDettaglioUI.ddt.vettRagioneSociale}" width="100%" />
+              </t:row>
+              <t:row id="g_88" coldistance="6" >
+                <t:label id="g_89" text="Indirizzo" width="110" />
+                <t:field id="g_90" enabled="#{d.DdtDettaglioUI.modificabile}" text="#{d.DdtDettaglioUI.ddt.vettIndirizzo}" width="100%" />
+              </t:row>
+              <t:row id="g_91" coldistance="6" >
+                <t:label id="g_92" text="P.IVA" width="110" />
+                <t:field id="g_93" enabled="#{d.DdtDettaglioUI.modificabile}" text="#{d.DdtDettaglioUI.ddt.vettPartitaIva}" width="140" />
+                <t:label id="g_94" text="Albo" width="35" />
+                <t:field id="g_95" enabled="#{d.DdtDettaglioUI.modificabile}" text="#{d.DdtDettaglioUI.ddt.vettIscrizioneAlbo}" width="100%" />
+              </t:row>
+              <t:row id="g_96" coldistance="6" >
+                <t:label id="g_97" text="Inizio trasporto" width="110" />
+                <t:calendarfield id="g_98" enabled="#{d.DdtDettaglioUI.modificabile}" format="date" value="#{d.DdtDettaglioUI.inizioData}" width="120" />
+                <t:label id="g_99" text="ora (HH:MM)" width="75" />
+                <t:field id="g_100" enabled="#{d.DdtDettaglioUI.modificabile}" text="#{d.DdtDettaglioUI.inizioOra}" width="60" />
+              </t:row>
+              <t:row id="g_101" coldistance="6" >
+                <t:label id="g_102" text="Annotazioni" width="110" />
+                <t:textarea id="g_103" enabled="#{d.DdtDettaglioUI.modificabile}" height="50" text="#{d.DdtDettaglioUI.ddt.annotazioni}" width="100%" />
+              </t:row>
+            </t:foldablepane>
+          </t:row>
+
+          <t:row id="g_104" >
+            <t:foldablepane id="g_105" rowdistance="3" text="Posizioni (da SAP)" width="100%" >
+              <t:row id="g_106" >
+                <t:fixgrid id="g_107" objectbinding="#{d.DdtDettaglioUI.gridPosizioni}" sbvisibleamount="8" width="100%" >
+                  <t:gridcol id="g_108" text="Materiale" width="90" >
+                    <t:label id="g_109" text=".{materiale}" />
+                  </t:gridcol>
+                  <t:gridcol id="g_110" text="Descrizione" width="100%" >
+                    <t:label id="g_111" text=".{descrizione}" />
+                  </t:gridcol>
+                  <t:gridcol id="g_112" text="Lotto" width="85" >
+                    <t:label id="g_113" text=".{lotto}" />
+                  </t:gridcol>
+                  <t:gridcol id="g_114" text="UM" width="40" >
+                    <t:label id="g_115" text=".{um}" />
+                  </t:gridcol>
+                  <t:gridcol id="g_116" text="Quantità" width="80" >
+                    <t:label id="g_117" align="right" text=".{quantita}" />
+                  </t:gridcol>
+                  <t:gridcol id="g_118" text="Peso kg" width="75" >
+                    <t:label id="g_119" align="right" text=".{peso}" />
+                  </t:gridcol>
+                </t:fixgrid>
+              </t:row>
+            </t:foldablepane>
+          </t:row>
+
+          <t:row id="g_120" >
+            <t:foldablepane id="g_121" rowdistance="3" text="Storico versioni ed eventi" width="100%" >
+              <t:row id="g_122" >
+                <t:label id="g_123" text="Doppio clic su una versione per rivederne il PDF." width="100%" />
+              </t:row>
+              <t:row id="g_124" >
+                <t:fixgrid id="g_125" objectbinding="#{d.DdtDettaglioUI.gridVersioni}" sbvisibleamount="4" width="100%" nodatatext="(Mai stampato.)" >
+                  <t:gridcol id="g_126" text="Vers." width="50" >
+                    <t:label id="g_127" text=".{versione}" />
+                  </t:gridcol>
+                  <t:gridcol id="g_128" text="Stampata il" width="130" >
+                    <t:label id="g_129" text=".{creata}" />
+                  </t:gridcol>
+                  <t:gridcol id="g_130" text="Impronta SHA-256" width="100%" >
+                    <t:label id="g_131" text=".{hash}" />
+                  </t:gridcol>
+                </t:fixgrid>
+              </t:row>
+              <t:row id="g_132" >
+                <t:fixgrid id="g_133" objectbinding="#{d.DdtDettaglioUI.gridEventi}" sbvisibleamount="6" width="100%" >
+                  <t:gridcol id="g_134" text="Quando" width="120" >
+                    <t:label id="g_135" text=".{quando}" />
+                  </t:gridcol>
+                  <t:gridcol id="g_136" text="Evento" width="100" >
+                    <t:label id="g_137" text=".{tipo}" />
+                  </t:gridcol>
+                  <t:gridcol id="g_138" text="Vers." width="45" >
+                    <t:label id="g_139" text=".{versione}" />
+                  </t:gridcol>
+                  <t:gridcol id="g_140" text="Postazione" width="110" >
+                    <t:label id="g_141" text=".{postazione}" />
+                  </t:gridcol>
+                  <t:gridcol id="g_142" text="Note" width="100%" >
+                    <t:label id="g_143" text=".{note}" />
+                  </t:gridcol>
+                </t:fixgrid>
+              </t:row>
+            </t:foldablepane>
+          </t:row>
+
+          <t:row id="g_144" rendered="#{d.DdtDettaglioUI.annullabile}" >
+            <t:foldablepane id="g_145" rowdistance="3" text="Annullamento" width="100%" >
+              <t:row id="g_146" coldistance="6" >
+                <t:label id="g_147" text="Motivo" width="110" />
+                <t:field id="g_148" text="#{d.DdtDettaglioUI.motivoAnnullamento}" width="100%" />
+                <t:button id="g_149" actionListener="#{d.DdtDettaglioUI.onAnnulla}" text="Annulla DDT" width="110+" />
+              </t:row>
+            </t:foldablepane>
+          </t:row>
+
+        </t:scrollpane>
+      </t:row>
+    </t:pane>
+
+    <t:coldistance id="g_150" width="8" />
+
+    <t:pane id="g_151" height="100%" width="40%" >
+      <t:row id="g_152" >
+        <t:pdfrenderer id="g_153" height="100%" pdf="#{d.DdtDettaglioUI.pdf}" width="100%" />
+      </t:row>
+    </t:pane>
+  </t:row>
+</t:rowbodypane>
+<t:rowheader id="g_154" coldistance="6" >
+  <t:button id="g_155" actionListener="#{d.DdtDettaglioUI.onSalva}" enabled="#{d.DdtDettaglioUI.modificabile}" text="Salva" width="90+" />
+  <t:button id="g_156" actionListener="#{d.DdtDettaglioUI.onStampa}" text="Stampa" width="90+" />
+  <t:button id="g_157" actionListener="#{d.DdtDettaglioUI.onRistampa}" enabled="#{d.DdtDettaglioUI.stampato}" text="Ristampa" width="90+" />
+  <t:filedownloadbutton id="g_158" rendered="#{d.DdtDettaglioUI.downloadDisponibile}" text="Scarica PDF" url="#{d.DdtDettaglioUI.downloadUrl}" width="100+" />
+  <t:button id="g_159" actionListener="#{d.DdtDettaglioUI.onVerificaStorno}" rendered="#{d.DdtDettaglioUI.annullabile}" text="Verifica storno in SAP" width="150+" />
+  <t:coldistance id="g_160" width="100%" />
+  <t:button id="g_161" actionListener="#{d.DdtDettaglioUI.onEliminaBozza}" rendered="#{d.DdtDettaglioUI.bozza}" text="Elimina bozza" width="110+" />
+  <t:button id="g_162" actionListener="#{d.DdtDettaglioUI.onChiudi}" text="Chiudi" width="90+" />
+</t:rowheader>
+<t:pageaddons id="g_pa" />
+</t:layoutdefinition>

@@ -1,0 +1,130 @@
+<?xml version="1.0" encoding="utf-8"?>
+<t:layoutdefinition xmlns:t="http://www.CaptainCasa.com/controllibrary/t" xmlns:tpbc="http://www.CaptainCasa.com/controllibrary/tpbc" >
+<t:beanprocessing id="g_1" />
+<t:rowbodypane id="g_2" rowdistance="5" >
+  <t:row id="g_3" >
+    <t:label id="g_4" font="#{d.AnagraficheUI.messaggioFont}" text="#{d.AnagraficheUI.messaggio}" width="100%" />
+  </t:row>
+
+  <t:row id="g_90" >
+  <t:scrollpane id="g_91" height="100%" width="100%" >
+  <t:row id="g_5" >
+    <t:foldablepane id="g_6" rowdistance="4" text="Stabilimenti (codice = stabilimento SAP)" width="100%" >
+      <t:row id="g_7" >
+        <t:fixgrid id="g_8" objectbinding="#{d.AnagraficheUI.gridStabilimenti}" sbvisibleamount="6" selectorcolumn="1" width="100%" >
+          <t:gridcol id="g_9" text="Codice" width="60" >
+            <t:field id="g_10" enabled=".{nuovo}" text=".{codice}" />
+          </t:gridcol>
+          <t:gridcol id="g_11" text="Ragione sociale" width="30%" >
+            <t:field id="g_12" text=".{ragioneSociale}" />
+          </t:gridcol>
+          <t:gridcol id="g_13" text="Indirizzo" width="30%" >
+            <t:field id="g_14" text=".{indirizzo}" />
+          </t:gridcol>
+          <t:gridcol id="g_15" text="CAP" width="60" >
+            <t:field id="g_16" text=".{cap}" />
+          </t:gridcol>
+          <t:gridcol id="g_17" text="Città" width="20%" >
+            <t:field id="g_18" text=".{citta}" />
+          </t:gridcol>
+          <t:gridcol id="g_19" text="Prov." width="45" >
+            <t:field id="g_20" text=".{provincia}" />
+          </t:gridcol>
+          <t:gridcol id="g_21" text="Naz." width="45" >
+            <t:field id="g_22" text=".{nazione}" />
+          </t:gridcol>
+          <t:gridcol id="g_23" text="P.IVA / C.F." width="20%" >
+            <t:field id="g_24" text=".{partitaIva}" />
+          </t:gridcol>
+          <t:gridcol id="g_25" text="Attivo" width="50" >
+            <t:checkbox id="g_26" align="center" selected=".{attivo}" />
+          </t:gridcol>
+        </t:fixgrid>
+      </t:row>
+      <t:row id="g_27" coldistance="6" >
+        <t:button id="g_28" actionListener="#{d.AnagraficheUI.onAggiungiStabilimento}" text="Aggiungi" width="90+" />
+        <t:button id="g_29" actionListener="#{d.AnagraficheUI.onSalvaStabilimenti}" text="Salva" width="90+" />
+        <t:coldistance id="g_30" width="100%" />
+        <t:button id="g_31" actionListener="#{d.AnagraficheUI.onEliminaStabilimento}" text="Elimina selezionato" width="140+" />
+      </t:row>
+    </t:foldablepane>
+  </t:row>
+
+  <t:row id="g_32" >
+    <t:foldablepane id="g_33" rowdistance="4" text="Vettori" width="100%" >
+      <t:row id="g_34" >
+        <t:fixgrid id="g_35" objectbinding="#{d.AnagraficheUI.gridVettori}" sbvisibleamount="6" selectorcolumn="1" width="100%" >
+          <t:gridcol id="g_36" text="Ragione sociale" width="25%" >
+            <t:field id="g_37" text=".{ragioneSociale}" />
+          </t:gridcol>
+          <t:gridcol id="g_38" text="Indirizzo" width="25%" >
+            <t:field id="g_39" text=".{indirizzo}" />
+          </t:gridcol>
+          <t:gridcol id="g_40" text="CAP" width="60" >
+            <t:field id="g_41" text=".{cap}" />
+          </t:gridcol>
+          <t:gridcol id="g_42" text="Città" width="15%" >
+            <t:field id="g_43" text=".{citta}" />
+          </t:gridcol>
+          <t:gridcol id="g_44" text="Prov." width="45" >
+            <t:field id="g_45" text=".{provincia}" />
+          </t:gridcol>
+          <t:gridcol id="g_46" text="P.IVA" width="15%" >
+            <t:field id="g_47" text=".{partitaIva}" />
+          </t:gridcol>
+          <t:gridcol id="g_48" text="Iscrizione albo" width="15%" >
+            <t:field id="g_49" text=".{iscrizioneAlbo}" />
+          </t:gridcol>
+          <t:gridcol id="g_50" text="Predef." width="55" >
+            <t:checkbox id="g_51" align="center" selected=".{predefinito}" />
+          </t:gridcol>
+          <t:gridcol id="g_52" text="Attivo" width="50" >
+            <t:checkbox id="g_53" align="center" selected=".{attivo}" />
+          </t:gridcol>
+        </t:fixgrid>
+      </t:row>
+      <t:row id="g_54" coldistance="6" >
+        <t:button id="g_55" actionListener="#{d.AnagraficheUI.onAggiungiVettore}" text="Aggiungi" width="90+" />
+        <t:button id="g_56" actionListener="#{d.AnagraficheUI.onSalvaVettori}" text="Salva" width="90+" />
+        <t:coldistance id="g_57" width="100%" />
+        <t:button id="g_58" actionListener="#{d.AnagraficheUI.onEliminaVettore}" text="Elimina selezionato" width="140+" />
+      </t:row>
+    </t:foldablepane>
+  </t:row>
+
+  <t:row id="g_59" >
+    <t:foldablepane id="g_60" rowdistance="4" text="Causale del trasporto, Aspetto dei beni, Porto" width="100%" >
+      <t:row id="g_61" coldistance="6" >
+        <t:label id="g_62" text="Tabella da gestire" width="120" />
+        <t:combobox id="g_63" flush="true" validvaluesbinding="#{d.AnagraficheUI.tipiVvb}" value="#{d.AnagraficheUI.tipo}" width="250" />
+        <t:label id="g_92" text="(scegliere la tabella: la griglia sotto mostra le sue voci; la voce predefinita viene proposta sui nuovi DDT)" width="100%" />
+      </t:row>
+      <t:row id="g_64" >
+        <t:fixgrid id="g_65" objectbinding="#{d.AnagraficheUI.gridDecodifiche}" sbvisibleamount="6" selectorcolumn="1" width="100%" >
+          <t:gridcol id="g_66" text="Codice" width="100" >
+            <t:field id="g_67" enabled=".{nuovo}" text=".{codice}" />
+          </t:gridcol>
+          <t:gridcol id="g_68" text="Descrizione (come stampata sul DDT)" width="100%" >
+            <t:field id="g_69" text=".{descrizione}" />
+          </t:gridcol>
+          <t:gridcol id="g_70" text="Predef." width="55" >
+            <t:checkbox id="g_71" align="center" selected=".{predefinito}" />
+          </t:gridcol>
+          <t:gridcol id="g_72" text="Attivo" width="50" >
+            <t:checkbox id="g_73" align="center" selected=".{attivo}" />
+          </t:gridcol>
+        </t:fixgrid>
+      </t:row>
+      <t:row id="g_74" coldistance="6" >
+        <t:button id="g_75" actionListener="#{d.AnagraficheUI.onAggiungiDecodifica}" text="Aggiungi" width="90+" />
+        <t:button id="g_76" actionListener="#{d.AnagraficheUI.onSalvaDecodifiche}" text="Salva" width="90+" />
+        <t:coldistance id="g_77" width="100%" />
+        <t:button id="g_78" actionListener="#{d.AnagraficheUI.onEliminaDecodifica}" text="Elimina selezionata" width="140+" />
+      </t:row>
+    </t:foldablepane>
+  </t:row>
+  </t:scrollpane>
+  </t:row>
+</t:rowbodypane>
+<t:pageaddons id="g_pa" />
+</t:layoutdefinition>
