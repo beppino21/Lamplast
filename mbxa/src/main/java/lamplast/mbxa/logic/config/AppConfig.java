@@ -80,8 +80,9 @@ public final class AppConfig {
                 try (InputStream in = AppConfig.class.getClassLoader().getResourceAsStream(FILE_NAME)) {
                     if (in == null) {
                         throw new IllegalStateException("File di configurazione " + FILE_NAME
-                            + " non trovato. Indicarlo con -Dmbxa.config=..., con la variabile MBXA_CONFIG"
-                            + " oppure copiarlo in ${catalina.base}/conf/");
+                            + " non trovato. Percorsi controllati: " + percorsiCercati()
+                            + ". Indicarlo con -Dmbxa.config=..., con la variabile MBXA_CONFIG"
+                            + " oppure copiarlo nella cartella conf di Tomcat.");
                     }
                     try (Reader r = new InputStreamReader(in, StandardCharsets.UTF_8)) {
                         props.load(r);
@@ -112,6 +113,23 @@ public final class AppConfig {
             if (Files.isRegularFile(p)) return p;
         }
         return null;
+    }
+
+    /** Per i messaggi di errore: ogni percorso cercato, con l'esito. */
+    private static String percorsiCercati() {
+        StringBuilder sb = new StringBuilder();
+        String[][] voci = {
+            { "-Dmbxa.config", System.getProperty("mbxa.config") },
+            { "MBXA_CONFIG", System.getenv("MBXA_CONFIG") },
+            { "catalina.base", System.getProperty("catalina.base") == null ? null
+                : System.getProperty("catalina.base") + "/conf/" + FILE_NAME } };
+        for (String[] v : voci) {
+            if (sb.length() > 0) sb.append("; ");
+            sb.append(v[0]).append(" = ");
+            if (v[1] == null || v[1].isBlank()) sb.append("(non impostato)");
+            else sb.append(v[1].trim()).append(Files.isRegularFile(Paths.get(v[1].trim())) ? "" : " (non esiste)");
+        }
+        return sb.toString();
     }
 
     public String getSource() { return m_source; }

@@ -57,6 +57,7 @@ public class Ddt implements Serializable {
     private String destProvincia;
     private String destNazione;
     private String destPartitaIva;
+    private String destCodiceFiscale;
 
     // trasporto
     private String causale;
@@ -154,6 +155,8 @@ public class Ddt implements Serializable {
     public void setDestNazione(String v) { destNazione = v; }
     public String getDestPartitaIva() { return destPartitaIva; }
     public void setDestPartitaIva(String v) { destPartitaIva = v; }
+    public String getDestCodiceFiscale() { return destCodiceFiscale; }
+    public void setDestCodiceFiscale(String v) { destCodiceFiscale = v; }
     public String getCausale() { return causale; }
     public void setCausale(String v) { causale = v; }
     public String getPorto() { return porto; }

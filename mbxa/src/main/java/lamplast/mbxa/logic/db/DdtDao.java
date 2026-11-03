@@ -28,7 +28,7 @@ public class DdtDao implements java.io.Serializable {
         "ddt_tipo_num", "ddt_anno", "ddt_progressivo", "ddt_numero", "ddt_data",
         "mitt_codice", "mitt_ragione_sociale", "mitt_indirizzo", "mitt_cap", "mitt_citta", "mitt_provincia", "mitt_nazione",
         "dest_codice", "dest_ragione_sociale", "dest_indirizzo", "dest_cap", "dest_citta", "dest_provincia", "dest_nazione",
-        "dest_partita_iva",
+        "dest_partita_iva", "dest_codice_fiscale",
         "causale", "porto", "aspetto_beni", "vettore_id", "vett_ragione_sociale", "vett_indirizzo", "vett_partita_iva",
         "vett_iscrizione_albo", "colli", "peso_lordo", "peso_netto", "unita_peso", "inizio_trasporto", "annotazioni",
         "stato", "versione_corrente", "storno_mat_doc_anno", "storno_mat_doc", "annullato_at", "motivo_annullamento",
@@ -432,6 +432,7 @@ public class DdtDao implements java.io.Serializable {
         Db.setString(ps, i++, d.getDestProvincia());
         Db.setString(ps, i++, d.getDestNazione());
         Db.setString(ps, i++, d.getDestPartitaIva());
+        Db.setString(ps, i++, d.getDestCodiceFiscale());
         Db.setString(ps, i++, d.getCausale());
         Db.setString(ps, i++, d.getPorto());
         Db.setString(ps, i++, d.getAspettoBeni());
@@ -486,6 +487,7 @@ public class DdtDao implements java.io.Serializable {
         d.setDestProvincia(rs.getString("dest_provincia"));
         d.setDestNazione(rs.getString("dest_nazione"));
         d.setDestPartitaIva(rs.getString("dest_partita_iva"));
+        d.setDestCodiceFiscale(rs.getString("dest_codice_fiscale"));
         d.setCausale(rs.getString("causale"));
         d.setPorto(rs.getString("porto"));
         d.setAspettoBeni(rs.getString("aspetto_beni"));

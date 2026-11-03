@@ -27,6 +27,7 @@ import lamplast.mbxa.logic.model.Ddt;
 import lamplast.mbxa.logic.model.DdtPosizione;
 import lamplast.mbxa.logic.model.DdtStorico;
 import lamplast.mbxa.logic.pdf.DdtPdfBuilder;
+import lamplast.mbxa.logic.pdf.Filigrana;
 import lamplast.mbxa.logic.sap.MaterialDocumentClient;
 import lamplast.mbxa.logic.sap.ProductClient;
 import lamplast.mbxa.logic.sap.ProductClient.ProductInfo;
@@ -216,6 +217,7 @@ public class DdtService implements java.io.Serializable {
                 d.setDestProvincia(input.getDestProvincia());
                 d.setDestNazione(input.getDestNazione());
                 d.setDestPartitaIva(input.getDestPartitaIva());
+                d.setDestCodiceFiscale(input.getDestCodiceFiscale());
             }
             d.setCausale(input.getCausale());
             d.setPorto(input.getPorto());
@@ -316,13 +318,26 @@ public class DdtService implements java.io.Serializable {
         });
     }
 
-    /** PDF di una versione specifica (storico). Non registra eventi: è una consultazione. */
+    /**
+     * PDF di una versione specifica (storico e anteprima). Non registra eventi: è una consultazione.
+     * Per un DDT annullato il PDF esce con la filigrana "ANNULLATO".
+     */
     public byte[] pdfVersione(long id, int versione) throws Exception {
         try (Connection c = Db.open()) {
             byte[] pdf = m_dao.pdfVersione(c, id, versione);
             if (pdf == null) throw new DdtException("Versione " + versione + " non trovata.");
-            return pdf;
+            Ddt d = m_dao.load(c, id);
+            return perUscita(d, pdf);
         }
+    }
+
+    /**
+     * Unico punto da cui un PDF salvato esce dal servizio. Un DDT annullato porta sempre
+     * la filigrana, applicata su una copia: il PDF in database resta quello emesso.
+     */
+    private static byte[] perUscita(Ddt d, byte[] pdf) throws Exception {
+        if (d != null && d.isAnnullato()) return Filigrana.annullato(pdf, d.getAnnullatoAt());
+        return pdf;
     }
 
     /**
@@ -339,11 +354,15 @@ public class DdtService implements java.io.Serializable {
 
     private Stampa ristampaInterna(Connection c, Ddt d, String postazione, String note) throws Exception {
         Stampa s = new Stampa();
-        s.pdf = m_dao.pdfVersione(c, d.getId(), d.getVersioneCorrente());
-        if (s.pdf == null) throw new DdtException("PDF della versione " + d.getVersioneCorrente() + " non trovato.");
+        byte[] originale = m_dao.pdfVersione(c, d.getId(), d.getVersioneCorrente());
+        if (originale == null) throw new DdtException("PDF della versione " + d.getVersioneCorrente() + " non trovato.");
+        s.pdf = perUscita(d, originale);
         s.versione = d.getVersioneCorrente();
         s.ristampa = true;
         s.numeroDdt = d.getDdtNumero();
+        if (d.isAnnullato()) {
+            note = (note == null || note.isBlank() ? "Ristampa di DDT annullato" : note) + " (filigrana ANNULLATO)";
+        }
         m_dao.insertEvento(c, d.getId(), s.versione, "RISTAMPA", postazione, note);
         return s;
     }

@@ -146,11 +146,7 @@ public class DdtPdfBuilder {
         sx.addElement(par(nvl(d.getDestIndirizzo()), F_VALUE, 12));
         sx.addElement(par(localita(d.getDestCap(), d.getDestCitta(), d.getDestProvincia(), d.getDestNazione()), F_VALUE, 12));
         sx.addElement(spazio(6));
-        Paragraph piva = new Paragraph();
-        piva.setLeading(12);
-        piva.add(new Chunk("Partita Iva/Codice Fiscale: ", F_VALUE_B));
-        piva.add(new Chunk(nvl(d.getDestPartitaIva()), F_VALUE));
-        sx.addElement(piva);
+        sx.addElement(identificativiFiscali(d.getDestPartitaIva(), d.getDestCodiceFiscale()));
         t.addCell(sx);
 
         PdfPTable box = new PdfPTable(1);
@@ -388,6 +384,28 @@ public class DdtPdfBuilder {
         if (um == null) return "";
         String a = m_alias.get(um.trim().toUpperCase());
         return a != null ? a : um;
+    }
+
+    /**
+     * Partita IVA e codice fiscale del destinatario. Se c'è uno solo dei due, o coincidono,
+     * resta la dicitura unica del modulo R/3; se sono diversi si stampano entrambi.
+     */
+    private static Paragraph identificativiFiscali(String piva, String cf) {
+        String p = piva == null ? "" : piva.trim();
+        String c = cf == null ? "" : cf.trim();
+        Paragraph par = new Paragraph();
+        par.setLeading(12);
+        if (!p.isEmpty() && !c.isEmpty() && !p.equalsIgnoreCase(c)
+                && !p.toUpperCase().replaceFirst("^IT", "").equalsIgnoreCase(c)) {
+            par.add(new Chunk("Partita Iva: ", F_VALUE_B));
+            par.add(new Chunk(p, F_VALUE));
+            par.add(new Chunk("   Codice Fiscale: ", F_VALUE_B));
+            par.add(new Chunk(c, F_VALUE));
+        } else {
+            par.add(new Chunk("Partita Iva/Codice Fiscale: ", F_VALUE_B));
+            par.add(new Chunk(p.isEmpty() ? c : p, F_VALUE));
+        }
+        return par;
     }
 
     /** Numero all'italiana: separatore delle migliaia, fino a 3 decimali, senza zeri inutili. */

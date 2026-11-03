@@ -13,28 +13,31 @@
       <t:row id="g_7" >
         <t:fixgrid id="g_8" objectbinding="#{d.AnagraficheUI.gridStabilimenti}" sbvisibleamount="6" selectorcolumn="1" width="100%" >
           <t:gridcol id="g_9" text="Codice" width="60" >
-            <t:field id="g_10" enabled=".{nuovo}" text=".{codice}" />
+            <t:field id="g_10" enabled=".{nuovo}" maxlength="4" text=".{codice}" />
           </t:gridcol>
-          <t:gridcol id="g_11" text="Ragione sociale" width="30%" >
-            <t:field id="g_12" text=".{ragioneSociale}" />
+          <t:gridcol id="g_11" text="Ragione sociale" width="25%" >
+            <t:field id="g_12" maxlength="120" text=".{ragioneSociale}" />
           </t:gridcol>
-          <t:gridcol id="g_13" text="Indirizzo" width="30%" >
-            <t:field id="g_14" text=".{indirizzo}" />
+          <t:gridcol id="g_13" text="Indirizzo" width="25%" >
+            <t:field id="g_14" maxlength="120" text=".{indirizzo}" />
           </t:gridcol>
           <t:gridcol id="g_15" text="CAP" width="60" >
-            <t:field id="g_16" text=".{cap}" />
+            <t:field id="g_16" maxlength="10" text=".{cap}" />
           </t:gridcol>
-          <t:gridcol id="g_17" text="Città" width="20%" >
-            <t:field id="g_18" text=".{citta}" />
+          <t:gridcol id="g_17" text="Città" width="15%" >
+            <t:field id="g_18" maxlength="60" text=".{citta}" />
           </t:gridcol>
           <t:gridcol id="g_19" text="Prov." width="45" >
-            <t:field id="g_20" text=".{provincia}" />
+            <t:field id="g_20" maxlength="2" text=".{provincia}" />
           </t:gridcol>
           <t:gridcol id="g_21" text="Naz." width="45" >
-            <t:field id="g_22" text=".{nazione}" />
+            <t:field id="g_22" maxlength="2" text=".{nazione}" />
           </t:gridcol>
-          <t:gridcol id="g_23" text="P.IVA / C.F." width="20%" >
-            <t:field id="g_24" text=".{partitaIva}" />
+          <t:gridcol id="g_23" text="Partita IVA" width="15%" >
+            <t:field id="g_24" maxlength="20" text=".{partitaIva}" />
+          </t:gridcol>
+          <t:gridcol id="g_93" text="Codice fiscale" width="15%" >
+            <t:field id="g_94" maxlength="20" text=".{codiceFiscale}" />
           </t:gridcol>
           <t:gridcol id="g_25" text="Attivo" width="50" >
             <t:checkbox id="g_26" align="center" selected=".{attivo}" />
@@ -55,25 +58,25 @@
       <t:row id="g_34" >
         <t:fixgrid id="g_35" objectbinding="#{d.AnagraficheUI.gridVettori}" sbvisibleamount="6" selectorcolumn="1" width="100%" >
           <t:gridcol id="g_36" text="Ragione sociale" width="25%" >
-            <t:field id="g_37" text=".{ragioneSociale}" />
+            <t:field id="g_37" maxlength="120" text=".{ragioneSociale}" />
           </t:gridcol>
           <t:gridcol id="g_38" text="Indirizzo" width="25%" >
-            <t:field id="g_39" text=".{indirizzo}" />
+            <t:field id="g_39" maxlength="120" text=".{indirizzo}" />
           </t:gridcol>
           <t:gridcol id="g_40" text="CAP" width="60" >
-            <t:field id="g_41" text=".{cap}" />
+            <t:field id="g_41" maxlength="10" text=".{cap}" />
           </t:gridcol>
           <t:gridcol id="g_42" text="Città" width="15%" >
-            <t:field id="g_43" text=".{citta}" />
+            <t:field id="g_43" maxlength="60" text=".{citta}" />
           </t:gridcol>
           <t:gridcol id="g_44" text="Prov." width="45" >
-            <t:field id="g_45" text=".{provincia}" />
+            <t:field id="g_45" maxlength="2" text=".{provincia}" />
           </t:gridcol>
           <t:gridcol id="g_46" text="P.IVA" width="15%" >
-            <t:field id="g_47" text=".{partitaIva}" />
+            <t:field id="g_47" maxlength="20" text=".{partitaIva}" />
           </t:gridcol>
           <t:gridcol id="g_48" text="Iscrizione albo" width="15%" >
-            <t:field id="g_49" text=".{iscrizioneAlbo}" />
+            <t:field id="g_49" maxlength="40" text=".{iscrizioneAlbo}" />
           </t:gridcol>
           <t:gridcol id="g_50" text="Predef." width="55" >
             <t:checkbox id="g_51" align="center" selected=".{predefinito}" />
@@ -102,10 +105,10 @@
       <t:row id="g_64" >
         <t:fixgrid id="g_65" objectbinding="#{d.AnagraficheUI.gridDecodifiche}" sbvisibleamount="6" selectorcolumn="1" width="100%" >
           <t:gridcol id="g_66" text="Codice" width="100" >
-            <t:field id="g_67" enabled=".{nuovo}" text=".{codice}" />
+            <t:field id="g_67" enabled=".{nuovo}" maxlength="10" text=".{codice}" />
           </t:gridcol>
           <t:gridcol id="g_68" text="Descrizione (come stampata sul DDT)" width="100%" >
-            <t:field id="g_69" text=".{descrizione}" />
+            <t:field id="g_69" maxlength="80" text=".{descrizione}" />
           </t:gridcol>
           <t:gridcol id="g_70" text="Predef." width="55" >
             <t:checkbox id="g_71" align="center" selected=".{predefinito}" />

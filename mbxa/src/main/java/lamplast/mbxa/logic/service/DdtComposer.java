@@ -169,6 +169,7 @@ public final class DdtComposer {
         d.setDestProvincia(s.getProvincia());
         d.setDestNazione(s.getNazione());
         d.setDestPartitaIva(s.getPartitaIva());
+        d.setDestCodiceFiscale(s.getCodiceFiscale());
     }
 
     /** Copia i dati del vettore; null = trasporto a cura del mittente. */

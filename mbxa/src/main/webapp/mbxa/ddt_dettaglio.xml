@@ -44,39 +44,40 @@
               <t:row id="g_29" coldistance="6" >
                 <t:label id="g_30" text="Destinatario" width="110" />
                 <t:label id="g_31" text="#{d.DdtDettaglioUI.ddt.destCodice}" width="50" />
-                <t:field id="g_32" enabled="#{d.DdtDettaglioUI.bozza}" text="#{d.DdtDettaglioUI.ddt.destRagioneSociale}" width="100%" />
+                <t:field id="g_32" enabled="#{d.DdtDettaglioUI.bozza}" maxlength="120" text="#{d.DdtDettaglioUI.ddt.destRagioneSociale}" width="100%" />
               </t:row>
               <t:row id="g_33" coldistance="6" >
                 <t:label id="g_34" text="Indirizzo" width="110" />
-                <t:field id="g_35" enabled="#{d.DdtDettaglioUI.bozza}" text="#{d.DdtDettaglioUI.ddt.destIndirizzo}" width="100%" />
+                <t:field id="g_35" enabled="#{d.DdtDettaglioUI.bozza}" maxlength="120" text="#{d.DdtDettaglioUI.ddt.destIndirizzo}" width="100%" />
               </t:row>
               <t:row id="g_36" coldistance="6" >
                 <t:label id="g_37" text="CAP / Città / Prov." width="110" />
-                <t:field id="g_38" enabled="#{d.DdtDettaglioUI.bozza}" text="#{d.DdtDettaglioUI.ddt.destCap}" width="60" />
-                <t:field id="g_39" enabled="#{d.DdtDettaglioUI.bozza}" text="#{d.DdtDettaglioUI.ddt.destCitta}" width="100%" />
-                <t:field id="g_40" enabled="#{d.DdtDettaglioUI.bozza}" text="#{d.DdtDettaglioUI.ddt.destProvincia}" width="35" />
-                <t:field id="g_41" enabled="#{d.DdtDettaglioUI.bozza}" text="#{d.DdtDettaglioUI.ddt.destNazione}" width="35" />
+                <t:field id="g_38" enabled="#{d.DdtDettaglioUI.bozza}" maxlength="10" text="#{d.DdtDettaglioUI.ddt.destCap}" width="60" />
+                <t:field id="g_39" enabled="#{d.DdtDettaglioUI.bozza}" maxlength="60" text="#{d.DdtDettaglioUI.ddt.destCitta}" width="100%" />
+                <t:field id="g_40" enabled="#{d.DdtDettaglioUI.bozza}" maxlength="2" text="#{d.DdtDettaglioUI.ddt.destProvincia}" width="35" />
+                <t:field id="g_41" enabled="#{d.DdtDettaglioUI.bozza}" maxlength="2" text="#{d.DdtDettaglioUI.ddt.destNazione}" width="35" />
               </t:row>
               <t:row id="g_42" coldistance="6" >
                 <t:label id="g_43" text="P.IVA / C.F." width="110" />
-                <t:field id="g_44" enabled="#{d.DdtDettaglioUI.bozza}" text="#{d.DdtDettaglioUI.ddt.destPartitaIva}" width="160" />
+                <t:field id="g_44" enabled="#{d.DdtDettaglioUI.bozza}" maxlength="20" text="#{d.DdtDettaglioUI.ddt.destPartitaIva}" width="160" />
+                <t:field id="g_44b" enabled="#{d.DdtDettaglioUI.bozza}" maxlength="20" text="#{d.DdtDettaglioUI.ddt.destCodiceFiscale}" width="160" />
               </t:row>
               <t:rowline id="g_45" />
               <t:row id="g_46" coldistance="6" >
                 <t:label id="g_47" text="Partenza" width="110" />
                 <t:label id="g_48" text="#{d.DdtDettaglioUI.ddt.mittCodice}" width="50" />
-                <t:field id="g_49" enabled="#{d.DdtDettaglioUI.bozza}" text="#{d.DdtDettaglioUI.ddt.mittRagioneSociale}" width="100%" />
+                <t:field id="g_49" enabled="#{d.DdtDettaglioUI.bozza}" maxlength="120" text="#{d.DdtDettaglioUI.ddt.mittRagioneSociale}" width="100%" />
               </t:row>
               <t:row id="g_50" coldistance="6" >
                 <t:label id="g_51" text="Indirizzo" width="110" />
-                <t:field id="g_52" enabled="#{d.DdtDettaglioUI.bozza}" text="#{d.DdtDettaglioUI.ddt.mittIndirizzo}" width="100%" />
+                <t:field id="g_52" enabled="#{d.DdtDettaglioUI.bozza}" maxlength="120" text="#{d.DdtDettaglioUI.ddt.mittIndirizzo}" width="100%" />
               </t:row>
               <t:row id="g_53" coldistance="6" >
                 <t:label id="g_54" text="CAP / Città / Prov." width="110" />
-                <t:field id="g_55" enabled="#{d.DdtDettaglioUI.bozza}" text="#{d.DdtDettaglioUI.ddt.mittCap}" width="60" />
-                <t:field id="g_56" enabled="#{d.DdtDettaglioUI.bozza}" text="#{d.DdtDettaglioUI.ddt.mittCitta}" width="100%" />
-                <t:field id="g_57" enabled="#{d.DdtDettaglioUI.bozza}" text="#{d.DdtDettaglioUI.ddt.mittProvincia}" width="35" />
-                <t:field id="g_58" enabled="#{d.DdtDettaglioUI.bozza}" text="#{d.DdtDettaglioUI.ddt.mittNazione}" width="35" />
+                <t:field id="g_55" enabled="#{d.DdtDettaglioUI.bozza}" maxlength="10" text="#{d.DdtDettaglioUI.ddt.mittCap}" width="60" />
+                <t:field id="g_56" enabled="#{d.DdtDettaglioUI.bozza}" maxlength="60" text="#{d.DdtDettaglioUI.ddt.mittCitta}" width="100%" />
+                <t:field id="g_57" enabled="#{d.DdtDettaglioUI.bozza}" maxlength="2" text="#{d.DdtDettaglioUI.ddt.mittProvincia}" width="35" />
+                <t:field id="g_58" enabled="#{d.DdtDettaglioUI.bozza}" maxlength="2" text="#{d.DdtDettaglioUI.ddt.mittNazione}" width="35" />
               </t:row>
               <t:row id="g_59" coldistance="6" >
                 <t:coldistance id="g_60" width="100%" />
@@ -115,17 +116,17 @@
               </t:row>
               <t:row id="g_85" coldistance="6" >
                 <t:label id="g_86" text="Ragione sociale" width="110" />
-                <t:field id="g_87" enabled="#{d.DdtDettaglioUI.modificabile}" text="#{d.DdtDettaglioUI.ddt.vettRagioneSociale}" width="100%" />
+                <t:field id="g_87" enabled="#{d.DdtDettaglioUI.modificabile}" maxlength="120" text="#{d.DdtDettaglioUI.ddt.vettRagioneSociale}" width="100%" />
               </t:row>
               <t:row id="g_88" coldistance="6" >
                 <t:label id="g_89" text="Indirizzo" width="110" />
-                <t:field id="g_90" enabled="#{d.DdtDettaglioUI.modificabile}" text="#{d.DdtDettaglioUI.ddt.vettIndirizzo}" width="100%" />
+                <t:field id="g_90" enabled="#{d.DdtDettaglioUI.modificabile}" maxlength="200" text="#{d.DdtDettaglioUI.ddt.vettIndirizzo}" width="100%" />
               </t:row>
               <t:row id="g_91" coldistance="6" >
                 <t:label id="g_92" text="P.IVA" width="110" />
-                <t:field id="g_93" enabled="#{d.DdtDettaglioUI.modificabile}" text="#{d.DdtDettaglioUI.ddt.vettPartitaIva}" width="140" />
+                <t:field id="g_93" enabled="#{d.DdtDettaglioUI.modificabile}" maxlength="20" text="#{d.DdtDettaglioUI.ddt.vettPartitaIva}" width="140" />
                 <t:label id="g_94" text="Albo" width="35" />
-                <t:field id="g_95" enabled="#{d.DdtDettaglioUI.modificabile}" text="#{d.DdtDettaglioUI.ddt.vettIscrizioneAlbo}" width="100%" />
+                <t:field id="g_95" enabled="#{d.DdtDettaglioUI.modificabile}" maxlength="40" text="#{d.DdtDettaglioUI.ddt.vettIscrizioneAlbo}" width="100%" />
               </t:row>
               <t:row id="g_96" coldistance="6" >
                 <t:label id="g_97" text="Inizio trasporto" width="110" />

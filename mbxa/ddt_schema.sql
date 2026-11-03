@@ -36,6 +36,7 @@ CREATE TABLE ana_stabilimento (
     provincia        varchar(2),
     nazione          varchar(2)   NOT NULL DEFAULT 'IT',
     partita_iva      varchar(20),
+    codice_fiscale   varchar(20),
     attivo           boolean      NOT NULL DEFAULT true,
     created_at       timestamptz  NOT NULL DEFAULT now(),
     updated_at       timestamptz  NOT NULL DEFAULT now()
@@ -130,6 +131,7 @@ CREATE TABLE ddt_testata (
     dest_provincia       varchar(2),
     dest_nazione         varchar(2),
     dest_partita_iva     varchar(20),
+    dest_codice_fiscale  varchar(20),
 
     -- Dati di trasporto (completamento manuale)
     causale              varchar(80),

@@ -44,11 +44,12 @@ public class AnagraficheDao implements java.io.Serializable {
     public void saveStabilimento(Connection c, Stabilimento s) throws SQLException {
         try (PreparedStatement ps = c.prepareStatement(
                 "INSERT INTO ana_stabilimento (codice, ragione_sociale, indirizzo, cap, citta, provincia, nazione,"
-                + " partita_iva, attivo) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)"
+                + " partita_iva, codice_fiscale, attivo) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
                 + " ON CONFLICT (codice) DO UPDATE SET ragione_sociale = EXCLUDED.ragione_sociale,"
                 + " indirizzo = EXCLUDED.indirizzo, cap = EXCLUDED.cap, citta = EXCLUDED.citta,"
                 + " provincia = EXCLUDED.provincia, nazione = EXCLUDED.nazione,"
-                + " partita_iva = EXCLUDED.partita_iva, attivo = EXCLUDED.attivo")) {
+                + " partita_iva = EXCLUDED.partita_iva, codice_fiscale = EXCLUDED.codice_fiscale,"
+                + " attivo = EXCLUDED.attivo")) {
             ps.setString(1, s.getCodice().trim().toUpperCase());
             ps.setString(2, s.getRagioneSociale().trim());
             ps.setString(3, s.getIndirizzo().trim());
@@ -56,8 +57,9 @@ public class AnagraficheDao implements java.io.Serializable {
             ps.setString(5, s.getCitta().trim());
             Db.setString(ps, 6, upper(s.getProvincia()));
             ps.setString(7, s.getNazione() == null || s.getNazione().isBlank() ? "IT" : s.getNazione().trim().toUpperCase());
-            Db.setString(ps, 8, s.getPartitaIva());
-            ps.setBoolean(9, s.isAttivo());
+            Db.setString(ps, 8, upper(s.getPartitaIva()));
+            Db.setString(ps, 9, upper(s.getCodiceFiscale()));
+            ps.setBoolean(10, s.isAttivo());
             ps.executeUpdate();
         }
     }
@@ -234,6 +236,7 @@ public class AnagraficheDao implements java.io.Serializable {
         s.setProvincia(rs.getString("provincia"));
         s.setNazione(rs.getString("nazione"));
         s.setPartitaIva(rs.getString("partita_iva"));
+        s.setCodiceFiscale(rs.getString("codice_fiscale"));
         s.setAttivo(rs.getBoolean("attivo"));
         return s;
     }

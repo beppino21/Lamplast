@@ -216,7 +216,9 @@ public class DdtDettaglioUI extends PageBean implements Serializable {
             DdtService.Stampa s = m_service.ristampa(m_ddt.getId(), UiUtil.postazione());
             ricarica(m_ddt.getId());
             mostraPdf(s.pdf, true);
-            ok("Ristampa della versione " + s.versione + " (documento identico all'originale).");
+            ok(m_ddt.isAnnullato()
+                ? "Ristampa della versione " + s.versione + " con filigrana ANNULLATO."
+                : "Ristampa della versione " + s.versione + " (documento identico all'originale).");
         } catch (Exception e) {
             errore(UiUtil.messaggio(e));
         }
@@ -333,7 +335,8 @@ public class DdtDettaglioUI extends PageBean implements Serializable {
             DdtService.Stampa s = m_service.stampa(m_ddt.getId(), UiUtil.postazione(), sequenzaConfermata);
             ricarica(m_ddt.getId());
             mostraPdf(s.pdf, true);
-            if (s.ristampa) ok("Dati invariati dall'ultima stampa: ristampa della versione " + s.versione + ".");
+            if (s.ristampa && m_ddt.isAnnullato()) ok("DDT annullato: ristampa della versione " + s.versione + " con filigrana ANNULLATO.");
+            else if (s.ristampa) ok("Dati invariati dall'ultima stampa: ristampa della versione " + s.versione + ".");
             else if (s.versione == 1) ok("DDT " + s.numeroDdt + " emesso.");
             else ok("Stampata la versione " + s.versione + " del DDT " + s.numeroDdt + ".");
         } catch (DdtException.SequenzaDaConfermare q) {
@@ -441,7 +444,7 @@ public class DdtDettaglioUI extends PageBean implements Serializable {
         }
         try {
             String nome = "DDT_" + (m_ddt.getDdtNumero() == null ? m_ddt.getMatDoc() : m_ddt.getDdtNumero()
-                .replaceAll("[^A-Za-z0-9]", "_")) + ".pdf";
+                .replaceAll("[^A-Za-z0-9]", "_")) + (m_ddt.isAnnullato() ? "_ANNULLATO" : "") + ".pdf";
             m_downloadUrl = TempFileManager.saveTempFile(nome, "application/pdf", pdf);
         } catch (Throwable t) {
             m_downloadUrl = null;

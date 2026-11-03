@@ -6,6 +6,7 @@ import java.util.List;
 
 import org.eclnt.editor.annotations.CCGenClass;
 import org.eclnt.jsfserver.base.faces.event.ActionEvent;
+import org.eclnt.jsfserver.defaultscreens.OKPopup;
 import org.eclnt.jsfserver.elements.impl.FIXGRIDItem;
 import org.eclnt.jsfserver.elements.impl.FIXGRIDListBinding;
 import org.eclnt.jsfserver.elements.util.ValidValuesBinding;
@@ -58,6 +59,8 @@ public class AnagraficheUI extends PageBean implements Serializable {
         public void setNazione(String v) { s.setNazione(v); }
         public String getPartitaIva() { return s.getPartitaIva(); }
         public void setPartitaIva(String v) { s.setPartitaIva(v); }
+        public String getCodiceFiscale() { return s.getCodiceFiscale(); }
+        public void setCodiceFiscale(String v) { s.setCodiceFiscale(v); }
         public boolean getAttivo() { return s.isAttivo(); }
         public void setAttivo(boolean v) { s.setAttivo(v); }
     }
@@ -297,9 +300,19 @@ public class AnagraficheUI extends PageBean implements Serializable {
         return TipoDecodifica.valueOf(m_tipo);
     }
 
+    /**
+     * Esito di un salvataggio. In caso di errore il messaggio va anche in un popup:
+     * le righe non salvate non devono passare inosservate.
+     */
     private void esito(List<String> errori, String okMsg) {
-        if (errori.isEmpty()) ok(okMsg);
-        else errore(String.join(" ", errori));
+        if (errori.isEmpty()) {
+            ok(okMsg);
+            return;
+        }
+        errore("Salvataggio non completato: " + String.join(" ", errori));
+        OKPopup.createInstance("Salvataggio non completato",
+            "Le righe seguenti NON sono state salvate:\n\n- " + String.join("\n- ", errori)
+                + "\n\nCorreggerle e premere di nuovo Salva.");
     }
 
     private void ok(String m) {

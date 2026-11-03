@@ -48,6 +48,11 @@ public final class Fotografia {
         put(o, "destProvincia", d.getDestProvincia());
         put(o, "destNazione", d.getDestNazione());
         put(o, "destPartitaIva", d.getDestPartitaIva());
+        // aggiunto dopo i primi DDT: solo se valorizzato, così le fotografie già salvate
+        // (che non hanno la chiave) restano confrontabili e non nascono versioni inutili
+        if (d.getDestCodiceFiscale() != null && !d.getDestCodiceFiscale().isBlank()) {
+            put(o, "destCodiceFiscale", d.getDestCodiceFiscale());
+        }
         put(o, "causale", d.getCausale());
         put(o, "porto", d.getPorto());
         put(o, "aspettoBeni", d.getAspettoBeni());

@@ -18,6 +18,7 @@ public final class Anagrafiche {
         private String provincia;
         private String nazione = "IT";
         private String partitaIva;
+        private String codiceFiscale;
         private boolean attivo = true;
 
         public String getCodice() { return codice; }
@@ -36,6 +37,8 @@ public final class Anagrafiche {
         public void setNazione(String v) { nazione = v; }
         public String getPartitaIva() { return partitaIva; }
         public void setPartitaIva(String v) { partitaIva = v; }
+        public String getCodiceFiscale() { return codiceFiscale; }
+        public void setCodiceFiscale(String v) { codiceFiscale = v; }
         public boolean isAttivo() { return attivo; }
         public void setAttivo(boolean v) { attivo = v; }
     }

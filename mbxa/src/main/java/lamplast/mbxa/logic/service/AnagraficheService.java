@@ -30,9 +30,15 @@ public class AnagraficheService implements java.io.Serializable {
         if (vuoto(s.getRagioneSociale()) || vuoto(s.getIndirizzo()) || vuoto(s.getCap()) || vuoto(s.getCitta())) {
             throw new DdtException("Stabilimento " + s.getCodice() + ": ragione sociale, indirizzo, CAP e città sono obbligatori.");
         }
-        if (!vuoto(s.getProvincia()) && s.getProvincia().trim().length() > 2) {
-            throw new DdtException("Provincia: sigla di 2 lettere.");
-        }
+        String chi = "Stabilimento " + s.getCodice().trim() + ": ";
+        lunghezza(chi, "Ragione sociale", s.getRagioneSociale(), 120);
+        lunghezza(chi, "Indirizzo", s.getIndirizzo(), 120);
+        lunghezza(chi, "CAP", s.getCap(), 10);
+        lunghezza(chi, "Città", s.getCitta(), 60);
+        lunghezza(chi, "Provincia", s.getProvincia(), 2);
+        lunghezza(chi, "Nazione", s.getNazione(), 2);
+        lunghezza(chi, "Partita IVA", s.getPartitaIva(), 20);
+        lunghezza(chi, "Codice fiscale", s.getCodiceFiscale(), 20);
         Db.inTransaction(c -> {
             m_dao.saveStabilimento(c, s);
             return null;
@@ -54,6 +60,14 @@ public class AnagraficheService implements java.io.Serializable {
 
     public void salvaVettore(Vettore v) throws Exception {
         if (vuoto(v.getRagioneSociale())) throw new DdtException("Ragione sociale del vettore obbligatoria.");
+        String chi = "Vettore " + v.getRagioneSociale().trim() + ": ";
+        lunghezza(chi, "Ragione sociale", v.getRagioneSociale(), 120);
+        lunghezza(chi, "Indirizzo", v.getIndirizzo(), 120);
+        lunghezza(chi, "CAP", v.getCap(), 10);
+        lunghezza(chi, "Città", v.getCitta(), 60);
+        lunghezza(chi, "Provincia", v.getProvincia(), 2);
+        lunghezza(chi, "Partita IVA", v.getPartitaIva(), 20);
+        lunghezza(chi, "Iscrizione albo", v.getIscrizioneAlbo(), 40);
         Db.inTransaction(c -> {
             m_dao.saveVettore(c, v);
             return null;
@@ -76,6 +90,7 @@ public class AnagraficheService implements java.io.Serializable {
             throw new DdtException("Codice obbligatorio (max 10 caratteri).");
         }
         if (vuoto(d.getDescrizione())) throw new DdtException("Descrizione obbligatoria.");
+        lunghezza("Voce " + d.getCodice().trim() + ": ", "Descrizione", d.getDescrizione(), 80);
         Db.inTransaction(c -> {
             m_dao.saveDecodifica(c, tipo, d);
             return null;
@@ -87,6 +102,15 @@ public class AnagraficheService implements java.io.Serializable {
             m_dao.deleteDecodifica(c, tipo, codice);
             return null;
         });
+    }
+
+    /** Controllo esplicito delle lunghezze del database, con un messaggio comprensibile. */
+    private static void lunghezza(String chi, String campo, String valore, int max) {
+        if (valore == null) return;
+        int n = valore.trim().length();
+        if (n > max) {
+            throw new DdtException(chi + "campo \"" + campo + "\" troppo lungo: " + n + " caratteri, massimo " + max + ".");
+        }
     }
 
     private static boolean vuoto(String s) {

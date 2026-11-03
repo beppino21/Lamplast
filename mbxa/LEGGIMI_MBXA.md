@@ -38,7 +38,9 @@
   la stampa successiva crea una nuova versione se i dati sono cambiati, altrimenti
   restituisce lo stesso PDF, byte per byte. Nessuna dicitura "copia" o "ristampa".
 - Le versioni stampate e i DDT emessi non si cancellano (trigger del database).
-  Un DDT si annulla, e i suoi PDF restano consultabili e ristampabili identici.
+  Un DDT si annulla: i suoi PDF restano in database intatti (stessa impronta SHA-256), ma tutto
+  ciò che esce di un DDT annullato (anteprima, stampa, download, storico) porta la filigrana
+  diagonale "ANNULLATO il gg.mm.aaaa", applicata al momento su una copia (`Filigrana`).
 - Un solo DDT non annullato per documento materiale. Dopo un annullamento per errore
   (documento non stornato in SAP) il 301 torna tra quelli da acquisire: il nuovo DDT
   è collegato a quello annullato. Numerazione MANUALE: il numero del DDT annullato torna
@@ -50,8 +52,19 @@
 
 ## Aggiornamento di un database esistente
 
-`ddt_migrazione_01_annullamenti.sql`: da eseguire una volta sui database creati con la
-prima versione di `ddt_schema.sql` (i database nuovi non ne hanno bisogno).
+Script da eseguire una volta, in ordine, sui database creati con una versione precedente di
+`ddt_schema.sql` (i database nuovi non ne hanno bisogno):
+
+1. `ddt_migrazione_01_annullamenti.sql`: annullamento e riemissione.
+2. `ddt_migrazione_02_codice_fiscale.sql`: codice fiscale separato dalla partita IVA
+   (anagrafica stabilimenti e destinatario del DDT).
+
+## Azzeramento dei DDT (solo pulizia tecnica)
+
+`ddt_azzeramento.sql` cancella tutti i DDT, versioni, PDF ed eventi e riparte la numerazione
+interna; le anagrafiche restano. È irreversibile: prima un backup con `pg_dump`. Per partire
+richiede, nella stessa sessione, `SET mbxa.conferma = 'AZZERA';` (istruzioni nel file).
+Per correggere un singolo DDT si usa l'annullamento, non questo script.
 
 ## Backup
 
