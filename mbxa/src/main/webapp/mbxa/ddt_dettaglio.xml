@@ -197,11 +197,11 @@
                   <t:gridcol id="g_138" text="Vers." width="45" >
                     <t:label id="g_139" text=".{versione}" />
                   </t:gridcol>
-                  <t:gridcol id="g_140" text="Postazione" width="110" >
-                    <t:label id="g_141" text=".{postazione}" />
+                  <t:gridcol id="g_140" text="Postazione" width="200" >
+                    <t:label id="g_141" text=".{postazione}" tooltip=".{postazione}" />
                   </t:gridcol>
                   <t:gridcol id="g_142" text="Note" width="100%" >
-                    <t:label id="g_143" text=".{note}" />
+                    <t:label id="g_143" text=".{note}" tooltip=".{note}" />
                   </t:gridcol>
                 </t:fixgrid>
               </t:row>

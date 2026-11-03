@@ -76,7 +76,20 @@ public class DdtMainUI extends PageBean implements Serializable {
         public String getMittente() { return UiUtil.nvl(s.plant); }
         public String getDestinatario() { return UiUtil.nvl(s.receivingPlant); }
         public String getRighe() { return String.valueOf(s.itemCount); }
-        public String getNota() { return s.cancelled ? "Stornato" : ""; }
+        /** Prima l'eventuale DDT annullato da sostituire, poi il testo di testata del documento. */
+        public String getNota() {
+            StringBuilder sb = new StringBuilder();
+            if (s.sostituisceDdt != null) sb.append("Sostituisce DDT ").append(s.sostituisceDdt).append(" annullato");
+            if (s.headerText != null && !s.headerText.isBlank()) {
+                if (sb.length() > 0) sb.append(" - ");
+                sb.append(s.headerText.trim());
+            }
+            return sb.toString();
+        }
+
+        public String getNotaFont() {
+            return s.sostituisceDdt != null ? "weight:bold;color:#B71C1C" : "";
+        }
 
         @Override
         public void onRowExecute() {

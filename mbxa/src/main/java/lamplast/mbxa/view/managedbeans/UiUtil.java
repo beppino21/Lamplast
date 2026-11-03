@@ -8,6 +8,7 @@ import java.util.Date;
 import org.eclnt.jsfserver.util.HttpSessionAccess;
 
 import lamplast.mbxa.logic.service.DdtException;
+import lamplast.mbxa.logic.service.Postazioni;
 
 /** Utilità comuni alle maschere. */
 final class UiUtil {
@@ -21,13 +22,17 @@ final class UiUtil {
 
     private UiUtil() {}
 
-    /** Postazione per il registro eventi (non c'è login): indirizzo IP del client. */
+    /**
+     * Postazione per il registro eventi (non c'è login): nome del PC ricavato dal DNS
+     * interno, con l'indirizzo IP tra parentesi (vedi {@link Postazioni}).
+     */
     static String postazione() {
         try {
             var req = HttpSessionAccess.getCurrentRequest();
             if (req == null) return null;
             String fwd = req.getHeader("X-Forwarded-For");
-            return fwd != null && !fwd.isBlank() ? fwd.split(",")[0].trim() : req.getRemoteAddr();
+            String ip = fwd != null && !fwd.isBlank() ? fwd.split(",")[0].trim() : req.getRemoteAddr();
+            return Postazioni.descrivi(ip);
         } catch (Throwable t) {
             return null;
         }

@@ -104,14 +104,20 @@ public class DdtService implements java.io.Serializable {
         Set<String> anni = new HashSet<>();
         for (MaterialDocumentClient.Summary s : recenti) anni.add(s.year);
         Set<String> acquisiti;
+        Map<String, String> annullati;
         try (Connection c = Db.open()) {
             acquisiti = m_dao.acquiredKeys(c, anni);
+            annullati = m_dao.ultimiAnnullati(c, anni);
         }
         List<MaterialDocumentClient.Summary> result = new ArrayList<>();
         for (MaterialDocumentClient.Summary s : recenti) {
             // stornati in SAP: non vanno stampati; acquisiti: hanno già un DDT non annullato
             if (s.cancelled) continue;
-            if (!acquisiti.contains(s.year + "/" + s.number)) result.add(s);
+            String key = s.year + "/" + s.number;
+            if (acquisiti.contains(key)) continue;
+            // già avuto un DDT, poi annullato: il nuovo DDT lo sostituirà
+            s.sostituisceDdt = annullati.get(key);
+            result.add(s);
         }
         return result;
     }
@@ -192,9 +198,14 @@ public class DdtService implements java.io.Serializable {
      * Salva i dati modificabili. In bozza si possono cambiare anche numero e data DDT;
      * dopo l'emissione solo i dati accessori (le modifiche producono una nuova versione
      * alla stampa successiva). Le posizioni vengono da SAP e non si modificano.
+     * <p>
+     * Su un DDT emesso l'evento MODIFICA si registra solo se qualche dato è davvero
+     * cambiato, con l'elenco dei campi nella nota.
+     *
+     * @return descrizione dei dati di trasporto cambiati (vuota se nulla è cambiato)
      */
-    public void salva(Ddt input, String postazione) throws Exception {
-        Db.inTransaction(c -> {
+    public List<String> salva(Ddt input, String postazione) throws Exception {
+        return Db.inTransaction(c -> {
             Ddt d = m_dao.loadForUpdate(c, input.getId());
             if (d == null) throw new DdtException("DDT non trovato.");
             if (d.isAnnullato()) throw new DdtException("Il DDT è annullato: non è modificabile.");
@@ -219,6 +230,7 @@ public class DdtService implements java.io.Serializable {
                 d.setDestPartitaIva(input.getDestPartitaIva());
                 d.setDestCodiceFiscale(input.getDestCodiceFiscale());
             }
+            Map<String, String> prima = datiTrasporto(d);
             d.setCausale(input.getCausale());
             d.setPorto(input.getPorto());
             d.setAspettoBeni(input.getAspettoBeni());
@@ -232,13 +244,62 @@ public class DdtService implements java.io.Serializable {
             d.setPesoNetto(input.getPesoNetto());
             d.setInizioTrasporto(input.getInizioTrasporto());
             d.setAnnotazioni(input.getAnnotazioni());
-            m_dao.updateTestata(c, d);
+            List<String> cambiati = differenze(prima, datiTrasporto(d));
             if (d.isEmesso()) {
-                m_dao.insertEvento(c, d.getId(), d.getVersioneCorrente(), "MODIFICA", postazione,
-                    "Modifica dati accessori dopo l'emissione");
+                // DDT emesso: niente da salvare e nessun evento se i dati sono gli stessi
+                if (cambiati.isEmpty()) return cambiati;
+                m_dao.updateTestata(c, d);
+                String nota = "Modificati: " + String.join(", ", cambiati);
+                if (nota.length() > 500) nota = nota.substring(0, 497) + "...";
+                m_dao.insertEvento(c, d.getId(), d.getVersioneCorrente(), "MODIFICA", postazione, nota);
+            } else {
+                m_dao.updateTestata(c, d);
             }
-            return null;
+            return cambiati;
         });
+    }
+
+    /** Dati di trasporto modificabili anche dopo l'emissione: etichetta -> valore normalizzato. */
+    private static Map<String, String> datiTrasporto(Ddt d) {
+        Map<String, String> m = new java.util.LinkedHashMap<>();
+        m.put("causale", testo(d.getCausale()));
+        m.put("aspetto dei beni", testo(d.getAspettoBeni()));
+        m.put("porto", testo(d.getPorto()));
+        m.put("vettore", testo(d.getVettRagioneSociale()));
+        m.put("#indirizzo vettore", testo(d.getVettIndirizzo()));
+        m.put("P.IVA vettore", testo(d.getVettPartitaIva()));
+        m.put("albo vettore", testo(d.getVettIscrizioneAlbo()));
+        m.put("colli", d.getColli() == null ? null : String.valueOf(d.getColli()));
+        m.put("peso lordo", numero(d.getPesoLordo()));
+        m.put("peso netto", numero(d.getPesoNetto()));
+        m.put("inizio trasporto", d.getInizioTrasporto() == null ? null
+            : d.getInizioTrasporto().format(java.time.format.DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm")));
+        m.put("#annotazioni", testo(d.getAnnotazioni()));
+        return m;
+    }
+
+    /**
+     * Campi cambiati, con valore vecchio e nuovo ("colli 10 → 12"). Per i testi lunghi
+     * (chiave con '#') solo il nome del campo: il dettaglio resta nelle versioni stampate.
+     */
+    static List<String> differenze(Map<String, String> prima, Map<String, String> dopo) {
+        List<String> res = new ArrayList<>();
+        for (Map.Entry<String, String> e : dopo.entrySet()) {
+            String vecchio = prima.get(e.getKey());
+            String nuovo = e.getValue();
+            if (java.util.Objects.equals(vecchio, nuovo)) continue;
+            if (e.getKey().startsWith("#")) res.add(e.getKey().substring(1));
+            else res.add(e.getKey() + " " + (vecchio == null ? "–" : vecchio) + " → " + (nuovo == null ? "–" : nuovo));
+        }
+        return res;
+    }
+
+    private static String testo(String s) {
+        return s == null || s.isBlank() ? null : s.trim();
+    }
+
+    private static String numero(java.math.BigDecimal v) {
+        return v == null ? null : v.stripTrailingZeros().toPlainString();
     }
 
     /** Solo bozze: ricopia mittente e destinatario dall'anagrafica (dopo averla completata). */

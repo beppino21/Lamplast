@@ -44,6 +44,10 @@ public class MaterialDocumentClient {
         public String receivingPlant;
         public int itemCount;
         public boolean cancelled;
+        /** Testo di testata del documento materiale (MIGO). */
+        public String headerText;
+        /** Numero del DDT annullato che il nuovo DDT sostituirà (valorizzato da DdtService). */
+        public String sostituisceDdt;
     }
 
     // ------------------------------------------------------------------------
@@ -116,6 +120,7 @@ public class MaterialDocumentClient {
                     s.postingDate = posting;
                     s.plant = S4HttpClient.text(r, "Plant");
                     s.receivingPlant = S4HttpClient.text(r, "IssuingOrReceivingPlant");
+                    s.headerText = S4HttpClient.text(h, "MaterialDocumentHeaderText");
                     byDoc.put(key, s);
                 }
                 s.itemCount++;

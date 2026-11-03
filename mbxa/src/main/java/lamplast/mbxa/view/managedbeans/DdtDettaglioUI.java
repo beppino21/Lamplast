@@ -189,7 +189,11 @@ public class DdtDettaglioUI extends PageBean implements Serializable {
     public void onSalva(ActionEvent event) {
         if (!aperto()) return;
         try {
-            salva();
+            java.util.List<String> cambiati = salva();
+            if (m_ddt.isEmesso() && cambiati.isEmpty()) {
+                ok("Nessun dato modificato.");
+                return;
+            }
             ok(m_ddt.isEmesso() && m_service.modificatoDopoStampa(m_ddt.getId())
                 ? "Salvato. I dati differiscono dall'ultima stampa: alla prossima stampa nascerà la versione "
                     + (m_ddt.getVersioneCorrente() + 1) + "."
@@ -359,11 +363,12 @@ public class DdtDettaglioUI extends PageBean implements Serializable {
         }
     }
 
-    private void salva() throws Exception {
-        if (m_ddt.isAnnullato()) return;
+    private java.util.List<String> salva() throws Exception {
+        if (m_ddt.isAnnullato()) return java.util.Collections.emptyList();
         m_ddt.setInizioTrasporto(componiInizioTrasporto());
-        m_service.salva(m_ddt, UiUtil.postazione());
+        java.util.List<String> cambiati = m_service.salva(m_ddt, UiUtil.postazione());
         ricarica(m_ddt.getId());
+        return cambiati;
     }
 
     private LocalDateTime componiInizioTrasporto() {

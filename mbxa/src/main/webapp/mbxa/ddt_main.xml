@@ -96,7 +96,7 @@
             <t:label id="g_71" align="right" text=".{righe}" />
           </t:gridcol>
           <t:gridcol id="g_72" text="Nota" width="100%" >
-            <t:label id="g_73" text=".{nota}" />
+            <t:label id="g_73" font=".{notaFont}" text=".{nota}" />
           </t:gridcol>
         </t:fixgrid>
       </t:row>

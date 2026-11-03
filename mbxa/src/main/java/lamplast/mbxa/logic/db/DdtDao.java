@@ -6,8 +6,10 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import lamplast.mbxa.logic.model.Ddt;
@@ -89,6 +91,25 @@ public class DdtDao implements java.io.Serializable {
             }
         }
         return keys;
+    }
+
+    /**
+     * Per ogni documento materiale con almeno un DDT annullato: numero dell'ultimo annullato.
+     * Chiave "anno/numero", come {@link #acquiredKeys}.
+     */
+    public Map<String, String> ultimiAnnullati(Connection c, Set<String> anni) throws SQLException {
+        Map<String, String> res = new HashMap<>();
+        if (anni.isEmpty()) return res;
+        try (PreparedStatement ps = c.prepareStatement(
+                "SELECT DISTINCT ON (mat_doc_anno, mat_doc) mat_doc_anno, mat_doc, ddt_numero FROM ddt_testata"
+                + " WHERE mat_doc_anno::text = ANY (?::text[]) AND stato = 'ANNULLATO'"
+                + " ORDER BY mat_doc_anno, mat_doc, id DESC")) {
+            ps.setArray(1, c.createArrayOf("text", anni.toArray()));
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) res.put(rs.getString(1).trim() + "/" + rs.getString(2), rs.getString(3));
+            }
+        }
+        return res;
     }
 
     public Ddt load(Connection c, long id) throws SQLException {
